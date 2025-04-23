@@ -1,0 +1,363 @@
+fileFormatVersion: 2
+guid: a770a8e00786ffa4ba4e99f1d0acc00a
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 62a9f0aa5b59740cfbadc7e5f9823bb0, type: 3}
+  textureImporterSettings:
+    alphaSource: 1
+    mipMapMode: 0
+    enableMipMap: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+    convertToNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+    swizzle: 50462976
+    isReadable: 0
+    streamingMipmaps: 0
+    streamingMipmapsPriority: 0
+    vTOnly: 0
+    ignoreMipmapLimit: 0
+    nPOTScale: 1
+    sRGBTexture: 1
+    spriteMode: 2
+    spriteExtrude: 1
+    spriteMeshType: 1
+    alignment: 0
+    spritePivot: {x: 0.5, y: 0.5}
+    spritePixelsToUnits: 100
+    spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+    spriteGenerateFallbackPhysicsShape: 0
+    generateCubemap: 6
+    cubemapConvolution: 0
+    seamlessCubemap: 0
+    alphaIsTransparency: 1
+    spriteTessellationDetail: -1
+    textureType: 8
+    textureShape: 1
+    singleChannelComponent: 0
+    flipbookRows: 0
+    flipbookColumns: 0
+    ignorePngGamma: 0
+    cookieMode: 0
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+    normalMap: 0
+    textureFormat: 0
+    maxTextureSize: 0
+    lightmap: 0
+    compressionQuality: 0
+    linearTexture: 0
+    grayScaleToAlpha: 0
+    rGBM: 0
+    cubemapConvolutionSteps: 0
+    cubemapConvolutionExponent: 0
+    maxTextureSizeSet: 0
+    compressionQualitySet: 0
+    textureFormatSet: 0
+    applyGammaDecoding: 0
+  previousAsepriteImporterSettings:
+    fileImportMode: 1
+    importHiddenLayers: 0
+    layerImportMode: 1
+    defaultPivotSpace: 0
+    defaultPivotAlignment: 7
+    customPivotPosition: {x: 0.5, y: 0.5}
+    mosaicPadding: 4
+    spritePadding: 0
+    generateModelPrefab: 1
+    generateAnimationClips: 1
+    addSortingGroup: 1
+    addShadowCasters: 0
+  asepriteImporterSettings:
+    fileImportMode: 1
+    importHiddenLayers: 0
+    layerImportMode: 1
+    defaultPivotSpace: 0
+    defaultPivotAlignment: 7
+    customPivotPosition: {x: 0.5, y: 0.5}
+    mosaicPadding: 4
+    spritePadding: 0
+    generateModelPrefab: 1
+    generateAnimationClips: 1
+    addSortingGroup: 1
+    addShadowCasters: 0
+  importFileNodeState: 1
+  platformSettingsDirtyTick: 0
+  textureAssetName: 
+  singleSpriteImportData:
+  - name: 
+    originalName: 
+    pivot: {x: 0, y: 0}
+    alignment: 0
+    border: {x: 0, y: 0, z: 0, w: 0}
+    rect:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 0
+      height: 0
+    spriteID: 
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 0, y: 0}
+  animatedSpriteImportData:
+  - name: maga-combate-ataque_Frame_0
+    originalName: 
+    pivot: {x: 0.46875, y: -0.15}
+    alignment: 9
+    border: {x: 0, y: 0, z: 0, w: 0}
+    rect:
+      serializedVersion: 2
+      x: 4
+      y: 196
+      width: 32
+      height: 40
+    spriteID: cf342b0c7905ecc449734c79f9f61444
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 4, y: 196}
+  - name: maga-combate-ataque_Frame_1
+    originalName: 
+    pivot: {x: 0.46875, y: -0.15}
+    alignment: 9
+    border: {x: 0, y: 0, z: 0, w: 0}
+    rect:
+      serializedVersion: 2
+      x: 51
+      y: 4
+      width: 32
+      height: 40
+    spriteID: ed5689f0eafdbca4084b99ed247d9856
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 51, y: 4}
+  - name: maga-combate-ataque_Frame_2
+    originalName: 
+    pivot: {x: 0.55263156, y: -0.15}
+    alignment: 9
+    border: {x: 0, y: 0, z: 0, w: 0}
+    rect:
+      serializedVersion: 2
+      x: 4
+      y: 100
+      width: 38
+      height: 40
+    spriteID: c152afd2ccb3a2b42895bc7d0fa29a25
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 4, y: 100}
+  - name: maga-combate-ataque_Frame_3
+    originalName: 
+    pivot: {x: 0.5641026, y: -0.15}
+    alignment: 9
+    border: {x: 0, y: 0, z: 0, w: 0}
+    rect:
+      serializedVersion: 2
+      x: 4
+      y: 4
+      width: 39
+      height: 40
+    spriteID: b15df33355970024dacc85105779aeb0
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 4, y: 4}
+  - name: maga-combate-ataque_Frame_4
+    originalName: 
+    pivot: {x: 0.53846157, y: -0.15}
+    alignment: 9
+    border: {x: 0, y: 0, z: 0, w: 0}
+    rect:
+      serializedVersion: 2
+      x: 4
+      y: 52
+      width: 39
+      height: 40
+    spriteID: 39b47dc4ae0a42b488ffa5ad9baddf2d
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 4, y: 52}
+  - name: maga-combate-ataque_Frame_5
+    originalName: 
+    pivot: {x: 0.55263156, y: -0.15}
+    alignment: 9
+    border: {x: 0, y: 0, z: 0, w: 0}
+    rect:
+      serializedVersion: 2
+      x: 4
+      y: 148
+      width: 38
+      height: 40
+    spriteID: e335b288d501c534e9943de6a8d1e705
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 4, y: 148}
+  - name: maga-combate-ataque_Frame_6
+    originalName: 
+    pivot: {x: 0.46875, y: -0.15}
+    alignment: 9
+    border: {x: 0, y: 0, z: 0, w: 0}
+    rect:
+      serializedVersion: 2
+      x: 51
+      y: 52
+      width: 32
+      height: 40
+    spriteID: 6b9a69d913de92f4398504739d2ecc35
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 51, y: 52}
+  - name: maga-combate-ataque_Frame_7
+    originalName: 
+    pivot: {x: 0.46875, y: -0.15}
+    alignment: 9
+    border: {x: 0, y: 0, z: 0, w: 0}
+    rect:
+      serializedVersion: 2
+      x: 51
+      y: 100
+      width: 32
+      height: 40
+    spriteID: cab71cd529469184f8aad766df61ddf6
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 51, y: 100}
+  spriteSheetImportData: []
+  asepriteLayers:
+  - layerIndex: 0
+    guid: -355772488
+    name: maga-combate-ataque
+    layerFlags: 0
+    layerType: 0
+    blendMode: 0
+    cells:
+    - name: maga-combate-ataque_Frame_0
+      frameIndex: 0
+      cellRect:
+        x: 9
+        y: 6
+        width: 32
+        height: 40
+      spriteId: cf342b0c7905ecc449734c79f9f61444
+    - name: maga-combate-ataque_Frame_1
+      frameIndex: 1
+      cellRect:
+        x: 9
+        y: 6
+        width: 32
+        height: 40
+      spriteId: ed5689f0eafdbca4084b99ed247d9856
+    - name: maga-combate-ataque_Frame_2
+      frameIndex: 2
+      cellRect:
+        x: 3
+        y: 6
+        width: 38
+        height: 40
+      spriteId: c152afd2ccb3a2b42895bc7d0fa29a25
+    - name: maga-combate-ataque_Frame_3
+      frameIndex: 3
+      cellRect:
+        x: 2
+        y: 6
+        width: 39
+        height: 40
+      spriteId: b15df33355970024dacc85105779aeb0
+    - name: maga-combate-ataque_Frame_4
+      frameIndex: 4
+      cellRect:
+        x: 3
+        y: 6
+        width: 39
+        height: 40
+      spriteId: 39b47dc4ae0a42b488ffa5ad9baddf2d
+    - name: maga-combate-ataque_Frame_5
+      frameIndex: 5
+      cellRect:
+        x: 3
+        y: 6
+        width: 38
+        height: 40
+      spriteId: e335b288d501c534e9943de6a8d1e705
+    - name: maga-combate-ataque_Frame_6
+      frameIndex: 6
+      cellRect:
+        x: 9
+        y: 6
+        width: 32
+        height: 40
+      spriteId: 6b9a69d913de92f4398504739d2ecc35
+    - name: maga-combate-ataque_Frame_7
+      frameIndex: 7
+      cellRect:
+        x: 9
+        y: 6
+        width: 32
+        height: 40
+      spriteId: cab71cd529469184f8aad766df61ddf6
+    linkedCells: []
+    parentIndex: -1
+  platformSettings: []
+  generatePhysicsShape: 0
+  secondarySpriteTextures: []
+  spritePackingTag: 
+  canvasSize: {x: 48, y: 48}
