@@ -1,0 +1,88 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "Mountain - Ramps.tmx",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "file.lastUsedOpenFilter": "Todos los archivos (*)",
+    "fileStates": {
+        "": {
+            "scaleInDock": 1,
+            "scaleInEditor": 5.5
+        },
+        "#Sprite-0001": {
+            "scaleInDock": 4
+        },
+        "Adventure - Props.tsx": {
+            "scaleInDock": 1.5,
+            "scaleInEditor": 0.75
+        },
+        "Adventure Tiles.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 0.75
+        },
+        "C:/Users/User/Desktop/(Art Box) Aseprite/2023/23-05-12 - top down beach assets/_tiled metadata and examples/beach_tiles_dock.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/User/Desktop/(Art Box) Aseprite/2023/23-05-12 - top down beach assets/_tiled metadata and examples/beach_tiles_opaque.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/User/Desktop/(Art Box) Aseprite/2023/23-05-12 - top down beach assets/_tiled metadata and examples/beach_tiles_transparent.tmx": {
+            "scale": 1.14853515625,
+            "selectedLayer": 10,
+            "viewCenter": {
+                "x": 256.4135702746366,
+                "y": 256.4135702746365
+            }
+        },
+        "C:/Users/User/Desktop/(Art Box) Aseprite/2023/23-05-12 - top down beach assets/_tiled metadata and examples/beach_tiles_transparent.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/User/Desktop/(Art Box) Aseprite/2023/23-05-12 - top down beach assets/_tiled metadata and examples/beach_tiles_water.tsx": {
+            "scaleInDock": 1
+        },
+        "Mountain - Ramps.tmx": {
+            "expandedGroupLayers": [
+                6
+            ],
+            "expandedObjectLayers": [
+                7,
+                10,
+                5,
+                6,
+                8
+            ],
+            "scale": 2,
+            "selectedLayer": 9,
+            "viewCenter": {
+                "x": 442.75,
+                "y": 223.75
+            }
+        },
+        "Mountain - Ramps.tmx#Adventure - Props 64x32": {
+            "scaleInDock": 0.75
+        }
+    },
+    "last.imagePath": "C:/Users/User/Desktop/(Art Box) Aseprite/2023/23-07-07 - top down forest/Export/props",
+    "map.lastUsedFormat": "tmx",
+    "map.width": 20,
+    "openFiles": [
+        "Mountain - Ramps.tmx"
+    ],
+    "project": "Adventure Pack Tiled.tiled-project",
+    "recentFiles": [
+        "Mountain - Ramps.tmx",
+        "C:/Users/User/Desktop/(Art Box) Aseprite/2023/23-05-12 - top down beach assets/_tiled metadata and examples/beach_tiles_transparent.tmx",
+        "Adventure - Props.tsx",
+        "Adventure Tiles.tsx"
+    ],
+    "tileset.embedInMap": true,
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}
