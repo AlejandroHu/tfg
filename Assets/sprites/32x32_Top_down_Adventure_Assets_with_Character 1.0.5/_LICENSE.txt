@@ -1,0 +1,27 @@
+_____________________________________________________________
+LICENSE:
+(UPDATED - 27/08/2023)
+_____________________________________________________________
+(For all Assets)
+
+✔️ You can:
+
+    1 - Use the assets for both personal and commercial purposes, including games, animations, and other projects.
+    2 - Edit, modify, and manipulate the assets to suit your project's needs. 
+
+❌ You can not:
+
+    1 - Claim assets as yours.
+    2 - Redistribute, repackage, or resell these assets, whether modified or not (this includes NFTs).
+    3 - Use the assets or any derivative works in a logo, trademark, or service mark.
+    4 - Use assets in AI​ training or AI creations.
+
+Remember to encrypt asset files when distributing your projects online.
+Credit is not required, but it is greatly appreciated.
+Credit is required for open source projects.
+_____________________________________________________________
+
+Credit:
+Made by @FreddyPixelart 
+https://freddypixelart.itch.io/
+https://twitter.com/FreddyPixelart

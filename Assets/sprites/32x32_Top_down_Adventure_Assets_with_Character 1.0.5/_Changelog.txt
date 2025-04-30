@@ -1,0 +1,47 @@
+============================
+Version 1.0.1 - 2/9/2023:
+============================
+- Fixed some tiles dark pixel error.
+- Added Mountain Ramps and variants (grass/dark grass/dirt).
+- Added Mountain side variations.
+- New Props:
+	- Dead Trees
+	- Bushes
+	
+
+============================
+Version 1.0.2 - 2/9/2023:
+============================
+- Added lumberjack tree chopping animation!
+
+
+============================
+Version 1.0.3 - 17/11/2023:
+============================
+- Added many trees:
+	- Growth stages for many trees
+	- Chopped tree variants
+	- Dead tree variants
+- All props are now available as single sprites organized in themes
+
+
+============================
+Version 1.0.4 - 24/11/2023:
+============================
+- Added big tree:
+	- Chopped and Dead tree Variants
+- Added items:
+	- Wood related items (logs, branches, twigs, board)
+
+
+============================
+Version 1.0.5 - 28/11/2023:
+============================
+(Special Thanks to CubeStick!)
+- Big House Update (PART 1):
+	- Modular house tiles (Walls, foundation)
+	- Better grid alignment for all tiles (Roofs, Doors, Windows and Props)
+	- Categorized house spritesheet files
+- Added props from preview images that were missing:
+	- House foundation stairs
+- Fixed wooden fences props.
