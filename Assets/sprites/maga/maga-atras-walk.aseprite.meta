@@ -123,15 +123,15 @@ ScriptedImporter:
   animatedSpriteImportData:
   - name: maga-atras-walk_Frame_0
     originalName: 
-    pivot: {x: 0.5, y: -0.19999999}
+    pivot: {x: 0.5084746, y: -0.07692308}
     alignment: 9
     border: {x: 0, y: 0, z: 0, w: 0}
     rect:
       serializedVersion: 2
       x: 4
-      y: 72
-      width: 22
-      height: 25
+      y: 4
+      width: 118
+      height: 26
     spriteID: 43e9776d64d558046ab9a722fd2ac569
     spriteBone: []
     spriteOutline: []
@@ -140,67 +140,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 4, y: 72}
-  - name: maga-atras-walk_Frame_1
-    originalName: 
-    pivot: {x: 0.5, y: -0.1923077}
-    alignment: 9
-    border: {x: 0, y: 0, z: 0, w: 0}
-    rect:
-      serializedVersion: 2
-      x: 4
-      y: 4
-      width: 22
-      height: 26
-    spriteID: 65fc7075c3b7a504f8aa79845fd478b5
-    spriteBone: []
-    spriteOutline: []
-    vertices: []
-    spritePhysicsOutline: []
-    indices: 
-    edges: []
-    tessellationDetail: 0
-    uvTransform: {x: 4, y: 4}
-  - name: maga-atras-walk_Frame_2
-    originalName: 
-    pivot: {x: 0.5, y: -0.19999999}
-    alignment: 9
-    border: {x: 0, y: 0, z: 0, w: 0}
-    rect:
-      serializedVersion: 2
-      x: 34
-      y: 4
-      width: 22
-      height: 25
-    spriteID: 213d4ff188a2c4a46828dbd4ecf969f5
-    spriteBone: []
-    spriteOutline: []
-    vertices: []
-    spritePhysicsOutline: []
-    indices: 
-    edges: []
-    tessellationDetail: 0
-    uvTransform: {x: 34, y: 4}
-  - name: maga-atras-walk_Frame_3
-    originalName: 
-    pivot: {x: 0.5, y: -0.1923077}
-    alignment: 9
-    border: {x: 0, y: 0, z: 0, w: 0}
-    rect:
-      serializedVersion: 2
-      x: 4
-      y: 38
-      width: 22
-      height: 26
-    spriteID: 97eee2c4cac9ad740a74e0fd8bd033ea
-    spriteBone: []
-    spriteOutline: []
-    vertices: []
-    spritePhysicsOutline: []
-    indices: 
-    edges: []
-    tessellationDetail: 0
-    uvTransform: {x: 4, y: 38}
+    uvTransform: {x: 0, y: 2}
   spriteSheetImportData: []
   asepriteLayers:
   - layerIndex: 0
@@ -210,42 +150,18 @@ ScriptedImporter:
     layerType: 0
     blendMode: 0
     cells:
-    - name: maga-atras-walk_Frame_0
+    - name: maga-atras-walk
       frameIndex: 0
       cellRect:
-        x: 5
-        y: 5
-        width: 22
-        height: 25
+        x: 0
+        y: 0
+        width: 128
+        height: 32
       spriteId: 43e9776d64d558046ab9a722fd2ac569
-    - name: maga-atras-walk_Frame_1
-      frameIndex: 1
-      cellRect:
-        x: 5
-        y: 5
-        width: 22
-        height: 26
-      spriteId: 65fc7075c3b7a504f8aa79845fd478b5
-    - name: maga-atras-walk_Frame_2
-      frameIndex: 2
-      cellRect:
-        x: 5
-        y: 5
-        width: 22
-        height: 25
-      spriteId: 213d4ff188a2c4a46828dbd4ecf969f5
-    - name: maga-atras-walk_Frame_3
-      frameIndex: 3
-      cellRect:
-        x: 5
-        y: 5
-        width: 22
-        height: 26
-      spriteId: 97eee2c4cac9ad740a74e0fd8bd033ea
     linkedCells: []
     parentIndex: -1
   platformSettings: []
   generatePhysicsShape: 0
   secondarySpriteTextures: []
   spritePackingTag: 
-  canvasSize: {x: 32, y: 32}
+  canvasSize: {x: 128, y: 32}

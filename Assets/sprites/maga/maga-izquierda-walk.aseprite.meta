@@ -123,15 +123,15 @@ ScriptedImporter:
   animatedSpriteImportData:
   - name: maga-izquierda-walk_Frame_0
     originalName: 
-    pivot: {x: 0.47619048, y: -0.041666668}
+    pivot: {x: 0.50427353, y: -0.08}
     alignment: 9
     border: {x: 0, y: 0, z: 0, w: 0}
     rect:
       serializedVersion: 2
       x: 4
-      y: 70
-      width: 21
-      height: 24
+      y: 4
+      width: 117
+      height: 25
     spriteID: 3e116130ce0fe1441845fd84287036e2
     spriteBone: []
     spriteOutline: []
@@ -140,67 +140,7 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 4, y: 70}
-  - name: maga-izquierda-walk_Frame_1
-    originalName: 
-    pivot: {x: 0.47619048, y: -0.04}
-    alignment: 9
-    border: {x: 0, y: 0, z: 0, w: 0}
-    rect:
-      serializedVersion: 2
-      x: 4
-      y: 4
-      width: 21
-      height: 25
-    spriteID: dccf4d3939d95794f99ff0727072e590
-    spriteBone: []
-    spriteOutline: []
-    vertices: []
-    spritePhysicsOutline: []
-    indices: 
-    edges: []
-    tessellationDetail: 0
-    uvTransform: {x: 4, y: 4}
-  - name: maga-izquierda-walk_Frame_2
-    originalName: 
-    pivot: {x: 0.47619048, y: -0.041666668}
-    alignment: 9
-    border: {x: 0, y: 0, z: 0, w: 0}
-    rect:
-      serializedVersion: 2
-      x: 33
-      y: 4
-      width: 21
-      height: 24
-    spriteID: 295f063e161f79242b538ad2e2148114
-    spriteBone: []
-    spriteOutline: []
-    vertices: []
-    spritePhysicsOutline: []
-    indices: 
-    edges: []
-    tessellationDetail: 0
-    uvTransform: {x: 33, y: 4}
-  - name: maga-izquierda-walk_Frame_3
-    originalName: 
-    pivot: {x: 0.47619048, y: -0.04}
-    alignment: 9
-    border: {x: 0, y: 0, z: 0, w: 0}
-    rect:
-      serializedVersion: 2
-      x: 4
-      y: 37
-      width: 21
-      height: 25
-    spriteID: 922a4011acd13fc46a609a2e9bc4d809
-    spriteBone: []
-    spriteOutline: []
-    vertices: []
-    spritePhysicsOutline: []
-    indices: 
-    edges: []
-    tessellationDetail: 0
-    uvTransform: {x: 4, y: 37}
+    uvTransform: {x: -1, y: 2}
   spriteSheetImportData: []
   asepriteLayers:
   - layerIndex: 0
@@ -210,42 +150,18 @@ ScriptedImporter:
     layerType: 0
     blendMode: 0
     cells:
-    - name: maga-izquierda-walk_Frame_0
+    - name: maga-izquierda-walk
       frameIndex: 0
       cellRect:
-        x: 6
-        y: 1
-        width: 21
-        height: 24
+        x: 0
+        y: 0
+        width: 128
+        height: 32
       spriteId: 3e116130ce0fe1441845fd84287036e2
-    - name: maga-izquierda-walk_Frame_1
-      frameIndex: 1
-      cellRect:
-        x: 6
-        y: 1
-        width: 21
-        height: 25
-      spriteId: dccf4d3939d95794f99ff0727072e590
-    - name: maga-izquierda-walk_Frame_2
-      frameIndex: 2
-      cellRect:
-        x: 6
-        y: 1
-        width: 21
-        height: 24
-      spriteId: 295f063e161f79242b538ad2e2148114
-    - name: maga-izquierda-walk_Frame_3
-      frameIndex: 3
-      cellRect:
-        x: 6
-        y: 1
-        width: 21
-        height: 25
-      spriteId: 922a4011acd13fc46a609a2e9bc4d809
     linkedCells: []
     parentIndex: -1
   platformSettings: []
   generatePhysicsShape: 0
   secondarySpriteTextures: []
   spritePackingTag: 
-  canvasSize: {x: 32, y: 32}
+  canvasSize: {x: 128, y: 32}

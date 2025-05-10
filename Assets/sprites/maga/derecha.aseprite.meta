@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: f1ab5a89a2e6e3744bbc81981abed9cd
+guid: 64932813712bda9459978007a6bc3c96
 ScriptedImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -121,7 +121,7 @@ ScriptedImporter:
     tessellationDetail: 0
     uvTransform: {x: 0, y: 0}
   animatedSpriteImportData:
-  - name: maga-izquierda
+  - name: derecha
     originalName: 
     pivot: {x: 0.52380955, y: -0.08}
     alignment: 9
@@ -132,7 +132,7 @@ ScriptedImporter:
       y: 4
       width: 21
       height: 25
-    spriteID: 51fc52db4cc13454b8dbf6a8c99a31c4
+    spriteID: 99b9f330aec092a4ab92bd04bed6b5c6
     spriteBone: []
     spriteOutline: []
     vertices: []
@@ -144,20 +144,20 @@ ScriptedImporter:
   spriteSheetImportData: []
   asepriteLayers:
   - layerIndex: 0
-    guid: -986311741
-    name: maga-izquierda
+    guid: -1395335158
+    name: derecha
     layerFlags: 0
     layerType: 0
     blendMode: 0
     cells:
-    - name: maga-izquierda
+    - name: derecha
       frameIndex: 0
       cellRect:
         x: 5
         y: 2
         width: 21
         height: 25
-      spriteId: 51fc52db4cc13454b8dbf6a8c99a31c4
+      spriteId: 99b9f330aec092a4ab92bd04bed6b5c6
     linkedCells: []
     parentIndex: -1
   platformSettings: []
