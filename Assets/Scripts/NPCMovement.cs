@@ -5,104 +5,171 @@ using UnityEngine;
 public class NPCMovement : MonoBehaviour
 {
     [Header("Movement")]
-    [SerializeField] private float moveSpeed = 2f; // Velocidad de movimiento del NPC
-    private Vector2 movementDirection;
+    [SerializeField] private float moveSpeed = 2f;
+    private Vector2 currentMovementVector; // Indica si se está moviendo y en qué dirección general
     private Vector3 startPosition;
-    private Vector3 targetPosition;
 
     [Header("Animations")]
     [SerializeField] private Animator anim;
-    private string lastDirection = "Down";
+    private string lastDirectionAnimKey = "Down"; // Para la clave de animación (Up, Down, Left, Right)
 
     private Rigidbody2D rb;
 
     [Header("Movement Pattern")]
-    [SerializeField] private float moveDistance = 64f; // Cuánto se mueve el NPC (2 tiles de 32x32)
-    [SerializeField] private float waitTime = 1f; // Tiempo de espera al llegar a la posición
+    [SerializeField] private float moveDistance = 1.28f; // Ajusta según tu PixelsPerUnit o escala deseada
+    [SerializeField] private float waitTime = 1f;
 
     [Header("Movement Direction")]
-    [SerializeField] private Vector2 moveDirection = Vector2.right; // Dirección del movimiento (por defecto a la derecha)
+    [SerializeField] private Vector2 patrolDirection = Vector2.right; // Dirección base del patrón
+
+    private Coroutine movementCoroutine;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         startPosition = transform.position;
-        targetPosition = startPosition;
     }
 
     private void Start()
     {
-        StartCoroutine(MovePattern()); // Iniciar el patrón de movimiento
-    }
+        // Establecer la dirección inicial para la animación basada en la patrulla
+        if (patrolDirection.normalized != Vector2.zero)
+        {
+            UpdateLastDirectionAnimKey(patrolDirection.normalized);
+        }
+        // El currentMovementVector es (0,0) al inicio, así que HandleAnimations() pondrá Idle
+        HandleAnimations(); // Poner animación inicial (Idle + lastDirectionAnimKey)
 
-    private void FixedUpdate()
-    {
-        rb.velocity = movementDirection * moveSpeed; // Mover al NPC
+        if (movementCoroutine != null) StopCoroutine(movementCoroutine);
+        movementCoroutine = StartCoroutine(MovePattern());
     }
 
     private void HandleAnimations()
     {
         if (anim == null) return;
 
-        string animationName = movementDirection == Vector2.zero ? "Idle" : "Walking";
-        anim.Play(animationName + lastDirection); // Animación en función de la dirección
+        string statePrefix = (currentMovementVector == Vector2.zero) ? "Idle" : "Walking";
+        string fullAnimationName = statePrefix + lastDirectionAnimKey;
+
+        // Para evitar reiniciar la animación si ya se está reproduciendo (opcional, pero bueno)
+        // Esto es más útil si tus animaciones no son de loop perfecto o si Play() causa un pequeño "salto"
+        if (!anim.GetCurrentAnimatorStateInfo(0).IsName(fullAnimationName))
+        {
+            anim.Play(fullAnimationName);
+            // Para transiciones más suaves, podrías considerar anim.CrossFade en el futuro:
+            // anim.CrossFade(fullAnimationName, 0.1f); // 0.1f es la duración de la transición
+        }
+    }
+
+    private void UpdateLastDirectionAnimKey(Vector2 direction)
+    {
+        // Solo actualiza la dirección si el vector de dirección no es (casi) cero
+        // Esto evita que lastDirectionAnimKey se pierda cuando el NPC se detiene.
+        if (direction.sqrMagnitude < 0.01f) return;
+
+        if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y)) // Movimiento horizontal predomina
+        {
+            if (direction.x > 0) lastDirectionAnimKey = "Right";
+            else lastDirectionAnimKey = "Left";
+        }
+        else // Movimiento vertical predomina (o son iguales, se prioriza Y)
+        {
+            if (direction.y > 0) lastDirectionAnimKey = "Up";
+            else lastDirectionAnimKey = "Down";
+        }
     }
 
     private IEnumerator MovePattern()
     {
         while (true)
         {
-            // Determinar la dirección del movimiento
-            targetPosition = startPosition + new Vector3(moveDirection.x * moveDistance, moveDirection.y * moveDistance, 0); // Mover en la dirección seleccionada
-            yield return StartCoroutine(MoveToPosition(targetPosition));
+            Vector3 patternTargetPosition = startPosition + new Vector3(patrolDirection.x * moveDistance, patrolDirection.y * moveDistance, 0);
+            yield return StartCoroutine(MoveToPosition(patternTargetPosition));
 
             // Volver a la posición inicial
             yield return StartCoroutine(MoveToPosition(startPosition));
 
-            yield return new WaitForSeconds(waitTime); // Espera antes de repetir
+            // Al llegar a startPosition, ya se habrá puesto en Idle por MoveToPosition.
+            // Así que solo esperamos.
+            yield return new WaitForSeconds(waitTime);
         }
     }
 
     private IEnumerator MoveToPosition(Vector3 target)
     {
-        Vector3 start = transform.position;
-        float distance = Vector3.Distance(start, target);
-        float startTime = Time.time;
+        Vector2 directionToTarget = (target - transform.position).normalized;
+
+        if (directionToTarget != Vector2.zero) // Solo si hay que moverse
+        {
+            currentMovementVector = directionToTarget;
+            UpdateLastDirectionAnimKey(currentMovementVector);
+            HandleAnimations(); // Inicia animación de caminar
+        }
+        else
+        {
+            currentMovementVector = Vector2.zero; // Ya está en el target
+            HandleAnimations();
+            yield break; // Salir si ya está en el objetivo
+        }
+
 
         while (Vector3.Distance(transform.position, target) > 0.05f)
         {
-            float journeyLength = (Time.time - startTime) * moveSpeed;
-            float fractionOfJourney = journeyLength / distance;
-            Vector3 newPosition = Vector3.Lerp(start, target, fractionOfJourney);
+            Vector2 currentFacingDirection = currentMovementVector.normalized;
+            if (currentFacingDirection == Vector2.zero && Vector3.Distance(transform.position, target) > 0.05f)
+            {
+                currentFacingDirection = (target - transform.position).normalized;
+            }
 
-            rb.MovePosition(newPosition); 
+            while (IsObstacleInPath(currentFacingDirection))
+            {
+                if (currentMovementVector != Vector2.zero) // Solo la primera vez que se detiene
+                {
+                    currentMovementVector = Vector2.zero;
+                    HandleAnimations(); // Poner animación de Idle
+                }
+                yield return null;
+            }
 
-            // Actualiza animaciones
-            movementDirection = (target - transform.position).normalized;
-            SetDirectionAnimation(movementDirection);
+            if (currentMovementVector == Vector2.zero && Vector3.Distance(transform.position, target) > 0.05f) // Si estaba en Idle y obstáculo se fue
+            {
+                directionToTarget = (target - transform.position).normalized;
+                currentMovementVector = directionToTarget;
+                UpdateLastDirectionAnimKey(currentMovementVector); // Actualiza la dirección antes de animar
+                HandleAnimations(); // Poner animación de caminar de nuevo
+            }
+
+            Vector3 newPosition = Vector3.MoveTowards(transform.position, target, moveSpeed * Time.deltaTime);
+            rb.MovePosition(newPosition);
+
+            // No es necesario actualizar la animación en cada frame de MoveTowards si ya está caminando en la dir correcta.
+            // HandleAnimations(); // Podría ser demasiado si se llama cada frame
 
             yield return null;
         }
 
-        rb.MovePosition(target); // Asegura posición final
-        movementDirection = Vector2.zero;
-        HandleAnimations();
+        rb.MovePosition(target);
+        currentMovementVector = Vector2.zero;
+        HandleAnimations(); // Animación de Idle al llegar
     }
 
-
-    private void SetDirectionAnimation(Vector2 direction)
+    private bool IsObstacleInPath(Vector2 direction)
     {
-        if (direction == Vector2.zero) return;
+        if (direction == Vector2.zero) return false;
 
-        if (direction.y > 0.1f)
-            lastDirection = "Up";
-        else if (direction.y < -0.1f)
-            lastDirection = "Down";
-        else if (direction.x > 0.1f)
-            lastDirection = "Right";
-        else if (direction.x < -0.1f)
-            lastDirection = "Left";
+        float checkDistance = 0.5f; // AJUSTA ESTO
+        Vector2 raycastOrigin = (Vector2)transform.position + direction * 0.1f;
 
-        HandleAnimations(); // Actualiza la animación
+        RaycastHit2D hit = Physics2D.Raycast(raycastOrigin, direction, checkDistance);
+        Debug.DrawRay(raycastOrigin, direction * checkDistance, Color.red);
+
+        if (hit.collider != null)
+        {
+            if (hit.collider.CompareTag("Player"))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
