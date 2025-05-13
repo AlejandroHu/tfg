@@ -1,32 +1,58 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
+using System.Text; // Necesario para StringBuilder
 
 public class NPCDialogue : MonoBehaviour
 {
     [Header("Contenido del Diálogo")]
     [Tooltip("Las líneas de diálogo que dirá este NPC.")]
-    [TextArea(3, 10)] // Hace que el campo de texto sea más grande en el Inspector
+    [TextArea(3, 10)]
     public string[] dialogueLines;
 
     [Tooltip("Opcional: Nombre del NPC que se mostraría en la UI de diálogo.")]
     public string npcName;
 
-    // Referencias a otros componentes del NPC (pueden ser null)
+    [Header("UI del Diálogo")]
+    [Tooltip("Arrastra aquí el GameObject del panel principal de la caja de diálogo.")]
+    [SerializeField] private GameObject dialogueBoxPanel;
+    [Tooltip("Arrastra aquí el componente TextMeshProUGUI donde se mostrará el texto del diálogo.")]
+    [SerializeField] private TextMeshProUGUI dialogueTextTMP;
+    [Tooltip("Opcional: Arrastra aquí el TextMeshProUGUI para el nombre del NPC.")]
+    [SerializeField] private TextMeshProUGUI npcNameTextTMP;
+    [Tooltip("Opcional: GameObject para el indicador de 'continuar' (ej. una flecha).")]
+    [SerializeField] private GameObject continueIndicator;
+
+
+    [Header("Efecto Máquina de Escribir y Paginación")]
+    [Tooltip("Velocidad a la que aparecen los caracteres (caracteres por segundo). 0 para instantáneo.")]
+    [SerializeField] private float typewriterSpeed = 20f;
+    [Tooltip("Número máximo aproximado de caracteres a mostrar por página. Ajusta según tu caja y fuente.")]
+    [SerializeField] private int maxCharsPerPage = 100; // ¡DEBES AJUSTAR ESTO!
+    [Tooltip("Opcional: AudioSource para el sonido de tipeo.")]
+    [SerializeField] private AudioSource typingSoundAudioSource;
+    [Tooltip("Opcional: AudioClip para el sonido de cada caracter.")]
+    [SerializeField] private AudioClip typingSoundClip;
+
+    // Referencias a otros componentes del NPC
     private Animator _animator;
     private NPCMovement _npcMovement;
     private DynamicIdleBehavior _dynamicIdleBehavior;
 
     private bool _isDialogueActive = false;
-    private int _currentDialogueLine = 0;
+    private int _currentDialogueLineIndex = 0; // Índice de la línea actual en dialogueLines
+    private int _currentSegmentStartIndex = 0; // Índice de inicio del segmento actual DENTRO de la línea actual
+    private string _fullCurrentLineText; // El texto completo de la línea actual que se está paginando
 
-    // Podríamos necesitar una referencia al Transform del jugador para saber a quién mirar
     private Transform _playerTransform;
+    private Coroutine _typewriterCoroutine;
+    private bool _isLineCurrentlyTyping = false; // Si la página actual se está escribiendo
+    private bool _isCurrentPageFinishedDisplaying = false; // Si la página actual ya se mostró completa (tipeada o saltada)
+
 
     void Awake()
     {
-        // Obtener referencias a los componentes del mismo GameObject
-        // Es importante que el Animator esté en el hijo "charactersprite" según tu estructura
         Transform characterSprite = transform.Find("CharacterSprite");
         if (characterSprite != null)
         {
@@ -34,7 +60,7 @@ public class NPCDialogue : MonoBehaviour
         }
         else
         {
-            _animator = GetComponent<Animator>(); // Fallback si no está en el hijo
+            _animator = GetComponent<Animator>();
         }
 
         _npcMovement = GetComponent<NPCMovement>();
@@ -42,79 +68,122 @@ public class NPCDialogue : MonoBehaviour
 
         if (_animator == null)
         {
-            Debug.LogWarning("NPCDialogue: No se encontró Animator en " + gameObject.name + " o su hijo 'charactersprite'. El NPC no podrá cambiar de dirección al hablar.", this);
+            Debug.LogWarning("NPCDialogue: No se encontró Animator en " + gameObject.name + " o su hijo 'CharacterSprite'.", this);
         }
+
+        if (dialogueBoxPanel == null || dialogueTextTMP == null)
+        {
+            Debug.LogError("NPCDialogue: Referencias de UI no asignadas en el Inspector para " + gameObject.name, this);
+            enabled = false;
+            return;
+        }
+        dialogueBoxPanel.SetActive(false);
+        if (continueIndicator != null) continueIndicator.SetActive(false);
     }
 
-    /// <summary>
-    /// Inicia la secuencia de diálogo con este NPC.
-    /// </summary>
-    /// <param name="playerInitiating">El Transform del jugador que inicia el diálogo.</param>
     public void StartDialogue(Transform playerInitiating)
     {
-        if (_isDialogueActive)
-        {
-            Debug.LogWarning("NPCDialogue: Se intentó iniciar un diálogo que ya estaba activo para " + gameObject.name, this);
-            return; // Evitar iniciar si ya está en diálogo
-        }
+        if (_isDialogueActive) return;
 
         _isDialogueActive = true;
         _playerTransform = playerInitiating;
-        _currentDialogueLine = 0;
+        _currentDialogueLineIndex = 0;
+        _currentSegmentStartIndex = 0; // Resetear para la primera línea
+        _isCurrentPageFinishedDisplaying = false;
 
-        Debug.Log("Diálogo iniciado con: " + (string.IsNullOrEmpty(npcName) ? gameObject.name : npcName));
 
-        // 1. Controlar el comportamiento del NPC
-        if (_npcMovement != null) // Si el NPC se mueve
+        // Controlar comportamiento del NPC
+        if (_npcMovement != null)
         {
             _npcMovement.SetMovementPaused(true);
             _npcMovement.SetIdleAndFaceTarget(_playerTransform);
         }
-        else if (_dynamicIdleBehavior != null) // Si es estático con idle dinámico
+        else if (_dynamicIdleBehavior != null)
         {
             _dynamicIdleBehavior.FocusOnTarget(_playerTransform);
         }
-        else if (_animator != null) // Si es completamente estático con solo Animator
+        else if (_animator != null)
         {
-            // Lógica simple para girar (si no tiene DynamicIdleBehavior ni NPCMovement)
             Vector2 directionToPlayer = (_playerTransform.position - transform.position).normalized;
-            string directionKey = "Down"; // Default
-
+            string directionKey = "Down";
             if (directionToPlayer.sqrMagnitude > 0.01f)
             {
                 if (Mathf.Abs(directionToPlayer.x) > Mathf.Abs(directionToPlayer.y))
-                {
                     directionKey = directionToPlayer.x > 0 ? "Right" : "Left";
-                }
                 else
-                {
                     directionKey = directionToPlayer.y > 0 ? "Up" : "Down";
-                }
             }
-
             string animationName = "Idle" + directionKey;
             if (!_animator.GetCurrentAnimatorStateInfo(0).IsName(animationName))
-            {
                 _animator.Play(animationName);
-            }
         }
 
-        // 2. Mostrar la primera línea de diálogo (o la UI de diálogo)
-        ShowNextDialogueLine();
+        // Mostrar UI y primera línea/página
+        dialogueBoxPanel.SetActive(true);
+        if (npcNameTextTMP != null)
+        {
+            npcNameTextTMP.text = string.IsNullOrEmpty(npcName) ? "" : npcName;
+            npcNameTextTMP.gameObject.SetActive(!string.IsNullOrEmpty(npcName));
+        }
+
+        ProcessCurrentLine();
     }
 
-    /// <summary>
-    /// Avanza a la siguiente línea de diálogo o termina el diálogo si no hay más.
-    /// Este método sería llamado por la UI de diálogo cuando el jugador presiona "continuar".
-    /// </summary>
     public void AdvanceDialogue()
     {
         if (!_isDialogueActive) return;
 
-        _currentDialogueLine++;
-        if (_currentDialogueLine < dialogueLines.Length)
+        if (_isLineCurrentlyTyping && _typewriterCoroutine != null)
         {
-            ShowNextDialogueLine();
+            // Si la página actual se está escribiendo, mostrarla completa instantáneamente
+            StopCoroutine(_typewriterCoroutine);
+            _typewriterCoroutine = null;
+            // Mostrar el segmento que se estaba tipeando
+            int charsToDisplay = Mathf.Min(maxCharsPerPage, _fullCurrentLineText.Length - _currentSegmentStartIndex);
+            dialogueTextTMP.text = _fullCurrentLineText.Substring(_currentSegmentStartIndex, charsToDisplay);
+
+            _isLineCurrentlyTyping = false;
+            _isCurrentPageFinishedDisplaying = true;
+            UpdateContinueIndicator();
+
+            if (typingSoundAudioSource != null && typingSoundAudioSource.isPlaying)
+            {
+                typingSoundAudioSource.Stop();
+            }
+        }
+        else // La página actual ya se mostró completa (o se saltó el tipeo)
+        {
+            _currentSegmentStartIndex += maxCharsPerPage; // Avanzar al inicio del siguiente segmento
+
+            if (_currentSegmentStartIndex < _fullCurrentLineText.Length) // Si hay más segmentos en la MISMA línea
+            {
+                DisplaySegment();
+            }
+            else // Se terminó la línea actual, pasar a la siguiente línea del array dialogueLines
+            {
+                _currentDialogueLineIndex++;
+                _currentSegmentStartIndex = 0; // Resetear para la nueva línea
+                _isCurrentPageFinishedDisplaying = false;
+
+                if (_currentDialogueLineIndex < dialogueLines.Length)
+                {
+                    ProcessCurrentLine();
+                }
+                else
+                {
+                    EndDialogue();
+                }
+            }
+        }
+    }
+
+    private void ProcessCurrentLine()
+    {
+        if (_currentDialogueLineIndex < dialogueLines.Length)
+        {
+            _fullCurrentLineText = dialogueLines[_currentDialogueLineIndex];
+            _currentSegmentStartIndex = 0; // Siempre empezar desde el inicio de la nueva línea
+            DisplaySegment();
         }
         else
         {
@@ -122,49 +191,107 @@ public class NPCDialogue : MonoBehaviour
         }
     }
 
-    private void ShowNextDialogueLine()
+    private void DisplaySegment()
     {
-        if (_currentDialogueLine < dialogueLines.Length)
+        if (string.IsNullOrEmpty(_fullCurrentLineText))
         {
-            string lineToShow = dialogueLines[_currentDialogueLine];
-            Debug.Log((string.IsNullOrEmpty(npcName) ? gameObject.name : npcName) + ": " + lineToShow);
-            // AQUÍ es donde te comunicarías con tu sistema de UI para mostrar la línea
-            // Ejemplo: UIManager.Instance.ShowDialogueText(npcName, lineToShow);
+            // Si la línea está vacía, podría ser un error o una pausa intencional.
+            // Por ahora, la trataremos como si estuviera "completa" para avanzar.
+            _isLineCurrentlyTyping = false;
+            _isCurrentPageFinishedDisplaying = true;
+            dialogueTextTMP.text = "";
+            UpdateContinueIndicator();
+            return;
+        }
+
+        int charsToDisplayCount = Mathf.Min(maxCharsPerPage, _fullCurrentLineText.Length - _currentSegmentStartIndex);
+        string segmentToDisplay = _fullCurrentLineText.Substring(_currentSegmentStartIndex, charsToDisplayCount);
+
+        if (typewriterSpeed > 0)
+        {
+            if (_typewriterCoroutine != null) StopCoroutine(_typewriterCoroutine);
+            _typewriterCoroutine = StartCoroutine(TypewriterEffect(segmentToDisplay));
+        }
+        else
+        {
+            dialogueTextTMP.text = segmentToDisplay;
+            _isLineCurrentlyTyping = false;
+            _isCurrentPageFinishedDisplaying = true;
+            UpdateContinueIndicator();
         }
     }
 
-    /// <summary>
-    /// Termina la secuencia de diálogo actual.
-    /// </summary>
+    private IEnumerator TypewriterEffect(string segment)
+    {
+        _isLineCurrentlyTyping = true;
+        _isCurrentPageFinishedDisplaying = false;
+        if (continueIndicator != null) continueIndicator.SetActive(false); // Ocultar mientras se tipea
+
+        dialogueTextTMP.text = "";
+        float delay = 1f / typewriterSpeed;
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < segment.Length; i++)
+        {
+            sb.Append(segment[i]);
+            dialogueTextTMP.text = sb.ToString(); // Actualizar con StringBuilder es más eficiente para muchos cambios
+
+            if (typingSoundAudioSource != null && typingSoundClip != null)
+            {
+                typingSoundAudioSource.PlayOneShot(typingSoundClip);
+            }
+            yield return new WaitForSeconds(delay);
+        }
+        _isLineCurrentlyTyping = false;
+        _isCurrentPageFinishedDisplaying = true;
+        _typewriterCoroutine = null;
+        UpdateContinueIndicator();
+    }
+
+    private void UpdateContinueIndicator()
+    {
+        if (continueIndicator == null) return;
+
+        bool hasMoreSegmentsInLine = _currentSegmentStartIndex + maxCharsPerPage < _fullCurrentLineText.Length;
+        bool hasMoreLinesInDialogue = _currentDialogueLineIndex < dialogueLines.Length - 1;
+
+        // Mostrar indicador si:
+        // 1. La página actual está terminada de mostrar Y
+        // 2. (Hay más segmentos en la línea actual O hay más líneas en el diálogo)
+        if (_isCurrentPageFinishedDisplaying && (hasMoreSegmentsInLine || hasMoreLinesInDialogue))
+        {
+            continueIndicator.SetActive(true);
+        }
+        else
+        {
+            continueIndicator.SetActive(false);
+        }
+    }
+
+
     public void EndDialogue()
     {
         if (!_isDialogueActive) return;
 
         _isDialogueActive = false;
-        Debug.Log("Diálogo terminado con: " + (string.IsNullOrEmpty(npcName) ? gameObject.name : npcName));
-        _playerTransform = null; // Limpiar referencia al jugador
+        if (_typewriterCoroutine != null)
+        {
+            StopCoroutine(_typewriterCoroutine);
+            _typewriterCoroutine = null;
+        }
+        _isLineCurrentlyTyping = false;
+        _isCurrentPageFinishedDisplaying = false;
 
-        // AQUÍ es donde te comunicarías con tu sistema de UI para ocultar la caja de diálogo
-        // Ejemplo: UIManager.Instance.HideDialogueBox();
+        dialogueBoxPanel.SetActive(false);
+        if (continueIndicator != null) continueIndicator.SetActive(false);
 
-        // Reanudar el comportamiento normal del NPC
+
         if (_npcMovement != null)
-        {
             _npcMovement.SetMovementPaused(false);
-        }
         else if (_dynamicIdleBehavior != null)
-        {
             _dynamicIdleBehavior.ResumeDynamicIdle();
-        }
-        else if (_animator != null)
-        {
-            // Opcional: Si el NPC es completamente estático, podrías querer que vuelva
-            // a su dirección original si la guardaste, o simplemente dejarlo como está.
-            // Por ahora, no hacemos nada, se queda mirando donde estaba el jugador.
-        }
     }
 
-    // Opcional: para comprobar desde fuera si está en diálogo
     public bool IsDialogueActive()
     {
         return _isDialogueActive;

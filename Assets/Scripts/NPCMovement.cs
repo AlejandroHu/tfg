@@ -225,9 +225,10 @@ public class NPCMovement : MonoBehaviour
 
         if (hit.collider != null)
         {
-            // Modificado para incluir "Obstacle" también, como en el script original que me pasaste
+            // MODIFICADO: Ahora comprueba si el objeto golpeado tiene el tag "Player" O "Obstacle"
             if (hit.collider.CompareTag("Player"))
             {
+                Debug.Log(gameObject.name + " detectó un obstáculo: " + hit.collider.name + " con tag: " + hit.collider.tag); // Log para depuración
                 return true;
             }
         }

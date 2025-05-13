@@ -6422,6 +6422,14 @@ MonoBehaviour:
   dialogueLines:
   - hopa
   npcName: 
+  dialogueBoxPanel: {fileID: 1831045152}
+  dialogueTextTMP: {fileID: 889296640}
+  npcNameTextTMP: {fileID: 0}
+  continueIndicator: {fileID: 0}
+  typewriterSpeed: 20
+  maxCharsPerPage: 100
+  typingSoundAudioSource: {fileID: 0}
+  typingSoundClip: {fileID: 0}
 --- !u!1 &847800117
 GameObject:
   m_ObjectHideFlags: 0
@@ -6581,8 +6589,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Esta es una l\xEDnea de prueba para ver c\xF3mo se muestra el texto dentro
-    de la caja de di\xE1logo. Deber\xEDa tener varias palabras"
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -6700,6 +6707,14 @@ MonoBehaviour:
   dialogueLines:
   - holas
   npcName: 
+  dialogueBoxPanel: {fileID: 1831045152}
+  dialogueTextTMP: {fileID: 889296640}
+  npcNameTextTMP: {fileID: 0}
+  continueIndicator: {fileID: 0}
+  typewriterSpeed: 20
+  maxCharsPerPage: 100
+  typingSoundAudioSource: {fileID: 0}
+  typingSoundClip: {fileID: 0}
 --- !u!1 &1087514398
 GameObject:
   m_ObjectHideFlags: 0
@@ -9026,12 +9041,32 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7641354691395047502, guid: a57d707fb206b7345b187577aca9d1e2, type: 3}
+      propertyPath: m_Size.x
+      value: 0.55542827
+      objectReference: {fileID: 0}
+    - target: {fileID: 7641354691395047502, guid: a57d707fb206b7345b187577aca9d1e2, type: 3}
+      propertyPath: m_Size.y
+      value: 0.632962
+      objectReference: {fileID: 0}
+    - target: {fileID: 7641354691395047502, guid: a57d707fb206b7345b187577aca9d1e2, type: 3}
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7641354691395047502, guid: a57d707fb206b7345b187577aca9d1e2, type: 3}
+      propertyPath: m_Offset.x
+      value: 0.017817274
+      objectReference: {fileID: 0}
+    - target: {fileID: 7641354691395047502, guid: a57d707fb206b7345b187577aca9d1e2, type: 3}
+      propertyPath: m_Offset.y
+      value: 0.057671666
+      objectReference: {fileID: 0}
+    - target: {fileID: 7641354691395047502, guid: a57d707fb206b7345b187577aca9d1e2, type: 3}
       propertyPath: m_IsTrigger
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9148092987484928652, guid: a57d707fb206b7345b187577aca9d1e2, type: 3}
+      propertyPath: m_TagString
+      value: Untagged
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -9076,8 +9111,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dialogueLines:
-  - hola
+  - holadadadadasdnjadkjasdhashdaksjdhasjkdhaskjdhjkasdjkhaskjdhasdhjksahkjadhasjkdhjskadhkajdshsajkdhjkasjkdhaskjdhjsakhdajkshdjksahjkdhajksdhakjskjdhasjkdjhksahjdjhashdjkajhdajkdhjkajhdkahjdjaghola
   npcName: 
+  dialogueBoxPanel: {fileID: 1831045152}
+  dialogueTextTMP: {fileID: 889296640}
+  npcNameTextTMP: {fileID: 0}
+  continueIndicator: {fileID: 0}
+  typewriterSpeed: 20
+  maxCharsPerPage: 100
+  typingSoundAudioSource: {fileID: 0}
+  typingSoundClip: {fileID: 0}
 --- !u!1 &1271968943
 GameObject:
   m_ObjectHideFlags: 0
@@ -40888,10 +40931,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   interactionKey: 101
+  advanceDialogueKey: 32
   interactionDistance: 1.5
   interactableLayer:
     serializedVersion: 2
     m_Bits: 256
+  raycastOriginOffset: 0.2
 --- !u!1 &2064630294
 GameObject:
   m_ObjectHideFlags: 0
