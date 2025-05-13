@@ -2663,7 +2663,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 833286087612537164, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.09
+      value: -0.53
       objectReference: {fileID: 0}
     - target: {fileID: 833286087612537164, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: m_LocalPosition.z
@@ -2730,7 +2730,7 @@ PrefabInstance:
       addedObject: {fileID: 1130667075}
     - targetCorrespondingSourceObject: {fileID: 9064587946877540704, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1130667076}
+      addedObject: {fileID: 1130667080}
   m_SourcePrefab: {fileID: 100100000, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
 --- !u!1 &425758235
 GameObject:
@@ -3187,7 +3187,7 @@ Transform:
   m_GameObject: {fileID: 448456730}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.02, y: -3.03, z: -10}
+  m_LocalPosition: {x: 0.63, y: -0.99, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -9000,13 +9000,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 3101032117088922978, guid: a57d707fb206b7345b187577aca9d1e2, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5240383173512556467, guid: a57d707fb206b7345b187577aca9d1e2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.02
+      value: 0.63
       objectReference: {fileID: 0}
     - target: {fileID: 5240383173512556467, guid: a57d707fb206b7345b187577aca9d1e2, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -3.03
+      value: -0.99
       objectReference: {fileID: 0}
     - target: {fileID: 5240383173512556467, guid: a57d707fb206b7345b187577aca9d1e2, type: 3}
       propertyPath: m_LocalPosition.z
@@ -9098,7 +9102,7 @@ MonoBehaviour:
   moveDistance: 1.28
   waitTime: 1
   patrolDirection: {x: 1, y: 0}
---- !u!114 &1130667076
+--- !u!114 &1130667080
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -9111,7 +9115,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dialogueLines:
-  - holadadadadasdnjadkjasdhashdaksjdhasjkdhaskjdhjkasdjkhaskjdhasdhjksahkjadhasjkdhjskadhkajdshsajkdhjkasjkdhaskjdhjsakhdajkshdjksahjkdhajksdhakjskjdhasjkdjhksahjdjhashdjkajhdajkdhjkajhdkahjdjaghola
+  - adsdasddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
   npcName: 
   dialogueBoxPanel: {fileID: 1831045152}
   dialogueTextTMP: {fileID: 889296640}
@@ -15454,7 +15458,7 @@ Transform:
   m_GameObject: {fileID: 1334863272}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.02, y: -3.03, z: -10}
+  m_LocalPosition: {x: 0.63, y: -0.99, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -40978,7 +40982,7 @@ Transform:
   m_GameObject: {fileID: 2064630294}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.82083, y: 0.10158391, z: 0}
+  m_LocalPosition: {x: -0.72, y: 0.56, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
