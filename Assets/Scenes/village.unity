@@ -8823,7 +8823,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8865abbaffd6bfd42bb987afc7d442fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 3
+  moveSpeed: 0.5
   anim: {fileID: 463316762}
   moveDistance: 3
   waitTime: 1
@@ -40672,6 +40672,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3500350217145590107, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
+      propertyPath: moveSpeed
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3500350217145590107, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
+      propertyPath: moveDistance
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 3500350217145590107, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: patrolDirection.x
       value: 0
