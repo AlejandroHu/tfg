@@ -261,7 +261,7 @@ public class NPCMovement : MonoBehaviour
 
         float checkDistance = 0.3f; // Distancia del rayo. AJUSTA ESTO según el tamaño de tus personajes/tiles.
         // Origen del rayo, con un pequeño offset para evitar que choque con el propio collider del NPC.
-        Vector2 raycastOrigin = (Vector2)transform.position + direction * 0.4f; // Offset del origen. AJUSTA ESTO.
+        Vector2 raycastOrigin = (Vector2)transform.position + direction * 0.5f; // Offset del origen. AJUSTA ESTO.
 
         // Lanza el rayo.
         RaycastHit2D hit = Physics2D.Raycast(raycastOrigin, direction, checkDistance);
