@@ -24,8 +24,9 @@ public class NPCMovement : MonoBehaviour
 
     [Header("Movement Direction")] 
     [SerializeField] private Vector2 patrolDirection = Vector2.right; // Dirección base en la que el NPC realizará su patrulla (ej: Vector2.right para moverse a la derecha).
+    [SerializeField] private LayerMask detectionLayerMask; // LayerMask para filtrar qué golpea el raycast.
 
-   
+
     private Coroutine movementCoroutine; // Referencia a la corrutina de movimiento principal (MovePattern), para poder detenerla si es necesario.
 
     // Bandera pública (solo lectura externa) para saber si el movimiento del NPC está pausado por un sistema externo (como el diálogo).
@@ -264,7 +265,7 @@ public class NPCMovement : MonoBehaviour
         Vector2 raycastOrigin = (Vector2)transform.position + direction * 0.5f; // Offset del origen. AJUSTA ESTO.
 
         // Lanza el rayo.
-        RaycastHit2D hit = Physics2D.Raycast(raycastOrigin, direction, checkDistance);
+        RaycastHit2D hit = Physics2D.Raycast(raycastOrigin, direction, checkDistance, detectionLayerMask);
         // Dibuja el rayo en la vista de Escena para depuración (solo visible en el Editor).
         Debug.DrawRay(raycastOrigin, direction * checkDistance, Color.red);
 
