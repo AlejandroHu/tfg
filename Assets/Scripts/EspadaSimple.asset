@@ -10,24 +10,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d16b24e8e4faa2c4aa097a5bad87d013, type: 3}
-  m_Name: PocionSimple
+  m_Name: EspadaSimple
   m_EditorClassIdentifier: 
-  itemID: pocion_simple_01
-  itemName: "Poci\xF3n Simple"
+  itemID: espada_simple_01
+  itemName: Espada Simple
   icon: {fileID: 0}
-  description: Restaura un poco de HP.
-  itemType: 2
-  isStackable: 1
-  maxStackSize: 10
-  isEquipable: 0
-  equipmentSlot: 0
-  attackBonus: 0
+  description: "Descripci\xF3n del objeto."
+  itemType: 0
+  isStackable: 0
+  maxStackSize: 1
+  isEquipable: 1
+  equipmentSlot: 1
+  attackBonus: 5
   defenseBonus: 0
   magicAttackBonus: 0
   magicDefenseBonus: 0
   speedBonus: 0
   maxHpBonus: 0
   maxMpBonus: 0
-  isConsumable: 1
-  hpToRestore: 25
-  mpToRestore: 25
+  isConsumable: 0
+  hpToRestore: 0
+  mpToRestore: 0
