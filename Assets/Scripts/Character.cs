@@ -1,77 +1,65 @@
-// Puedes poner esto en el mismo namespace que ItemData.cs y PlayerInventory.cs si estás usando uno.
+// Puedes poner esto en el mismo namespace que ItemData.cs si estás usando uno.
 // namespace TuJuego.Personajes
 // {
 
 using UnityEngine;
-using System.Collections.Generic; // Necesario para Dictionary
+using System.Collections.Generic; // Añadido por si se usa para equipamiento más adelante
 
+/// <summary>
+/// Clase base para representar a un personaje en el juego (jugador o NPC).
+/// </summary>
 public class Character : MonoBehaviour
 {
-
-    // Añade más si quieres ver otros stats totales
     [Header("Información Básica del Personaje")]
     public string characterName = "Personaje";
     public int level = 1;
+    [Tooltip("Sprite del retrato del personaje para mostrar en la UI (menús, party, etc.).")]
+    public Sprite portraitSprite; // <--- VARIABLE AÑADIDA
 
-    [Header("Stats Base del Personaje")]
+    [Header("Stats Básicos")]
+    public int maxHP = 100;
+    public int currentHP;
+
+    public int maxMP = 50;
+    public int currentMP;
+
+    // --- Equipamiento (Placeholder - Se desarrollará más adelante) ---
+    // Un diccionario para almacenar qué ItemData está equipado en cada EquipmentSlot.
+    public Dictionary<EquipmentSlot, ItemData> equippedItems = new Dictionary<EquipmentSlot, ItemData>();
+
+
+    // --- Stats Totales (Propiedades calculadas - Se desarrollarán más adelante) ---
+    // Estas son propiedades de solo lectura que calcularán el stat total.
+    // Por ahora, devuelven el base, pero se modificarán para incluir bonos de equipo.
+    public int MaxHP => GetStatValueWithEquipment(baseMaxHP, item => item.maxHpBonus); // Ejemplo de cómo podría ser
+    public int MaxMP => GetStatValueWithEquipment(baseMaxMP, item => item.maxMpBonus);
+    public int Attack => GetStatValueWithEquipment(baseAttack, item => item.attackBonus);
+    public int Defense => GetStatValueWithEquipment(baseDefense, item => item.defenseBonus);
+    // Stats base (puedes moverlos arriba si prefieres)
     public int baseMaxHP = 100;
     public int baseMaxMP = 50;
     public int baseAttack = 10;
     public int baseDefense = 5;
-    public int baseMagicAttack = 8;
-    public int baseMagicDefense = 4;
-    public int baseSpeed = 10;
-    // Puedes añadir más stats base según necesites
-
-    // Stats actuales (pueden ser modificados por buffs/debuffs en el futuro)
-    public int currentHP;
-    public int currentMP;
-
-    // --- Equipamiento ---
-    // Un diccionario para almacenar qué ItemData está equipado en cada EquipmentSlot.
-    // La clave es el EquipmentSlot (ej: Head, Body), y el valor es el ItemData equipado.
-    public Dictionary<EquipmentSlot, ItemData> equippedItems = new Dictionary<EquipmentSlot, ItemData>();
-
-    // --- Stats Totales (calculados con el equipo) ---
-    // Estas son propiedades de solo lectura que calculan el stat total.
-    public int MaxHP => baseMaxHP + GetEquipmentBonus(item => item.maxHpBonus);
-    public int MaxMP => baseMaxMP + GetEquipmentBonus(item => item.maxMpBonus);
-    public int Attack => baseAttack + GetEquipmentBonus(item => item.attackBonus);
-    public int Defense => baseDefense + GetEquipmentBonus(item => item.defenseBonus);
-    public int MagicAttack => baseMagicAttack + GetEquipmentBonus(item => item.magicAttackBonus);
-    public int MagicDefense => baseMagicDefense + GetEquipmentBonus(item => item.magicDefenseBonus);
-    public int Speed => baseSpeed + GetEquipmentBonus(item => item.speedBonus);
+    // ... puedes añadir más stats base y propiedades totales ...
 
 
     void Awake()
     {
-        // Inicializar el diccionario de equipamiento con todas las ranuras vacías (null).
-        InitializeEquipmentSlots();
-
-        // Inicializar HP y MP al máximo al despertar (o cargar desde datos guardados).
-        // Ahora usan las propiedades MaxHP y MaxMP que consideran los bonos del equipo.
-        currentHP = MaxHP;
-        currentMP = MaxMP;
+        InitializeEquipmentSlots(); // Asegurarse de que el diccionario esté listo
+        currentHP = MaxHP; // Usar la propiedad que considera el equipo
+        currentMP = MaxMP; // Usar la propiedad que considera el equipo
     }
-
-    void Start()
-    {
-        // Podrías querer recalcular stats aquí si el equipo se asigna en Awake de otro script
-        // o si se carga desde un guardado.
-        // RecalculateStats(); // Ejemplo de un método que podrías tener
-    }
-    // Dentro de la clase Character
-
 
     // Inicializa el diccionario de equipamiento.
     private void InitializeEquipmentSlots()
     {
-        // Itera por todos los valores del enum EquipmentSlot.
+        if (equippedItems == null)
+        {
+            equippedItems = new Dictionary<EquipmentSlot, ItemData>();
+        }
         foreach (EquipmentSlot slot in System.Enum.GetValues(typeof(EquipmentSlot)))
         {
-            // Añade cada slot al diccionario, inicialmente sin ningún objeto equipado (valor null).
-            // Se excluye EquipmentSlot.None ya que no es una ranura real de equipamiento.
-            if (slot != EquipmentSlot.None)
+            if (slot != EquipmentSlot.None && !equippedItems.ContainsKey(slot))
             {
                 equippedItems[slot] = null;
             }
@@ -79,126 +67,34 @@ public class Character : MonoBehaviour
     }
 
     /// <summary>
-    /// Calcula la bonificación total de un stat específico proveniente de todos los objetos equipados.
+    /// Helper para calcular un stat total incluyendo bonos de equipo.
     /// </summary>
-    /// <param name="statSelector">Una función que toma un ItemData y devuelve el valor del bono de stat deseado.</param>
-    /// <returns>La suma de las bonificaciones de ese stat de todos los objetos equipados.</returns>
-    private int GetEquipmentBonus(System.Func<ItemData, int> statSelector)
+    private int GetStatValueWithEquipment(int baseValue, System.Func<ItemData, int> statSelector)
     {
-        int bonus = 0;
-        // Itera por cada objeto equipado en el diccionario 'equippedItems'.
-        foreach (ItemData item in equippedItems.Values)
+        int totalBonus = 0;
+        if (equippedItems != null)
         {
-            if (item != null) // Si hay un objeto equipado en el slot.
+            foreach (ItemData item in equippedItems.Values)
             {
-                bonus += statSelector(item); // Llama a la función 'statSelector' para obtener el bono de ese objeto y lo suma.
+                if (item != null)
+                {
+                    totalBonus += statSelector(item);
+                }
             }
         }
-        return bonus;
+        return baseValue + totalBonus;
     }
 
 
     /// <summary>
-    /// Equipa un objeto al personaje en su ranura correspondiente.
-    /// Si ya hay un objeto en esa ranura, se desequipa y se devuelve al inventario.
+    /// Cura al personaje una cantidad específica de HP.
     /// </summary>
-    /// <param name="itemToEquip">El ItemData del objeto a equipar.</param>
-    /// <param name="inventory">Referencia al inventario del jugador para devolver objetos desequipados.</param>
-    /// <returns>True si el objeto se equipó con éxito, False en caso contrario.</returns>
-    public bool EquipItem(ItemData itemToEquip, PlayerInventory inventory)
-    {
-        if (itemToEquip == null || !itemToEquip.isEquipable || itemToEquip.equipmentSlot == EquipmentSlot.None)
-        {
-            Debug.LogWarning("Intento de equipar un objeto no válido o no equipable.");
-            return false; // No es un objeto equipable válido.
-        }
-
-        // AQUÍ IRÍA LA LÓGICA DE RESTRICCIONES (ej: ¿puede este personaje usar esta clase de objeto?)
-        // if (!CanThisCharacterEquip(itemToEquip)) {
-        //     Debug.Log(characterName + " no puede equipar " + itemToEquip.itemName);
-        //     return false;
-        // }
-
-        EquipmentSlot slotToEquipIn = itemToEquip.equipmentSlot;
-
-        // Comprobar si ya hay algo equipado en esa ranura.
-        ItemData previouslyEquippedItem = null;
-        if (equippedItems.TryGetValue(slotToEquipIn, out previouslyEquippedItem) && previouslyEquippedItem != null)
-        {
-            // Si había algo, desequiparlo y añadirlo de nuevo al inventario.
-            Debug.Log(characterName + " desequipó " + previouslyEquippedItem.itemName + " para equipar " + itemToEquip.itemName);
-            previouslyEquippedItem.OnUnequip(this); // Llamar al método OnUnequip del objeto.
-            if (inventory != null)
-            {
-                inventory.AddItem(previouslyEquippedItem, 1); // Añadir al inventario.
-            }
-            else
-            {
-                Debug.LogWarning("PlayerInventory no proporcionado. El objeto " + previouslyEquippedItem.itemName + " no pudo ser devuelto al inventario.");
-            }
-        }
-
-        // Equipar el nuevo objeto.
-        equippedItems[slotToEquipIn] = itemToEquip;
-        itemToEquip.OnEquip(this); // Llamar al método OnEquip del nuevo objeto.
-        Debug.Log(characterName + " equipó " + itemToEquip.itemName + " en " + slotToEquipIn);
-
-        // Recalcular HP/MP actuales si los máximos cambiaron y el personaje estaba al máximo.
-        // O simplemente asegurar que no excedan el nuevo máximo.
-        RecalculateCurrentHPMPAfterEquipmentChange();
-
-        // Aquí podrías disparar un evento OnCharacterStatsChanged o OnEquipmentChanged para que la UI se actualice.
-        return true;
-    }
-
-    /// <summary>
-    /// Desequipa un objeto de una ranura específica y lo devuelve al inventario.
-    /// </summary>
-    /// <param name="slotToUnequip">La ranura de la que se quiere desequipar el objeto.</param>
-    /// <param name="inventory">Referencia al inventario del jugador.</param>
-    /// <returns>El ItemData del objeto que fue desequipado, o null si no había nada.</returns>
-    public ItemData UnequipItem(EquipmentSlot slotToUnequip, PlayerInventory inventory)
-    {
-        if (slotToUnequip == EquipmentSlot.None) return null;
-
-        ItemData unequippedItem = null;
-        if (equippedItems.TryGetValue(slotToUnequip, out unequippedItem) && unequippedItem != null)
-        {
-            unequippedItem.OnUnequip(this); // Llamar al método OnUnequip.
-            equippedItems[slotToUnequip] = null; // Vaciar el slot en el personaje.
-
-            if (inventory != null)
-            {
-                inventory.AddItem(unequippedItem, 1); // Añadir el objeto de vuelta al inventario.
-            }
-            else
-            {
-                Debug.LogWarning("PlayerInventory no proporcionado. El objeto " + unequippedItem.itemName + " no pudo ser devuelto al inventario.");
-            }
-            Debug.Log(characterName + " desequipó " + unequippedItem.itemName + " de " + slotToUnequip);
-
-            RecalculateCurrentHPMPAfterEquipmentChange();
-            // Disparar evento de cambio de stats/equipo.
-            return unequippedItem;
-        }
-        return null; // No había nada en esa ranura.
-    }
-
-    // Método para ajustar currentHP y currentMP si los máximos cambian debido al equipo.
-    private void RecalculateCurrentHPMPAfterEquipmentChange()
-    {
-        if (currentHP > MaxHP) currentHP = MaxHP;
-        if (currentMP > MaxMP) currentMP = MaxMP;
-        // Si el personaje estaba a 0 HP y un objeto le da MaxHP, no debería revivir automáticamente.
-        // Esa lógica iría en otro lado (ej: si currentHP era 0, sigue siendo 0 a menos que se use un objeto de revivir).
-    }
-
-
-    // --- Métodos de Stats (ya los tenías) ---
+    /// <param name="amount">La cantidad de HP a restaurar.</param>
+    /// <returns>True si el HP fue restaurado (no estaba ya al máximo), False en caso contrario.</returns>
     public bool Heal(int amount)
     {
         if (amount <= 0) return false;
-        if (currentHP >= MaxHP) // Usar la propiedad MaxHP que incluye bonos
+        if (currentHP >= MaxHP)
         {
             Debug.Log(characterName + " ya tiene el HP al máximo.");
             return false;
@@ -209,10 +105,15 @@ public class Character : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// Restaura al personaje una cantidad específica de MP.
+    /// </summary>
+    /// <param name="amount">La cantidad de MP a restaurar.</param>
+    /// <returns>True si el MP fue restaurado (no estaba ya al máximo), False en caso contrario.</returns>
     public bool RestoreMana(int amount)
     {
         if (amount <= 0) return false;
-        if (currentMP >= MaxMP) // Usar la propiedad MaxMP que incluye bonos
+        if (currentMP >= MaxMP)
         {
             Debug.Log(characterName + " ya tiene el MP al máximo.");
             return false;
@@ -249,6 +150,56 @@ public class Character : MonoBehaviour
             Debug.Log(characterName + " no tiene suficiente MP para gastar " + cost + ". MP actual: " + currentMP);
             return false;
         }
+    }
+
+    // Métodos para equipar/desequipar (los que ya tenías en el documento de diseño)
+    public bool EquipItem(ItemData itemToEquip, PlayerInventory inventory)
+    {
+        if (itemToEquip == null || !itemToEquip.isEquipable || itemToEquip.equipmentSlot == EquipmentSlot.None)
+        {
+            Debug.LogWarning("Intento de equipar un objeto no válido o no equipable.");
+            return false;
+        }
+
+        EquipmentSlot slotToEquipIn = itemToEquip.equipmentSlot;
+        ItemData previouslyEquippedItem = null;
+
+        if (equippedItems.TryGetValue(slotToEquipIn, out previouslyEquippedItem) && previouslyEquippedItem != null)
+        {
+            Debug.Log(characterName + " desequipó " + previouslyEquippedItem.itemName + " para equipar " + itemToEquip.itemName);
+            previouslyEquippedItem.OnUnequip(this);
+            if (inventory != null) inventory.AddItem(previouslyEquippedItem, 1);
+            else Debug.LogWarning("PlayerInventory no proporcionado al desequipar " + previouslyEquippedItem.itemName);
+        }
+
+        equippedItems[slotToEquipIn] = itemToEquip;
+        itemToEquip.OnEquip(this);
+        Debug.Log(characterName + " equipó " + itemToEquip.itemName + " en " + slotToEquipIn);
+        RecalculateCurrentHPMPAfterEquipmentChange();
+        return true;
+    }
+
+    public ItemData UnequipItem(EquipmentSlot slotToUnequip, PlayerInventory inventory)
+    {
+        if (slotToUnequip == EquipmentSlot.None) return null;
+        ItemData unequippedItem = null;
+        if (equippedItems.TryGetValue(slotToUnequip, out unequippedItem) && unequippedItem != null)
+        {
+            unequippedItem.OnUnequip(this);
+            equippedItems[slotToUnequip] = null;
+            if (inventory != null) inventory.AddItem(unequippedItem, 1);
+            else Debug.LogWarning("PlayerInventory no proporcionado al desequipar " + unequippedItem.itemName);
+            Debug.Log(characterName + " desequipó " + unequippedItem.itemName + " de " + slotToUnequip);
+            RecalculateCurrentHPMPAfterEquipmentChange();
+            return unequippedItem;
+        }
+        return null;
+    }
+
+    private void RecalculateCurrentHPMPAfterEquipmentChange()
+    {
+        if (currentHP > MaxHP) currentHP = MaxHP;
+        if (currentMP > MaxMP) currentMP = MaxMP;
     }
 }
 

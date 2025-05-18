@@ -1,11 +1,8 @@
-// Puedes poner esto en el mismo namespace que ItemData.cs y Character.cs si estás usando uno.
-// namespace TuJuego.Inventario
-// {
-
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System; // Necesario para usar Action (eventos)
+
 // Asegúrate de que el namespace coincida si estás usando uno
 // namespace TuJuego.Inventario 
 // {
@@ -49,17 +46,12 @@ public class PlayerInventory : MonoBehaviour
 {
     [Header("Configuración del Inventario")]
     [Tooltip("Número máximo de slots diferentes que puede tener el inventario.")]
-    [SerializeField] private int maxInventorySlots = 20;
+    // --- MODIFICADO: de private a public ---
+    [SerializeField] public int maxInventorySlots = 20; // Ahora es público
 
     public List<InventorySlot> inventorySlots = new List<InventorySlot>();
 
-    // --- Evento para notificar cambios en el inventario ---
-    // 'public static event Action' define un evento al que otros scripts pueden suscribirse.
-    // 'static' significa que el evento pertenece a la clase PlayerInventory, no a una instancia.
-    // 'Action' es un delegado que no toma parámetros y no devuelve nada.
     public static event Action OnInventoryChanged;
-
-    // --- Implementación del Patrón Singleton ---
     public static PlayerInventory Instance { get; private set; }
 
     void Awake()
@@ -71,7 +63,7 @@ public class PlayerInventory : MonoBehaviour
             return;
         }
         Instance = this;
-        // DontDestroyOnLoad(gameObject); // Descomenta si quieres que persista entre escenas
+        // DontDestroyOnLoad(gameObject); 
     }
 
     public bool AddItem(ItemData itemToAdd, int quantityToAdd)
@@ -82,7 +74,7 @@ public class PlayerInventory : MonoBehaviour
             return false;
         }
 
-        bool itemAddedSuccessfully = false; // Bandera para saber si se añadió algo
+        bool itemAddedSuccessfully = false;
 
         if (itemToAdd.isStackable)
         {
@@ -97,7 +89,7 @@ public class PlayerInventory : MonoBehaviour
                     quantityToAdd -= amountToAddInThisSlot;
                     itemAddedSuccessfully = true;
 
-                    if (quantityToAdd <= 0) break; // Si ya se añadió todo en este tipo de slot
+                    if (quantityToAdd <= 0) break;
                 }
             }
         }
@@ -121,18 +113,15 @@ public class PlayerInventory : MonoBehaviour
             else
             {
                 Debug.LogWarning("PlayerInventory: Inventario lleno. No se pudo añadir todo de " + itemToAdd.itemName + ". Quedaron: " + quantityToAdd);
-                // Si se añadió algo antes de llenarse, itemAddedSuccessfully será true.
-                // Si no se pudo añadir nada, itemAddedSuccessfully será false.
-                if (itemAddedSuccessfully) OnInventoryChanged?.Invoke(); // Notificar si algo se añadió antes de llenarse
+                if (itemAddedSuccessfully) OnInventoryChanged?.Invoke();
                 return itemAddedSuccessfully;
             }
-            if (quantityToAdd <= 0) break; // Salir del while si ya se añadió todo
+            if (quantityToAdd <= 0) break;
         }
 
-        // Si se añadió o modificó algún objeto, disparar el evento.
         if (itemAddedSuccessfully)
         {
-            OnInventoryChanged?.Invoke(); // El '?' es un operador null-conditional: solo invoca si OnInventoryChanged no es null (es decir, si hay suscriptores).
+            OnInventoryChanged?.Invoke();
         }
         return itemAddedSuccessfully;
     }
@@ -147,6 +136,7 @@ public class PlayerInventory : MonoBehaviour
 
         int initialQuantityToRemove = quantityToRemove;
         bool itemRemovedSuccessfully = false;
+        bool actualRemovalHappened = false; // Para saber si realmente se quitó algo
 
         for (int i = inventorySlots.Count - 1; i >= 0; i--)
         {
@@ -154,36 +144,48 @@ public class PlayerInventory : MonoBehaviour
             if (slot.item == itemToRemove)
             {
                 itemRemovedSuccessfully = true; // Marcamos que al menos encontramos el item
-                if (slot.quantity > quantityToRemove) // Si este slot tiene más de lo que necesitamos quitar
+                int amountToRemoveFromThisSlot = 0;
+
+                if (slot.quantity > quantityToRemove)
                 {
+                    amountToRemoveFromThisSlot = quantityToRemove;
                     slot.RemoveQuantity(quantityToRemove);
-                    quantityToRemove = 0; // Ya quitamos todo lo necesario
+                    quantityToRemove = 0;
                 }
-                else // Este slot tiene igual o menos de lo que necesitamos quitar
+                else
                 {
-                    quantityToRemove -= slot.quantity; // Quitamos lo que tiene el slot
-                    inventorySlots.RemoveAt(i); // Quitar el slot porque se vació (o quitamos todo lo que tenía)
+                    amountToRemoveFromThisSlot = slot.quantity;
+                    quantityToRemove -= slot.quantity;
+                    inventorySlots.RemoveAt(i);
                 }
+                if (amountToRemoveFromThisSlot > 0) actualRemovalHappened = true;
             }
             if (quantityToRemove <= 0) break;
         }
 
-        if (itemRemovedSuccessfully && initialQuantityToRemove > quantityToRemove) // Si se quitó al menos una parte de lo solicitado
+        if (actualRemovalHappened) // Solo invocar si realmente se quitó algo
         {
-            OnInventoryChanged?.Invoke(); // Disparar el evento
+            OnInventoryChanged?.Invoke();
             if (quantityToRemove > 0)
-            { // Si no se pudo quitar todo
+            {
                 Debug.LogWarning($"PlayerInventory: No se pudo quitar la cantidad completa de {itemToRemove.itemName}. Faltaron: {quantityToRemove} de {initialQuantityToRemove} solicitados.");
-                return false; // No se completó la operación como se esperaba
+                return false;
             }
-            return true; // Se quitó la cantidad solicitada o todo lo que había.
+            return true;
+        }
+        else if (itemRemovedSuccessfully && !actualRemovalHappened)
+        {
+            // Se encontró el item pero no se quitó nada (quizás quantityToRemove era mayor a lo que había)
+            // Esto no debería pasar si la lógica de arriba es correcta y quantityToRemove es positivo.
+            // Pero si RemoveQuantity no hace nada si el valor es mayor, podría pasar.
+            // Asumiendo que RemoveQuantity siempre quita si hay algo.
         }
         else if (!itemRemovedSuccessfully)
         {
             Debug.LogWarning($"PlayerInventory: No se encontró el objeto {itemToRemove.itemName} para quitar.");
         }
 
-        return false; // No se encontró el objeto o no se pudo quitar la cantidad solicitada
+        return false;
     }
 
     public bool HasItem(ItemData itemToCheck, int quantityRequired = 1)
