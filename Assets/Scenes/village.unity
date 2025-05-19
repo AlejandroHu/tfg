@@ -12233,6 +12233,7 @@ GameObject:
   - component: {fileID: 303464370}
   - component: {fileID: 303464372}
   - component: {fileID: 303464371}
+  - component: {fileID: 303464373}
   m_Layer: 5
   m_Name: FeetSlot_UI
   m_TagString: Untagged
@@ -12298,6 +12299,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 303464369}
   m_CullTransparentMesh: 1
+--- !u!114 &303464373
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 303464369}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1b0bbc60d1fe3b4f929248eccafe80a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  slotType: 4
+  itemIconImage: {fileID: 805934460}
 --- !u!1 &372631001
 GameObject:
   m_ObjectHideFlags: 0
@@ -12370,6 +12385,7 @@ GameObject:
   - component: {fileID: 407139224}
   - component: {fileID: 407139226}
   - component: {fileID: 407139225}
+  - component: {fileID: 407139227}
   m_Layer: 5
   m_Name: BodySlot_UI
   m_TagString: Untagged
@@ -12435,6 +12451,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 407139223}
   m_CullTransparentMesh: 1
+--- !u!114 &407139227
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 407139223}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1b0bbc60d1fe3b4f929248eccafe80a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  slotType: 3
+  itemIconImage: {fileID: 965638370}
 --- !u!95 &414128135 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 6649080233084359077, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
@@ -20811,6 +20841,7 @@ GameObject:
   - component: {fileID: 1171298150}
   - component: {fileID: 1171298152}
   - component: {fileID: 1171298151}
+  - component: {fileID: 1171298153}
   m_Layer: 5
   m_Name: MainHandSlot_UI
   m_TagString: Untagged
@@ -20876,6 +20907,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1171298149}
   m_CullTransparentMesh: 1
+--- !u!114 &1171298153
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1171298149}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1b0bbc60d1fe3b4f929248eccafe80a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  slotType: 1
+  itemIconImage: {fileID: 213121806}
 --- !u!95 &1184067002 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 2497511350659952744, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
@@ -20911,6 +20956,7 @@ GameObject:
   - component: {fileID: 1251366326}
   - component: {fileID: 1251366328}
   - component: {fileID: 1251366327}
+  - component: {fileID: 1251366329}
   m_Layer: 5
   m_Name: HeadSlot_UI
   m_TagString: Untagged
@@ -20976,6 +21022,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1251366325}
   m_CullTransparentMesh: 1
+--- !u!114 &1251366329
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1251366325}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1b0bbc60d1fe3b4f929248eccafe80a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  slotType: 2
+  itemIconImage: {fileID: 188518410}
 --- !u!1 &1271968943
 GameObject:
   m_ObjectHideFlags: 0
@@ -36056,11 +36116,10 @@ MonoBehaviour:
   characterLevelText: {fileID: 861257172}
   characterStatsTextDisplay: {fileID: 250976525}
   characterEquipmentSlotsContainer: {fileID: 1404288}
-  characterEquipmentSlotUIPrefab: {fileID: 0}
   partyMemberSelectionContainer: {fileID: 1149587338}
   partyMemberSelectIconPrefab: {fileID: 0}
   inventoryDisplayPanel_EquipmentScreen: {fileID: 263997068}
-  inventorySlotUIPrefab_EquipmentScreen: {fileID: 7190846623564069650, guid: 71bdf93829e147749836ef9b0505d7dc, type: 3}
+  inventorySlotUIPrefab_ForEquipScreen: {fileID: 7190846623564069650, guid: 71bdf93829e147749836ef9b0505d7dc, type: 3}
   toggleEquipmentScreenKey: 117
 --- !u!4 &1535627017
 Transform:
@@ -55167,14 +55226,19 @@ MonoBehaviour:
   characterName: Personaje
   level: 1
   portraitSprite: {fileID: 21300000, guid: 21aaaf4b49401584387cdb2c44f43d7d, type: 3}
-  maxHP: 100
-  currentHP: 0
-  maxMP: 50
-  currentMP: 0
   baseMaxHP: 100
   baseMaxMP: 50
   baseAttack: 10
   baseDefense: 5
+  baseMagicAttack: 8
+  baseMagicDefense: 4
+  baseSpeed: 10
+  currentHP: 0
+  currentMP: 0
+  initialHeadEquipment: {fileID: 11400000, guid: 02fca8146415d154e95022b164ca7c22, type: 2}
+  initialMainHandEquipment: {fileID: 11400000, guid: 6592f52d7e74cdc439661492c9b9e155, type: 2}
+  initialBodyEquipment: {fileID: 0}
+  initialFeetEquipment: {fileID: 0}
 --- !u!1001 &2075322837
 PrefabInstance:
   m_ObjectHideFlags: 0

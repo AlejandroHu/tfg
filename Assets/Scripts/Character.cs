@@ -204,3 +204,5 @@ public class Character : MonoBehaviour
 }
 
 // } // Fin del namespace (si lo usas)
+
+
