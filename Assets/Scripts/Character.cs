@@ -45,9 +45,11 @@ public class Character : MonoBehaviour
 
     void Awake()
     {
+        
         InitializeEquipmentSlots(); // Asegurarse de que el diccionario esté listo
         currentHP = MaxHP; // Usar la propiedad que considera el equipo
         currentMP = MaxMP; // Usar la propiedad que considera el equipo
+        DontDestroyOnLoad(gameObject);
     }
 
     // Inicializa el diccionario de equipamiento.

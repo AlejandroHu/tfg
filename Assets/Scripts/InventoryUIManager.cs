@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 using System.Text;
-// using TuJuego.Inventario; // Descomenta si tus clases de inventario están en este namespace
+// using TuJuego.Inventario; // Descomenta si tus clases de inventario y personaje están en este namespace
 // using TopDown; // Si Character.cs está en el namespace TopDown
 
 public class InventoryUIManager : MonoBehaviour
@@ -17,37 +17,31 @@ public class InventoryUIManager : MonoBehaviour
     [SerializeField] private int maxSlotsToDisplay = 24;
     [SerializeField] private KeyCode toggleInventoryKey = KeyCode.I;
 
-    [Header("Panel de Detalles/Acciones del Objeto")]
-    [SerializeField] private GameObject itemInfoActionPanel;
-    [SerializeField] private RectTransform itemInfoActionPanelRect;
-    [SerializeField] private TextMeshProUGUI itemNameText;
-    [SerializeField] private TextMeshProUGUI itemDescriptionText;
-    [SerializeField] private TextMeshProUGUI itemStatsText;
-    [SerializeField] private Button useButton;
-    [SerializeField] private Button equipButton;
-    [SerializeField] private Button discardButton;
-    [Tooltip("Opcional: Botón específico para cerrar el panel de información del ítem.")]
-    [SerializeField] private Button closeInfoButton;
+    [Header("Panel de Detalles/Acciones del Objeto (Inventario Principal)")]
+    [SerializeField] private GameObject itemInfoActionPanel_MainInv; // Panel para este manager
+    [SerializeField] private RectTransform itemInfoActionPanelRect_MainInv;
+    [SerializeField] private TextMeshProUGUI itemNameText_MainInv;
+    [SerializeField] private TextMeshProUGUI itemDescriptionText_MainInv;
+    [SerializeField] private TextMeshProUGUI itemStatsText_MainInv;
+    [SerializeField] private Button useButton_MainInv;
+    [SerializeField] private Button equipButton_MainInv;
+    [SerializeField] private Button discardButton_MainInv;
+    [SerializeField] private Button closeInfoButton_MainInv;
 
     [Header("Configuración de Posición del Panel de Info")]
-    [SerializeField] private float infoPanelOffsetX = 10f;
-    [SerializeField] private float infoPanelOffsetY = 0f;
+    [SerializeField] private float infoPanelOffsetX_MainInv = 10f;
+    [SerializeField] private float infoPanelOffsetY_MainInv = 0f;
 
     [Header("Referencias del Jugador")]
-    [Tooltip("Arrastra aquí el GameObject de tu personaje jugador principal (el que tiene el script Character.cs).")]
     [SerializeField] private GameObject playerGameObject;
     private Character _playerCharacterComponent;
 
     private List<InventorySlotUI> uiSlots = new List<InventorySlotUI>();
-    private InventorySlot _currentlySelectedSlotData;
+    private InventorySlot _currentlySelectedSlotData_MainInv;
 
     void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
 
         // Validaciones
@@ -55,35 +49,21 @@ public class InventoryUIManager : MonoBehaviour
         if (slotsContainer == null) Debug.LogError("InventoryUIManager: 'slotsContainer' no asignado.", this);
         if (inventorySlotPrefab == null) Debug.LogError("InventoryUIManager: 'inventorySlotPrefab' no asignado.", this);
 
-        if (itemInfoActionPanel != null)
+        if (itemInfoActionPanel_MainInv != null)
         {
-            if (itemInfoActionPanelRect == null) itemInfoActionPanelRect = itemInfoActionPanel.GetComponent<RectTransform>();
-            if (itemInfoActionPanelRect == null) Debug.LogError("InventoryUIManager: 'itemInfoActionPanel' (" + itemInfoActionPanel.name + ") no tiene un RectTransform o no está asignado a 'itemInfoActionPanelRect'.", this);
+            if (itemInfoActionPanelRect_MainInv == null) itemInfoActionPanelRect_MainInv = itemInfoActionPanel_MainInv.GetComponent<RectTransform>();
+            if (itemInfoActionPanelRect_MainInv == null) Debug.LogError("InventoryUIManager: 'itemInfoActionPanel_MainInv' no tiene RectTransform.", this);
         }
         else
         {
-            Debug.LogWarning("InventoryUIManager: 'itemInfoActionPanel' no asignado.", this);
+            Debug.LogWarning("InventoryUIManager: 'itemInfoActionPanel_MainInv' no asignado.", this);
         }
-        if (itemNameText == null && itemInfoActionPanel != null) Debug.LogWarning("InventoryUIManager: 'itemNameText' no asignado.", this);
-        if (itemDescriptionText == null && itemInfoActionPanel != null) Debug.LogWarning("InventoryUIManager: 'itemDescriptionText' no asignado.", this);
-        if (itemStatsText == null && itemInfoActionPanel != null) Debug.LogWarning("InventoryUIManager: 'itemStatsText' no asignado.", this);
-        if (useButton == null && itemInfoActionPanel != null) Debug.LogWarning("InventoryUIManager: 'useButton' no asignado.", this);
-        if (equipButton == null && itemInfoActionPanel != null) Debug.LogWarning("InventoryUIManager: 'equipButton' no asignado.", this);
-        if (discardButton == null && itemInfoActionPanel != null) Debug.LogWarning("InventoryUIManager: 'discardButton' no asignado.", this);
-        if (closeInfoButton == null && itemInfoActionPanel != null) Debug.LogWarning("InventoryUIManager: 'closeInfoButton' no asignado.", this);
+        // ... (más validaciones para los hijos del itemInfoActionPanel_MainInv)
 
         if (playerGameObject != null)
-        {
             _playerCharacterComponent = playerGameObject.GetComponent<Character>();
-            if (_playerCharacterComponent == null)
-            {
-                Debug.LogError("InventoryUIManager: El 'playerGameObject' asignado no tiene un componente 'Character'. Las acciones 'Usar' y 'Equipar' podrían fallar.", this);
-            }
-        }
         else
-        {
-            Debug.LogWarning("InventoryUIManager: 'playerGameObject' no está asignado en el Inspector. Las acciones 'Usar' y 'Equipar' podrían no funcionar correctamente si requieren un personaje objetivo.", this);
-        }
+            Debug.LogWarning("InventoryUIManager: 'playerGameObject' no asignado.", this);
     }
 
     void OnEnable()
@@ -101,27 +81,27 @@ public class InventoryUIManager : MonoBehaviour
     void Start()
     {
         if (inventoryPanelRoot != null) inventoryPanelRoot.SetActive(false);
-        if (itemInfoActionPanel != null) itemInfoActionPanel.SetActive(false);
+        if (itemInfoActionPanel_MainInv != null) itemInfoActionPanel_MainInv.SetActive(false);
 
         InitializeInventoryUI();
 
-        if (useButton != null) useButton.onClick.AddListener(OnUseButtonClicked);
-        if (equipButton != null) equipButton.onClick.AddListener(OnEquipButtonClicked);
-        if (discardButton != null) discardButton.onClick.AddListener(OnDiscardButtonClicked);
-        if (closeInfoButton != null) closeInfoButton.onClick.AddListener(HideItemInfoActionPanel);
+        // Configurar listeners para los botones del panel de información de ESTE inventario
+        if (useButton_MainInv != null) useButton_MainInv.onClick.AddListener(OnUseButtonClicked_MainInv);
+        if (equipButton_MainInv != null) equipButton_MainInv.onClick.AddListener(OnEquipButtonClicked_MainInv);
+        if (discardButton_MainInv != null) discardButton_MainInv.onClick.AddListener(OnDiscardButtonClicked_MainInv);
+        if (closeInfoButton_MainInv != null) closeInfoButton_MainInv.onClick.AddListener(HideItemInfoActionPanel_MainInv);
     }
 
     void Update()
     {
         if (Input.GetKeyDown(toggleInventoryKey))
-        {
             ToggleInventoryPanel();
-        }
+
         if (inventoryPanelRoot != null && inventoryPanelRoot.activeSelf &&
-            itemInfoActionPanel != null && itemInfoActionPanel.activeSelf &&
+            itemInfoActionPanel_MainInv != null && itemInfoActionPanel_MainInv.activeSelf &&
             Input.GetKeyDown(KeyCode.Escape))
         {
-            HideItemInfoActionPanel();
+            HideItemInfoActionPanel_MainInv();
         }
     }
 
@@ -132,11 +112,13 @@ public class InventoryUIManager : MonoBehaviour
         for (int i = 0; i < maxSlotsToDisplay; i++)
         {
             GameObject slotGO = Instantiate(inventorySlotPrefab, slotsContainer);
-            slotGO.name = "InventorySlotUI_" + i;
+            slotGO.name = "InventorySlotUI_Main_" + i;
             InventorySlotUI slotUIComponent = slotGO.GetComponent<InventorySlotUI>();
             if (slotUIComponent != null)
             {
                 uiSlots.Add(slotUIComponent);
+                // --- SUSCRIBIR AL EVENTO DEL SLOT ---
+                slotUIComponent.OnSlotClickedAction = HandleInventorySlotClicked_MainInv; // Usar el método de este manager
                 slotUIComponent.ClearSlotDisplay();
             }
             else
@@ -149,15 +131,15 @@ public class InventoryUIManager : MonoBehaviour
         if (inventoryPanelRoot != null && inventoryPanelRoot.activeSelf)
         {
             RefreshInventoryDisplay();
-            if (_currentlySelectedSlotData != null &&
-                (_currentlySelectedSlotData.item == null || _currentlySelectedSlotData.quantity <= 0 ||
-                 (PlayerInventory.Instance != null && !PlayerInventory.Instance.HasItem(_currentlySelectedSlotData.item, 1))))
+            if (_currentlySelectedSlotData_MainInv != null &&
+                (_currentlySelectedSlotData_MainInv.item == null || _currentlySelectedSlotData_MainInv.quantity <= 0 ||
+                 (PlayerInventory.Instance != null && !PlayerInventory.Instance.HasItem(_currentlySelectedSlotData_MainInv.item, 1))))
             {
-                HideItemInfoActionPanel();
+                HideItemInfoActionPanel_MainInv();
             }
-            else if (_currentlySelectedSlotData != null && itemInfoActionPanel != null && itemInfoActionPanel.activeSelf)
+            else if (_currentlySelectedSlotData_MainInv != null && itemInfoActionPanel_MainInv != null && itemInfoActionPanel_MainInv.activeSelf)
             {
-                DisplayItemInfoAndActions(_currentlySelectedSlotData, null);
+                DisplayItemInfoAndActions_MainInv(_currentlySelectedSlotData_MainInv.item, null); // No necesitamos el rect para solo refrescar
             }
         }
     }
@@ -183,206 +165,124 @@ public class InventoryUIManager : MonoBehaviour
         if (inventoryPanelRoot.activeSelf)
         {
             RefreshInventoryDisplay();
-            HideItemInfoActionPanel();
+            HideItemInfoActionPanel_MainInv();
         }
         else
         {
-            HideItemInfoActionPanel();
+            HideItemInfoActionPanel_MainInv();
         }
     }
 
-    public void OnInventorySlotClicked(RectTransform clickedSlotRectTransform, InventorySlot clickedSlotData)
+    // --- MANEJO DE CLIC EN SLOT PARA ESTE INVENTARIO PRINCIPAL ---
+    public void HandleInventorySlotClicked_MainInv(InventorySlot clickedSlotData, RectTransform clickedSlotRectTransform)
     {
-        if (itemInfoActionPanel == null) return;
+        if (itemInfoActionPanel_MainInv == null) return;
 
         if (clickedSlotData == null || clickedSlotData.item == null)
         {
-            HideItemInfoActionPanel();
-            _currentlySelectedSlotData = null;
+            HideItemInfoActionPanel_MainInv();
+            _currentlySelectedSlotData_MainInv = null;
             return;
         }
 
-        if (itemInfoActionPanel.activeSelf && _currentlySelectedSlotData == clickedSlotData)
+        if (itemInfoActionPanel_MainInv.activeSelf && _currentlySelectedSlotData_MainInv == clickedSlotData)
         {
-            HideItemInfoActionPanel();
+            HideItemInfoActionPanel_MainInv();
             return;
         }
 
-        _currentlySelectedSlotData = clickedSlotData;
-        DisplayItemInfoAndActions(clickedSlotData, clickedSlotRectTransform);
+        _currentlySelectedSlotData_MainInv = clickedSlotData;
+        DisplayItemInfoAndActions_MainInv(clickedSlotData.item, clickedSlotRectTransform);
     }
 
-    private void DisplayItemInfoAndActions(InventorySlot slotData, RectTransform clickedSlotUITransform)
+    private void DisplayItemInfoAndActions_MainInv(ItemData item, RectTransform clickedUITransform)
     {
-        if (itemInfoActionPanel == null || slotData == null || slotData.item == null)
-        {
-            HideItemInfoActionPanel();
-            return;
-        }
-        ItemData item = slotData.item;
-        if (itemNameText != null) itemNameText.text = item.itemName;
-        if (itemDescriptionText != null) itemDescriptionText.text = item.description;
-        if (itemStatsText != null)
+        if (itemInfoActionPanel_MainInv == null || item == null) { HideItemInfoActionPanel_MainInv(); return; }
+
+        if (itemNameText_MainInv != null) itemNameText_MainInv.text = item.itemName;
+        if (itemDescriptionText_MainInv != null) itemDescriptionText_MainInv.text = item.description;
+
+        if (itemStatsText_MainInv != null)
         {
             if (item.isEquipable)
             {
                 StringBuilder statsBuilder = new StringBuilder();
                 if (item.attackBonus != 0) statsBuilder.AppendLine("Ataque: " + item.attackBonus);
-                if (item.defenseBonus != 0) statsBuilder.AppendLine("Defensa: " + item.defenseBonus);
-                if (item.magicAttackBonus != 0) statsBuilder.AppendLine("Ata. Mág: " + item.magicAttackBonus);
-                if (item.magicDefenseBonus != 0) statsBuilder.AppendLine("Def. Mág: " + item.magicDefenseBonus);
-                if (item.speedBonus != 0) statsBuilder.AppendLine("Velocidad: " + item.speedBonus);
-                if (item.maxHpBonus != 0) statsBuilder.AppendLine("HP Max: +" + item.maxHpBonus);
-                if (item.maxMpBonus != 0) statsBuilder.AppendLine("MP Max: +" + item.maxMpBonus);
-                itemStatsText.text = statsBuilder.ToString();
-                itemStatsText.gameObject.SetActive(statsBuilder.Length > 0);
+                // ... (más stats)
+                itemStatsText_MainInv.text = statsBuilder.ToString();
+                itemStatsText_MainInv.gameObject.SetActive(statsBuilder.Length > 0);
             }
             else
-                itemStatsText.gameObject.SetActive(false);
+                itemStatsText_MainInv.gameObject.SetActive(false);
         }
-        if (useButton != null) useButton.gameObject.SetActive(item.isConsumable);
-        if (equipButton != null) equipButton.gameObject.SetActive(item.isEquipable);
-        if (discardButton != null) discardButton.gameObject.SetActive(true);
 
-        if (clickedSlotUITransform != null && itemInfoActionPanelRect != null)
+        if (useButton_MainInv != null) useButton_MainInv.gameObject.SetActive(item.isConsumable);
+        if (equipButton_MainInv != null) equipButton_MainInv.gameObject.SetActive(item.isEquipable);
+        if (discardButton_MainInv != null) discardButton_MainInv.gameObject.SetActive(true);
+
+        if (clickedUITransform != null && itemInfoActionPanelRect_MainInv != null)
         {
-            itemInfoActionPanel.SetActive(true);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(itemInfoActionPanelRect);
+            itemInfoActionPanel_MainInv.SetActive(true);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(itemInfoActionPanelRect_MainInv);
             Vector3[] slotCorners = new Vector3[4];
-            clickedSlotUITransform.GetWorldCorners(slotCorners);
+            clickedUITransform.GetWorldCorners(slotCorners);
             Vector2 targetPositionForInfoPanel = new Vector2(
-                slotCorners[2].x + infoPanelOffsetX,
-                slotCorners[2].y + infoPanelOffsetY
+                slotCorners[2].x + infoPanelOffsetX_MainInv,
+                slotCorners[2].y + infoPanelOffsetY_MainInv
             );
-            itemInfoActionPanelRect.position = targetPositionForInfoPanel;
+            itemInfoActionPanelRect_MainInv.position = targetPositionForInfoPanel;
         }
-        else if (itemInfoActionPanel != null && !itemInfoActionPanel.activeSelf)
+        else if (itemInfoActionPanel_MainInv != null && !itemInfoActionPanel_MainInv.activeSelf)
         {
-            itemInfoActionPanel.SetActive(true);
+            itemInfoActionPanel_MainInv.SetActive(true);
         }
     }
 
-    public void HideItemInfoActionPanel()
+    public void HideItemInfoActionPanel_MainInv()
     {
-        if (itemInfoActionPanel != null)
-        {
-            itemInfoActionPanel.SetActive(false);
-        }
-        _currentlySelectedSlotData = null;
+        if (itemInfoActionPanel_MainInv != null) itemInfoActionPanel_MainInv.SetActive(false);
+        _currentlySelectedSlotData_MainInv = null;
     }
 
-    public void OnUseButtonClicked()
+    // --- MÉTODOS PARA LOS BOTONES DEL PANEL DE INFO DE ESTE INVENTARIO ---
+    public void OnUseButtonClicked_MainInv()
     {
-        if (_currentlySelectedSlotData != null && _currentlySelectedSlotData.item != null && _currentlySelectedSlotData.item.isConsumable)
+        if (_currentlySelectedSlotData_MainInv != null && _currentlySelectedSlotData_MainInv.item != null && _currentlySelectedSlotData_MainInv.item.isConsumable)
         {
-            Debug.Log("Botón Usar presionado para: " + _currentlySelectedSlotData.item.itemName);
-            if (_playerCharacterComponent == null)
-            {
-                Debug.LogError("InventoryUIManager: _playerCharacterComponent no está asignado. No se puede usar el objeto.", this);
-                return;
-            }
-            bool itemWasUsedSuccessfully = _currentlySelectedSlotData.item.Use(_playerCharacterComponent);
+            if (_playerCharacterComponent == null) { Debug.LogError("InventoryUIManager: _playerCharacterComponent no asignado.", this); return; }
+            bool itemWasUsedSuccessfully = _currentlySelectedSlotData_MainInv.item.Use(_playerCharacterComponent);
             if (itemWasUsedSuccessfully)
             {
-                Debug.Log(_currentlySelectedSlotData.item.itemName + " fue usado con éxito.");
-                PlayerInventory.Instance.RemoveItem(_currentlySelectedSlotData.item, 1);
+                PlayerInventory.Instance.RemoveItem(_currentlySelectedSlotData_MainInv.item, 1);
             }
-            else
-            {
-                Debug.Log(_currentlySelectedSlotData.item.itemName + " no se pudo usar o no tuvo efecto.");
-            }
-        }
-        else
-        {
-            Debug.LogWarning("OnUseButtonClicked: No hay un objeto consumible seleccionado o _playerCharacterComponent no está asignado.");
         }
     }
 
-    public void OnEquipButtonClicked()
+    public void OnEquipButtonClicked_MainInv()
     {
-        if (_currentlySelectedSlotData != null && _currentlySelectedSlotData.item != null && _currentlySelectedSlotData.item.isEquipable)
+        if (_currentlySelectedSlotData_MainInv != null && _currentlySelectedSlotData_MainInv.item != null && _currentlySelectedSlotData_MainInv.item.isEquipable)
         {
-            Debug.Log("Botón Equipar presionado para: " + _currentlySelectedSlotData.item.itemName);
-
-            if (_playerCharacterComponent == null)
+            Debug.Log("Botón Equipar (Inventario Principal) para: " + _currentlySelectedSlotData_MainInv.item.itemName);
+            // AQUÍ, EN LUGAR DE EQUIPAR DIRECTAMENTE, ABRIMOS LA PANTALLA DE EQUIPAMIENTO
+            if (EquipmentScreenManager.Instance != null)
             {
-                Debug.LogError("InventoryUIManager: _playerCharacterComponent no está asignado. No se puede equipar el objeto.", this);
-                HideItemInfoActionPanel();
-                return;
-            }
-
-            if (PlayerInventory.Instance == null)
-            {
-                Debug.LogError("InventoryUIManager: PlayerInventory.Instance no encontrado. No se puede proceder con el equipamiento.", this);
-                HideItemInfoActionPanel();
-                return;
-            }
-
-            ItemData itemToEquip = _currentlySelectedSlotData.item;
-            bool removedFromInventory = PlayerInventory.Instance.RemoveItem(itemToEquip, 1);
-
-            if (removedFromInventory)
-            {
-                bool equippedSuccessfully = _playerCharacterComponent.EquipItem(itemToEquip, PlayerInventory.Instance);
-                if (equippedSuccessfully)
-                {
-                    Debug.Log(itemToEquip.itemName + " equipado en " + _playerCharacterComponent.characterName);
-                }
-                else
-                {
-                    Debug.LogWarning(itemToEquip.itemName + " no se pudo equipar en " + _playerCharacterComponent.characterName + ". Devolviendo al inventario.");
-                    PlayerInventory.Instance.AddItem(itemToEquip, 1);
-                }
+                EquipmentScreenManager.Instance.OpenForEquipping(_currentlySelectedSlotData_MainInv.item); // Necesitaremos este método en EquipmentScreenManager
+                ToggleInventoryPanel(); // Cerrar inventario principal
             }
             else
             {
-                Debug.LogError("InventoryUIManager: No se pudo quitar " + itemToEquip.itemName + " del inventario antes de equipar.");
+                Debug.LogError("InventoryUIManager: No se encontró EquipmentScreenManager.Instance para abrir la pantalla de equipar.");
             }
-            HideItemInfoActionPanel();
-        }
-        else
-        {
-            Debug.LogWarning("OnEquipButtonClicked: No hay un objeto equipable seleccionado.");
+            HideItemInfoActionPanel_MainInv();
         }
     }
 
-    public void OnDiscardButtonClicked()
+    public void OnDiscardButtonClicked_MainInv()
     {
-        // --- Comprobaciones específicas para el descarte ---
-        if (_currentlySelectedSlotData == null)
+        if (_currentlySelectedSlotData_MainInv != null && _currentlySelectedSlotData_MainInv.item != null && PlayerInventory.Instance != null)
         {
-            Debug.LogError("OnDiscardButtonClicked: _currentlySelectedSlotData ES NULL al entrar al método. No se puede tirar.");
-            return;
+            PlayerInventory.Instance.RemoveItem(_currentlySelectedSlotData_MainInv.item, _currentlySelectedSlotData_MainInv.quantity);
+            HideItemInfoActionPanel_MainInv();
         }
-        if (_currentlySelectedSlotData.item == null)
-        {
-            Debug.LogError("OnDiscardButtonClicked: _currentlySelectedSlotData.item ES NULL. No hay objeto que tirar.");
-            return;
-        }
-        if (PlayerInventory.Instance == null)
-        {
-            Debug.LogError("OnDiscardButtonClicked: PlayerInventory.Instance ES NULL. No se puede acceder al inventario para tirar.");
-            return;
-        }
-        // --- Fin Comprobaciones ---
-
-        ItemData itemToDiscard = _currentlySelectedSlotData.item;
-        int quantityToDiscard = _currentlySelectedSlotData.quantity;
-
-        Debug.Log("Botón Tirar presionado para: " + itemToDiscard.itemName + " x" + quantityToDiscard);
-
-        bool removedSuccessfully = PlayerInventory.Instance.RemoveItem(itemToDiscard, quantityToDiscard);
-
-        if (removedSuccessfully)
-        {
-            Debug.Log(quantityToDiscard + " de " + itemToDiscard.itemName + " tirados/eliminados del inventario.");
-        }
-        else
-        {
-            Debug.LogError("InventoryUIManager: Error al intentar tirar " + itemToDiscard.itemName + ". El objeto no pudo ser eliminado del inventario (quizás la cantidad cambió inesperadamente o ya no existía).");
-        }
-
-        HideItemInfoActionPanel();
     }
 }
-

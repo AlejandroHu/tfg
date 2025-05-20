@@ -87,8 +87,9 @@ GameObject:
   - component: {fileID: 2333898875442792845}
   - component: {fileID: 1824047756946700980}
   - component: {fileID: 8294523569746723122}
+  - component: {fileID: 3149160434953517834}
   m_Layer: 5
-  m_Name: PartyMemberIcon
+  m_Name: PartyMemberSelectIcon_Prefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -196,3 +197,17 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &3149160434953517834
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8120819764177050973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ab5cddfba9543d4cbfbb012e633cc1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  characterPortraitImage: {fileID: 7277538641581395038}
+  selectionButton: {fileID: 8294523569746723122}

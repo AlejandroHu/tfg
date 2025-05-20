@@ -63,7 +63,7 @@ public class PlayerInventory : MonoBehaviour
             return;
         }
         Instance = this;
-        // DontDestroyOnLoad(gameObject); 
+         DontDestroyOnLoad(gameObject); 
     }
 
     public bool AddItem(ItemData itemToAdd, int quantityToAdd)

@@ -1,25 +1,27 @@
 using UnityEngine;
-using UnityEngine.UI;       // Necesario para el componente Image
-using TMPro;                // Necesario para TextMeshProUGUI
-using UnityEngine.EventSystems; // NECESARIO para detectar clics en UI (IPointerClickHandler)
+using UnityEngine.UI;
+using TMPro;
+using UnityEngine.EventSystems;
+using System; // Necesario para System.Action
 
-// Puedes poner esto en un namespace si estás organizando así tu código
-// namespace TuJuego.UI.Inventario
-// {
+// Asegúrate de que el namespace de ItemData y InventorySlot sea accesible
+// using TuJuego.Inventario;
 
 public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
 {
     [Header("Componentes de UI del Slot")]
     [Tooltip("Arrastra aquí la Image que mostrará el icono del objeto.")]
     [SerializeField] private Image itemIconImage;
-
     [Tooltip("Arrastra aquí el TextMeshProUGUI que mostrará la cantidad del objeto.")]
     [SerializeField] private TextMeshProUGUI quantityText;
 
     private InventorySlot _currentSlotData;
     public InventorySlot CurrentSlotData => _currentSlotData;
+    private RectTransform _rectTransform;
 
-    private RectTransform _rectTransform; // Guardar referencia a nuestro RectTransform
+    // Acción pública para que el manager que instancia este slot pueda suscribir un método.
+    // Pasará los datos del slot y el RectTransform del slot clickeado.
+    public Action<InventorySlot, RectTransform> OnSlotClickedAction;
 
     void Awake()
     {
@@ -27,53 +29,60 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
 
         if (itemIconImage == null)
         {
-            Transform iconTransform = transform.Find("ItemIcon_Image"); // Usa el nombre exacto de tu GameObject hijo
+            // Intenta encontrarlo si es un hijo con un nombre específico.
+            // Asegúrate de que "ItemIcon_Image" coincida con el nombre de tu GameObject hijo en el Prefab.
+            Transform iconTransform = transform.Find("ItemIcon_Image");
             if (iconTransform != null) itemIconImage = iconTransform.GetComponent<Image>();
+
             if (itemIconImage == null)
-                Debug.LogError("InventorySlotUI: 'itemIconImage' no asignado/encontrado en " + gameObject.name + ". Por favor, asígnalo en el Prefab.", this);
+                Debug.LogError("InventorySlotUI: 'itemIconImage' no asignado y no se encontró en los hijos de " + gameObject.name + ". Por favor, asígnalo en el Prefab.", this);
         }
 
         if (quantityText == null)
         {
-            Transform quantityTransform = transform.Find("Quantity_Text"); // Usa el nombre exacto de tu GameObject hijo
+            // Asegúrate de que "Quantity_Text" coincida con el nombre de tu GameObject hijo en el Prefab.
+            Transform quantityTransform = transform.Find("Quantity_Text");
             if (quantityTransform != null) quantityText = quantityTransform.GetComponent<TextMeshProUGUI>();
+
             if (quantityText == null)
-                Debug.LogError("InventorySlotUI: 'quantityText' no asignado/encontrado en " + gameObject.name + ". Por favor, asígnalo en el Prefab.", this);
+                Debug.LogError("InventorySlotUI: 'quantityText' no asignado y no se encontró en los hijos de " + gameObject.name + ". Por favor, asígnalo en el Prefab.", this);
         }
     }
 
     public void UpdateSlotDisplay(InventorySlot slotData)
     {
-        _currentSlotData = slotData;
+        _currentSlotData = slotData; // Guardar los datos del slot que este UI representa.
 
-        if (itemIconImage == null || quantityText == null) return;
+        if (itemIconImage == null || quantityText == null) return; // Salir si las referencias de UI no están listas.
 
         if (_currentSlotData != null && _currentSlotData.item != null && _currentSlotData.quantity > 0)
         {
-            itemIconImage.sprite = _currentSlotData.item.icon;
-            itemIconImage.enabled = true;
+            // --- Hay un objeto en este slot ---
+            itemIconImage.sprite = _currentSlotData.item.icon; // Asigna el icono del objeto.
+            itemIconImage.enabled = true;              // Asegúrate de que la imagen del icono sea visible.
 
             if (_currentSlotData.item.isStackable && _currentSlotData.quantity > 1)
             {
-                quantityText.text = "x" + _currentSlotData.quantity.ToString();
-                quantityText.gameObject.SetActive(true);
+                quantityText.text = "x" + _currentSlotData.quantity.ToString(); // Muestra la cantidad.
+                quantityText.gameObject.SetActive(true);       // Asegúrate de que el objeto de texto sea visible.
             }
             else
             {
-                quantityText.gameObject.SetActive(false);
+                quantityText.gameObject.SetActive(false);      // Oculta el texto de cantidad.
             }
         }
         else
         {
-            itemIconImage.sprite = null;
-            itemIconImage.enabled = false;
-            quantityText.gameObject.SetActive(false);
+            // --- El slot está vacío ---
+            itemIconImage.sprite = null;  // Quita cualquier icono anterior.
+            itemIconImage.enabled = false; // Oculta la imagen del icono.
+            quantityText.gameObject.SetActive(false); // Oculta el texto de cantidad.
         }
     }
 
     public void ClearSlotDisplay()
     {
-        _currentSlotData = null;
+        _currentSlotData = null; // Limpiar los datos del slot.
         if (itemIconImage != null)
         {
             itemIconImage.sprite = null;
@@ -89,15 +98,9 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
     // --- MÉTODO DE LA INTERFAZ IPointerClickHandler ---
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (InventoryUIManager.Instance == null)
-        {
-            Debug.LogError("InventorySlotUI: InventoryUIManager.Instance es null. Asegúrate de que esté en la escena y se inicialice correctamente.");
-            return;
-        }
-
-        // Llamar al método en InventoryUIManager pasando AMBOS parámetros:
-        // el RectTransform de este slot y los datos del slot (_currentSlotData, que puede ser null si el slot está vacío).
-        InventoryUIManager.Instance.OnInventorySlotClicked(_rectTransform, _currentSlotData);
+        // Si hay una acción suscrita (OnSlotClickedAction no es null), invocarla.
+        // Le pasamos los datos del slot actual (_currentSlotData, que puede ser null si el slot está vacío)
+        // y el RectTransform de este slot UI.
+        OnSlotClickedAction?.Invoke(_currentSlotData, _rectTransform);
     }
 }
-// } // Fin del namespace si lo usas

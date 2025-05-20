@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d16b24e8e4faa2c4aa097a5bad87d013, type: 3}
-  m_Name: EspadaSimple
+  m_Name: EspadaFuego
   m_EditorClassIdentifier: 
-  itemID: espada_simple_01
-  itemName: Espada Simple
-  icon: {fileID: 21300000, guid: 765e0a773ff8b854da370da179453e9e, type: 3}
+  itemID: espada_fuego_01
+  itemName: Espada Fuego
+  icon: {fileID: 21300000, guid: 0fd153212ed82744fbc62444b0215d6c, type: 3}
   description: "Descripci\xF3n del objeto."
   itemType: 0
   isStackable: 0
   maxStackSize: 1
   isEquipable: 1
   equipmentSlot: 1
-  attackBonus: 5
+  attackBonus: 40
   defenseBonus: 0
   magicAttackBonus: 0
   magicDefenseBonus: 0

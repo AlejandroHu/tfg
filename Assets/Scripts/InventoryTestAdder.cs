@@ -1,55 +1,103 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+// Asegúrate de que el namespace sea correcto si ItemData y PlayerInventory están en uno.
+// Por ejemplo, si tus scripts de inventario están en "TuJuego.Inventario":
+// using TuJuego.Inventario; 
 
 public class InventoryTestAdder : MonoBehaviour
 {
-    [Tooltip("Arrastra aquí tu asset de ItemData 'PocionSimple' desde la ventana de Proyecto.")]
-    public ItemData itemDePrueba;
-    public int cantidadAAñadir = 1;
+    [Header("Objetos de Prueba")]
+    [Tooltip("Arrastra aquí tu asset de ItemData para la 'Espada de Hierro' desde la ventana de Proyecto.")]
+    public ItemData itemEspadaDeHierro;
+
+    [Tooltip("Arrastra aquí tu asset de ItemData para la 'Espada de Acero' desde la ventana de Proyecto.")]
+    public ItemData itemEspadaDeAcero;
+
+    // Puedes añadir más items de prueba aquí si lo necesitas
+    // public ItemData itemPocion;
+    // public int cantidadPocion = 1;
+
+    [Header("Teclas de Prueba")]
+    [Tooltip("Tecla para añadir la Espada de Hierro.")]
+    [SerializeField] private KeyCode addEspadaHierroKey = KeyCode.Alpha6; // Ejemplo: Tecla 6
+
+    [Tooltip("Tecla para añadir la Espada de Acero.")]
+    [SerializeField] private KeyCode addEspadaAceroKey = KeyCode.Alpha7;  // Ejemplo: Tecla 7
+
+    // [Tooltip("Tecla para añadir Poción (si la tienes).")]
+    // [SerializeField] private KeyCode addPocionKey = KeyCode.Alpha8;
+
+    [Tooltip("Tecla para imprimir el contenido del inventario en la consola.")]
+    [SerializeField] private KeyCode printInventoryKey = KeyCode.Alpha0;
+
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha8)) // Presiona '8' para añadir
+        // Añadir Espada de Hierro
+        if (Input.GetKeyDown(addEspadaHierroKey))
         {
-            if (itemDePrueba != null && PlayerInventory.Instance != null)
+            if (itemEspadaDeHierro != null && PlayerInventory.Instance != null)
             {
-                bool anadido = PlayerInventory.Instance.AddItem(itemDePrueba, cantidadAAñadir);
-                if (anadido)
-                {
-                    Debug.Log($"Añadido {cantidadAAñadir} de {itemDePrueba.itemName} al inventario. Contenido actual:");
-                    PrintInventory();
-                }
-                else
-                {
-                    Debug.Log($"No se pudo añadir {itemDePrueba.itemName}. ¿Inventario lleno?");
-                }
+                // Las armas no suelen apilarse, así que la cantidad suele ser 1.
+                // PlayerInventory.AddItem se encargará de esto si itemEspadaDeHierro.isStackable es false.
+                bool anadido = PlayerInventory.Instance.AddItem(itemEspadaDeHierro, 1);
+                LogResultado(anadido, itemEspadaDeHierro.itemName, 1, "añadir");
+            }
+            else
+            {
+                if (itemEspadaDeHierro == null) Debug.LogWarning("InventoryTestAdder: 'itemEspadaDeHierro' no está asignado en el Inspector.");
+                if (PlayerInventory.Instance == null) Debug.LogWarning("InventoryTestAdder: PlayerInventory.Instance no encontrado.");
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.Alpha9)) // Presiona '9' para quitar
+        // Añadir Espada de Acero
+        if (Input.GetKeyDown(addEspadaAceroKey))
         {
-            if (itemDePrueba != null && PlayerInventory.Instance != null)
+            if (itemEspadaDeAcero != null && PlayerInventory.Instance != null)
             {
-                bool quitado = PlayerInventory.Instance.RemoveItem(itemDePrueba, cantidadAAñadir);
-                if (quitado)
-                {
-                    Debug.Log($"Quitados {cantidadAAñadir} de {itemDePrueba.itemName} del inventario. Contenido actual:");
-                    PrintInventory();
-                }
-                else
-                {
-                    Debug.Log($"No se pudo quitar {itemDePrueba.itemName}. ¿No había suficientes o no se encontró?");
-                }
+                bool anadido = PlayerInventory.Instance.AddItem(itemEspadaDeAcero, 1);
+                LogResultado(anadido, itemEspadaDeAcero.itemName, 1, "añadir");
+            }
+            else
+            {
+                if (itemEspadaDeAcero == null) Debug.LogWarning("InventoryTestAdder: 'itemEspadaDeAcero' no está asignado en el Inspector.");
+                if (PlayerInventory.Instance == null) Debug.LogWarning("InventoryTestAdder: PlayerInventory.Instance no encontrado.");
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.Alpha0)) // Presiona '0' para ver el inventario en consola
+        // Ejemplo para añadir poción (si lo necesitas)
+        /*
+        if (Input.GetKeyDown(addPocionKey)) 
+        {
+            if (itemPocion != null && PlayerInventory.Instance != null)
+            {
+                bool anadido = PlayerInventory.Instance.AddItem(itemPocion, cantidadPocion);
+                LogResultado(anadido, itemPocion.itemName, cantidadPocion, "añadir");
+            }
+        }
+        */
+
+        // Imprimir Inventario
+        if (Input.GetKeyDown(printInventoryKey))
         {
             PrintInventory();
         }
     }
 
+    // Método auxiliar para mostrar el resultado de la operación en consola
+    void LogResultado(bool exito, string itemName, int cantidad, string accion)
+    {
+        if (exito)
+        {
+            Debug.Log($"Se intentó {accion} {cantidad} de {itemName}. Éxito. Contenido actual del inventario:");
+            PrintInventory(); // Imprimir inventario después de una acción exitosa
+        }
+        else
+        {
+            Debug.Log($"No se pudo {accion} {cantidad} de {itemName}. ¿Inventario lleno o no había suficientes para quitar?");
+        }
+    }
+
+    // Método para imprimir el contenido actual del inventario en la consola
     void PrintInventory()
     {
         if (PlayerInventory.Instance != null)
@@ -61,12 +109,22 @@ public class InventoryTestAdder : MonoBehaviour
             }
             foreach (var slot in PlayerInventory.Instance.inventorySlots)
             {
-                if (slot.item != null)
+                // Asegurarse de que el slot y el item dentro del slot no sean nulos
+                if (slot != null && slot.item != null)
                 {
                     Debug.Log($"- {slot.item.itemName} x {slot.quantity}");
                 }
+                else if (slot == null)
+                {
+                    Debug.Log("- Slot nulo detectado en la lista (esto podría indicar un problema en cómo se añaden/quitan slots).");
+                }
+                // No es necesario un 'else' para slot.item == null si el slot existe pero está lógicamente vacío.
             }
             Debug.Log("-----------------------------");
+        }
+        else
+        {
+            Debug.Log("PlayerInventory.Instance no encontrado al intentar imprimir inventario.");
         }
     }
 }
