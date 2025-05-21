@@ -4,7 +4,6 @@ using TMPro;
 using System.Collections.Generic;
 using System.Text;
 using TopDown; // Asumiendo que PlayerMovement y Character están aquí
-
 // Asegúrate de que el namespace de tus otras clases sea correcto si los usas
 // using TuJuego.Inventario; 
 // using TuJuego.Personajes; 
@@ -63,7 +62,6 @@ public class EquipmentScreenManager : MonoBehaviour
     private ItemData _currentlySelectedItemFromEquipment;
     private EquipmentSlot _currentlySelectedEquipmentSlot;
 
-    // Lista para los UI de los iconos de selección de party
     private List<PartyMemberSelectIconUI> _partyMemberIconUIs = new List<PartyMemberSelectIconUI>();
     private Dictionary<EquipmentSlot, CharacterEquipmentSlotUI> _characterEquipmentSlotUIs = new Dictionary<EquipmentSlot, CharacterEquipmentSlotUI>();
     private List<InventorySlotUI> _inventorySlotUIs_EquipmentScreen = new List<InventorySlotUI>();
@@ -119,7 +117,7 @@ public class EquipmentScreenManager : MonoBehaviour
 
         InitializeCharacterEquipmentSlots();
         InitializeInventoryForEquipmentScreen();
-        // No llamamos a PopulatePartySelection aquí, se llamará al abrir la pantalla.
+        // No llamamos a PopulatePartySelection aquí, se hará al abrir la pantalla.
 
         // Listeners de botones del panel de información
         if (useButton_InfoPanel != null) useButton_InfoPanel.onClick.AddListener(OnUseItemClicked_InfoPanel);
@@ -148,40 +146,24 @@ public class EquipmentScreenManager : MonoBehaviour
 
         if (equipmentScreenPanel.activeSelf)
         {
-            // Al abrir, refrescar la lista de miembros de la party (por si cambió)
-            PopulatePartySelection();
+            PopulatePartySelection(); // Refrescar/Crear los iconos de la party
 
-            // Seleccionar el primer personaje de la party por defecto o el personaje jugador principal
             Character characterToDisplay = null;
-            // --- LÓGICA DE PRUEBA PARA OBTENER PERSONAJE INICIAL ---
-            // Si hay iconos de party y el primero es válido, intenta usar su personaje.
-            // Sino, busca el PlayerMovement.
-            if (_partyMemberIconUIs.Count > 0 && _partyMemberIconUIs[0] != null)
+            // --- SELECCIONAR PERSONAJE INICIAL USANDO PARTYMANAGER ---
+            if (PartyManager.Instance != null && PartyManager.Instance.CurrentPartyMembers.Count > 0)
             {
-                // Asumimos que PartyMemberSelectIconUI tiene una forma de exponer su _representedCharacter.
-                // Si no, esta lógica necesitará ajustarse o depender de un PartyManager.
-                // Por ahora, si SetupIcon fue llamado, _representedCharacter debería estar seteado en el iconUI.
-                // Necesitaríamos una propiedad pública en PartyMemberSelectIconUI para acceder a _representedCharacter.
-                // Ejemplo: public Character RepresentedCharacter => _representedCharacter;
-                // characterToDisplay = _partyMemberIconUIs[0].RepresentedCharacter; // Si tuvieras esa propiedad
-
-                // Solución temporal más simple: si hay party, y el jugador principal está en ella, lo seleccionamos.
-                // Esto aún depende de cómo obtienes tu 'currentParty' en PopulatePartySelection.
-                PlayerMovement pm = FindObjectOfType<PlayerMovement>();
-                if (pm != null)
-                {
-                    characterToDisplay = pm.GetComponent<Character>();
-                }
+                characterToDisplay = PartyManager.Instance.CurrentPartyMembers[0]; // Mostrar el primer miembro
+                Debug.Log("ESM: Personaje por defecto para mostrar: " + characterToDisplay.characterName);
             }
-            else // Si no hay iconos de party (o la lógica anterior falla)
+            else
             {
+                // Fallback si no hay PartyManager o party vacía (podría ser el jugador principal si existe solo)
                 PlayerMovement pm = FindObjectOfType<PlayerMovement>();
-                if (pm != null)
-                {
-                    characterToDisplay = pm.GetComponent<Character>();
-                }
+                if (pm != null) characterToDisplay = pm.GetComponent<Character>();
+                if (characterToDisplay == null)
+                    Debug.LogWarning("ESM: No se pudo encontrar un personaje inicial para mostrar (ni de PartyManager ni PlayerMovement).");
             }
-            // --- FIN LÓGICA DE PRUEBA ---
+            // --- FIN SELECCIÓN PERSONAJE INICIAL ---
 
             SelectCharacterForDisplay(characterToDisplay);
             RefreshInventoryForEquipmentScreen();
@@ -202,88 +184,58 @@ public class EquipmentScreenManager : MonoBehaviour
     {
         if (partyMemberSelectionContainer == null || partyMemberSelectIconPrefab == null)
         {
-            Debug.LogError("ESM: PopulatePartySelection - Falta 'partyMemberSelectionContainer' o 'partyMemberSelectIconPrefab'. No se pueden crear los iconos de selección de party.");
+            Debug.LogError("ESM: PopulatePartySelection - Falta 'partyMemberSelectionContainer' o 'partyMemberSelectIconPrefab'.");
             return;
         }
 
-        // Limpiar iconos antiguos para evitar duplicados si se llama varias veces
         foreach (Transform child in partyMemberSelectionContainer)
         {
             Destroy(child.gameObject);
         }
-        _partyMemberIconUIs.Clear(); // Limpiar la lista de referencias a los scripts UI
+        _partyMemberIconUIs.Clear();
 
-        // --- LÓGICA DE PRUEBA PARA OBTENER LA PARTY ---
-        // Esta sección debe ser reemplazada por la lógica de tu PartyManager.cs cuando lo tengas.
-        // Por ahora, crearemos una lista de prueba que solo contiene al personaje jugador principal.
-        List<Character> currentPartyForDisplay = new List<Character>();
-        PlayerMovement playerMovement = FindObjectOfType<PlayerMovement>();
-        if (playerMovement != null)
+        // --- OBTENER LA PARTY DESDE PARTYMANAGER ---
+        List<Character> partyToDisplay = new List<Character>();
+        if (PartyManager.Instance != null)
         {
-            Character mainCharacter = playerMovement.GetComponent<Character>();
-            if (mainCharacter != null)
-            {
-                currentPartyForDisplay.Add(mainCharacter);
-                // Debug.Log("ESM: PopulatePartySelection - Añadido personaje principal a la party de prueba: " + mainCharacter.characterName);
-            }
-            else
-            {
-                Debug.LogWarning("ESM: PopulatePartySelection - El GameObject con PlayerMovement no tiene un componente Character.");
-            }
+            partyToDisplay = PartyManager.Instance.CurrentPartyMembers;
+            Debug.Log("ESM: PopulatePartySelection - Obtenidos " + partyToDisplay.Count + " miembros desde PartyManager.");
         }
         else
         {
-            Debug.LogWarning("ESM: PopulatePartySelection - No se encontró PlayerMovement en la escena para la party de prueba.");
+            Debug.LogWarning("ESM: PopulatePartySelection - PartyManager.Instance es NULL. No se pueden poblar los iconos de party.");
+            // Como fallback, podrías intentar añadir el jugador principal si no hay PartyManager (como antes)
+            // PlayerMovement pm = FindObjectOfType<PlayerMovement>();
+            // if (pm != null) { Character mc = pm.GetComponent<Character>(); if (mc != null) partyToDisplay.Add(mc); }
+        }
+        // --- FIN OBTENER LA PARTY ---
+
+        if (partyToDisplay.Count == 0)
+        {
+            Debug.Log("ESM: PopulatePartySelection - No hay personajes en la party para mostrar iconos.");
+            SelectCharacterForDisplay(null); // Limpiar la UI si no hay personajes
+            return;
         }
 
-        // Ejemplo para añadir un segundo personaje de prueba (si lo tienes configurado en la escena con un script Character)
-        // GameObject otherCharacterGO = GameObject.Find("NombreDeOtroPersonajeEnEscena"); // Cambia el nombre
-        // if (otherCharacterGO != null) {
-        //    Character otherChar = otherCharacterGO.GetComponent<Character>();
-        //    if (otherChar != null && !currentPartyForDisplay.Contains(otherChar)) { // Evitar duplicados
-        //        currentPartyForDisplay.Add(otherChar);
-        //        Debug.Log("ESM: PopulatePartySelection - Añadido OTRO personaje a la party de prueba: " + otherChar.characterName);
-        //    }
-        // }
-        // --- FIN LÓGICA DE PRUEBA ---
-
-        // Cuando tengas tu PartyManager:
-        // if (PartyManager.Instance == null || PartyManager.Instance.currentPartyMembers.Count == 0)
-        // {
-        //    Debug.LogWarning("ESM: PopulatePartySelection - No hay PartyManager o no hay miembros en la party.");
-        //    SelectCharacterForDisplay(null); // Limpiar la UI del personaje si no hay party
-        //    return;
-        // }
-        // List<Character> currentPartyForDisplay = PartyManager.Instance.currentPartyMembers;
-
-
-        // Debug.Log("ESM: Poblando selección de party con " + currentPartyForDisplay.Count + " miembros.");
-        foreach (Character member in currentPartyForDisplay)
+        foreach (Character member in partyToDisplay)
         {
             if (member == null) continue;
 
-            // Instanciar el prefab del icono de selección de party
             GameObject iconGO = Instantiate(partyMemberSelectIconPrefab, partyMemberSelectionContainer);
-            iconGO.name = "PartyIcon_" + member.characterName; // Ponerle un nombre descriptivo
-
-            // Obtener el script PartyMemberSelectIconUI del icono instanciado
+            iconGO.name = "PartyIcon_" + member.characterName;
             PartyMemberSelectIconUI iconUI = iconGO.GetComponent<PartyMemberSelectIconUI>();
             if (iconUI != null)
             {
-                // Configurar el icono con los datos del personaje.
-                // El método SetupIcon en PartyMemberSelectIconUI se encarga de:
-                // 1. Guardar la referencia al 'member'.
-                // 2. Actualizar su 'characterPortraitImage'.
-                // 3. Configurar su botón para que llame a EquipmentScreenManager.Instance.SelectCharacterForDisplay(member).
-                iconUI.SetupIcon(member);
-                _partyMemberIconUIs.Add(iconUI); // Añadir a la lista para referencia futura si es necesario
+                iconUI.SetupIcon(member); // El script del icono se encarga de su botón y de llamar a SelectCharacterForDisplay
+                _partyMemberIconUIs.Add(iconUI);
             }
             else
             {
-                Debug.LogError("ESM: El prefab 'partyMemberSelectIconPrefab' (" + partyMemberSelectIconPrefab.name + ") no tiene el componente PartyMemberSelectIconUI. Asegúrate de que el script esté en el prefab raíz.", this);
+                Debug.LogError("ESM: El prefab 'partyMemberSelectIconPrefab' no tiene el componente PartyMemberSelectIconUI.", this);
             }
         }
     }
+
     private void InitializeCharacterEquipmentSlots()
     {
         if (characterEquipmentSlotsContainer == null) return; // Salir si el contenedor no está asignado.
@@ -313,33 +265,30 @@ public class EquipmentScreenManager : MonoBehaviour
     /// <param name="characterToDisplay">El personaje a mostrar. Puede ser null para limpiar la UI.</param>
     public void SelectCharacterForDisplay(Character characterToDisplay)
     {
-        _currentlyDisplayedCharacter = characterToDisplay; // Guardar el personaje actual.
-
+        _currentlyDisplayedCharacter = characterToDisplay;
         if (_currentlyDisplayedCharacter == null)
-        { // Si no hay personaje para mostrar.
-            // Limpiar los campos de la UI.
+        {
             if (characterNameText != null) characterNameText.text = "---";
             if (characterLevelText != null) characterLevelText.text = "Nvl: --";
             if (characterSpriteImage != null) { characterSpriteImage.sprite = null; characterSpriteImage.enabled = false; }
             if (characterStatsTextDisplay != null) characterStatsTextDisplay.text = "";
-            ClearCharacterEquipmentSlotsDisplay(); // Limpiar los slots de equipo.
+            ClearCharacterEquipmentSlotsDisplay();
             Debug.LogWarning("ESM: SelectCharacterForDisplay - Personaje nulo. UI limpiada.");
             return;
         }
-        Debug.Log("ESM: Mostrando equipo para: " + _currentlyDisplayedCharacter.characterName);
 
-        // Actualizar los textos e imagen del personaje.
+        Debug.Log("ESM: Mostrando información y equipo para: " + _currentlyDisplayedCharacter.characterName);
         if (characterNameText != null) characterNameText.text = _currentlyDisplayedCharacter.characterName;
         if (characterLevelText != null) characterLevelText.text = "Nvl: " + _currentlyDisplayedCharacter.level.ToString();
         if (characterSpriteImage != null)
         {
-            characterSpriteImage.sprite = _currentlyDisplayedCharacter.portraitSprite; // Asignar el retrato del personaje.
-            characterSpriteImage.enabled = (characterSpriteImage.sprite != null); // Mostrar solo si hay un sprite asignado.
+            characterSpriteImage.sprite = _currentlyDisplayedCharacter.portraitSprite;
+            characterSpriteImage.enabled = (characterSpriteImage.sprite != null);
         }
-
-        UpdateCharacterStatsDisplay(); // Actualizar los stats mostrados.
-        UpdateCharacterEquipmentSlotsDisplay(); // Actualizar los iconos del equipo.
-        RefreshInventoryForEquipmentScreen(true); // Refrescar el inventario (el 'true' podría ser para filtrar en el futuro).
+        UpdateCharacterStatsDisplay();
+        UpdateCharacterEquipmentSlotsDisplay();
+        RefreshInventoryForEquipmentScreen(true);
+        HideItemInfoActionPanel(); // Ocultar panel de info de item al cambiar de personaje
     }
 
     // Actualiza los textos de los stats del personaje actualmente mostrado.
@@ -592,7 +541,7 @@ public class EquipmentScreenManager : MonoBehaviour
     public void OnUseItemClicked_InfoPanel()
     {
         // DEBUG: Para confirmar que este método específico se está llamando
-        Debug.Log("ESM: OnUseItemClicked_InfoPanel - MÉTODO LLAMADO."); 
+        Debug.Log("ESM: OnUseItemClicked_InfoPanel - MÉTODO LLAMADO.");
         // Solo se puede usar un ítem si fue seleccionado del inventario.
         if (_currentlySelectedItemFromInventory != null && _currentlySelectedItemFromInventory.item != null && _currentlySelectedItemFromInventory.item.isConsumable)
         {
@@ -754,61 +703,47 @@ public class EquipmentScreenManager : MonoBehaviour
     /// <param name="itemToPreselect">El ItemData del objeto a preseleccionar (puede ser null).</param>
     public void OpenForEquipping(ItemData itemToPreselect)
     {
-        if (equipmentScreenPanel == null)
-        {
-            Debug.LogError("ESM: equipmentScreenPanel no está asignado. No se puede abrir la pantalla de equipamiento.");
-            return;
-        }
+        if (equipmentScreenPanel == null) return;
 
-        // Activar el panel principal de equipamiento si no lo está ya.
         if (!equipmentScreenPanel.activeSelf)
         {
-            // Llamar a ToggleEquipmentScreen en lugar de SetActive directamente
-            // para asegurar que toda la lógica de apertura se ejecute.
-            ToggleEquipmentScreen();
-            // Si ToggleEquipmentScreen ya llama a SelectCharacterForDisplay y RefreshInventory,
-            // no necesitamos hacerlo de nuevo aquí inmediatamente.
+            ToggleEquipmentScreen(); // Esto ya llama a PopulatePartySelection y SelectCharacterForDisplay(default)
         }
-        else
+        else // Si ya estaba activo, asegurar que la party y el personaje estén actualizados
         {
-            // Si ya estaba activo, igual queremos seleccionar el personaje y refrescar el inventario
-            // por si el contexto cambió.
-            Character characterToDisplay = null;
-            PlayerMovement pm = FindObjectOfType<PlayerMovement>();
-            if (pm != null) characterToDisplay = pm.GetComponent<Character>();
-            SelectCharacterForDisplay(characterToDisplay);
+            PopulatePartySelection();
+            // Si _currentlyDisplayedCharacter es null o queremos re-seleccionar el primero de la party
+            if (_currentlyDisplayedCharacter == null && PartyManager.Instance != null && PartyManager.Instance.CurrentPartyMembers.Count > 0)
+            {
+                SelectCharacterForDisplay(PartyManager.Instance.CurrentPartyMembers[0]);
+            }
+            else if (_currentlyDisplayedCharacter == null)
+            {
+                // Fallback si no hay party manager
+                PlayerMovement pm = FindObjectOfType<PlayerMovement>();
+                if (pm != null) SelectCharacterForDisplay(pm.GetComponent<Character>());
+            }
             RefreshInventoryForEquipmentScreen();
         }
 
-
         if (itemToPreselect != null)
         {
-            // Buscar el slot de UI que contiene este ítem para simular un clic o resaltarlo
-            // y mostrar su panel de información.
             bool itemFoundAndDisplayed = false;
-            // Iterar por los slots de UI del inventario en ESTA pantalla.
             for (int i = 0; i < _inventorySlotUIs_EquipmentScreen.Count; i++)
             {
                 InventorySlotUI slotUI = _inventorySlotUIs_EquipmentScreen[i];
                 if (slotUI.CurrentSlotData != null && slotUI.CurrentSlotData.item == itemToPreselect)
                 {
-                    // Encontramos el slot que contiene el ítem a preseleccionar.
-                    // Llamamos a la lógica que se ejecutaría si el jugador hiciera clic en este slot.
                     HandleInventorySlotSelectionOnEquipScreen(slotUI.CurrentSlotData, slotUI.GetComponent<RectTransform>());
                     itemFoundAndDisplayed = true;
                     break;
                 }
             }
-            if (!itemFoundAndDisplayed)
-            {
-                Debug.LogWarning("ESM: Ítem " + itemToPreselect.itemName + " no encontrado en la UI del inventario de la pantalla de equipo para preseleccionar.");
-                HideItemInfoActionPanel(); // Ocultar si no se encontró el ítem.
-            }
+            if (!itemFoundAndDisplayed) HideItemInfoActionPanel();
         }
         else
         {
-            HideItemInfoActionPanel(); // Si no hay ítem para preseleccionar, asegurar que el panel de info esté oculto.
+            HideItemInfoActionPanel();
         }
-        // Debug.Log("Pantalla de Equipamiento abierta para equipar: " + (itemToPreselect != null ? itemToPreselect.itemName : "Ningún ítem preseleccionado")); // Log más verboso
     }
 }

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemID: pocion_simple_01
   itemName: "Poci\xF3n Simple"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 122db76375aed5c4eb74707bfb438287, type: 3}
   description: Restaura un poco de HP.
   itemType: 2
   isStackable: 1

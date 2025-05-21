@@ -19,70 +19,87 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
     public InventorySlot CurrentSlotData => _currentSlotData;
     private RectTransform _rectTransform;
 
-    // Acción pública para que el manager que instancia este slot pueda suscribir un método.
-    // Pasará los datos del slot y el RectTransform del slot clickeado.
     public Action<InventorySlot, RectTransform> OnSlotClickedAction;
 
     void Awake()
     {
-        _rectTransform = GetComponent<RectTransform>(); // Obtener el RectTransform de este slot
+        _rectTransform = GetComponent<RectTransform>();
 
         if (itemIconImage == null)
         {
-            // Intenta encontrarlo si es un hijo con un nombre específico.
-            // Asegúrate de que "ItemIcon_Image" coincida con el nombre de tu GameObject hijo en el Prefab.
             Transform iconTransform = transform.Find("ItemIcon_Image");
             if (iconTransform != null) itemIconImage = iconTransform.GetComponent<Image>();
-
-            if (itemIconImage == null)
-                Debug.LogError("InventorySlotUI: 'itemIconImage' no asignado y no se encontró en los hijos de " + gameObject.name + ". Por favor, asígnalo en el Prefab.", this);
+            if (itemIconImage == null) Debug.LogError("InventorySlotUI (" + gameObject.name + "): 'itemIconImage' no asignado/encontrado.", this);
         }
-
         if (quantityText == null)
         {
-            // Asegúrate de que "Quantity_Text" coincida con el nombre de tu GameObject hijo en el Prefab.
             Transform quantityTransform = transform.Find("Quantity_Text");
             if (quantityTransform != null) quantityText = quantityTransform.GetComponent<TextMeshProUGUI>();
-
-            if (quantityText == null)
-                Debug.LogError("InventorySlotUI: 'quantityText' no asignado y no se encontró en los hijos de " + gameObject.name + ". Por favor, asígnalo en el Prefab.", this);
+            if (quantityText == null) Debug.LogError("InventorySlotUI (" + gameObject.name + "): 'quantityText' no asignado/encontrado.", this);
         }
+        // --- DEBUG: Para ver cuándo se crea cada slot UI y su estado inicial ---
+        // Debug.Log($"InventorySlotUI ({gameObject.name}): Awake. _currentSlotData es {( (_currentSlotData == null) ? "NULL" : (_currentSlotData.item != null ? _currentSlotData.item.itemName : "ITEM NULL") )}");
     }
 
     public void UpdateSlotDisplay(InventorySlot slotData)
     {
-        _currentSlotData = slotData; // Guardar los datos del slot que este UI representa.
+        string gameObjectName = gameObject.name;
+        // --- DEBUG: Qué datos está recibiendo este slot UI para mostrar ---
+        if (slotData != null && slotData.item != null)
+        {
+            Debug.Log($"InventorySlotUI ({gameObjectName}): UpdateSlotDisplay RECIBIENDO Item: {slotData.item.itemName}, Cantidad: {slotData.quantity}, SlotData HashCode: {slotData.GetHashCode()}");
+        }
+        else if (slotData != null && slotData.item == null)
+        {
+            Debug.Log($"InventorySlotUI ({gameObjectName}): UpdateSlotDisplay RECIBIENDO slotData con item NULL, Cantidad: {slotData.quantity}, SlotData HashCode: {slotData.GetHashCode()}");
+        }
+        else
+        {
+            Debug.Log($"InventorySlotUI ({gameObjectName}): UpdateSlotDisplay RECIBIENDO slotData NULL (limpiando).");
+        }
 
-        if (itemIconImage == null || quantityText == null) return; // Salir si las referencias de UI no están listas.
+        _currentSlotData = slotData; // Asignación de la referencia
+
+        // --- DEBUG: Qué datos tiene _currentSlotData INMEDIATAMENTE DESPUÉS de la asignación ---
+        if (_currentSlotData != null && _currentSlotData.item != null)
+        {
+            Debug.Log($"InventorySlotUI ({gameObjectName}): UpdateSlotDisplay ASIGNADO. _currentSlotData.item: {_currentSlotData.item.itemName}, Cantidad: {_currentSlotData.quantity}, _currentSlotData HashCode: {_currentSlotData.GetHashCode()}");
+        }
+        else
+        {
+            Debug.Log($"InventorySlotUI ({gameObjectName}): UpdateSlotDisplay ASIGNADO. _currentSlotData ahora es NULL.");
+        }
+
+        // Actualizar la UI visual
+        if (itemIconImage == null || quantityText == null) return;
 
         if (_currentSlotData != null && _currentSlotData.item != null && _currentSlotData.quantity > 0)
         {
-            // --- Hay un objeto en este slot ---
-            itemIconImage.sprite = _currentSlotData.item.icon; // Asigna el icono del objeto.
-            itemIconImage.enabled = true;              // Asegúrate de que la imagen del icono sea visible.
-
+            itemIconImage.sprite = _currentSlotData.item.icon;
+            itemIconImage.enabled = true;
             if (_currentSlotData.item.isStackable && _currentSlotData.quantity > 1)
             {
-                quantityText.text = "x" + _currentSlotData.quantity.ToString(); // Muestra la cantidad.
-                quantityText.gameObject.SetActive(true);       // Asegúrate de que el objeto de texto sea visible.
+                quantityText.text = "x" + _currentSlotData.quantity.ToString();
+                quantityText.gameObject.SetActive(true);
             }
             else
             {
-                quantityText.gameObject.SetActive(false);      // Oculta el texto de cantidad.
+                quantityText.gameObject.SetActive(false);
             }
         }
         else
         {
-            // --- El slot está vacío ---
-            itemIconImage.sprite = null;  // Quita cualquier icono anterior.
-            itemIconImage.enabled = false; // Oculta la imagen del icono.
-            quantityText.gameObject.SetActive(false); // Oculta el texto de cantidad.
+            itemIconImage.sprite = null;
+            itemIconImage.enabled = false;
+            quantityText.gameObject.SetActive(false);
         }
     }
 
     public void ClearSlotDisplay()
     {
-        _currentSlotData = null; // Limpiar los datos del slot.
+        Debug.Log($"InventorySlotUI ({gameObject.name}): ClearSlotDisplay llamado.");
+
+        _currentSlotData = null;
         if (itemIconImage != null)
         {
             itemIconImage.sprite = null;
@@ -95,12 +112,31 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    // --- MÉTODO DE LA INTERFAZ IPointerClickHandler ---
     public void OnPointerClick(PointerEventData eventData)
     {
-        // Si hay una acción suscrita (OnSlotClickedAction no es null), invocarla.
-        // Le pasamos los datos del slot actual (_currentSlotData, que puede ser null si el slot está vacío)
-        // y el RectTransform de este slot UI.
+        string itemNameOnClick = "N/A";
+        int quantityOnClick = 0;
+        int slotDataHashCodeOnClick = 0;
+
+        if (_currentSlotData != null && _currentSlotData.item != null)
+        {
+            itemNameOnClick = _currentSlotData.item.itemName;
+            quantityOnClick = _currentSlotData.quantity;
+            slotDataHashCodeOnClick = _currentSlotData.GetHashCode();
+        }
+        else if (_currentSlotData != null && _currentSlotData.item == null)
+        {
+            itemNameOnClick = "ITEM ES NULL";
+            quantityOnClick = _currentSlotData.quantity;
+            slotDataHashCodeOnClick = _currentSlotData.GetHashCode();
+        }
+        else
+        {
+            itemNameOnClick = "SLOTDATA ES NULL";
+        }
+        // --- DEBUG: Qué datos tiene _currentSlotData en el momento del clic y su HashCode ---
+        Debug.Log($"InventorySlotUI ({gameObject.name}): OnPointerClick. _currentSlotData.item es: {itemNameOnClick}, Cantidad: {quantityOnClick}, _currentSlotData HashCode: {slotDataHashCodeOnClick}");
+
         OnSlotClickedAction?.Invoke(_currentSlotData, _rectTransform);
     }
 }

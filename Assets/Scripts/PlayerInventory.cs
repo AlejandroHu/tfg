@@ -47,7 +47,7 @@ public class PlayerInventory : MonoBehaviour
     [Header("Configuración del Inventario")]
     [Tooltip("Número máximo de slots diferentes que puede tener el inventario.")]
     // --- MODIFICADO: de private a public ---
-    [SerializeField] public int maxInventorySlots = 20; // Ahora es público
+    [SerializeField] public int maxInventorySlots = 24; // Ahora es público
 
     public List<InventorySlot> inventorySlots = new List<InventorySlot>();
 
