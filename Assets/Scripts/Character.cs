@@ -1,58 +1,78 @@
-// Puedes poner esto en el mismo namespace que ItemData.cs si estás usando uno.
+using UnityEngine;
+using System.Collections.Generic; // Necesario para List y Dictionary
+
+// Puedes poner esto en un namespace si estás organizando así tu código
 // namespace TuJuego.Personajes
 // {
 
-using UnityEngine;
-using System.Collections.Generic; // Añadido por si se usa para equipamiento más adelante
+// Asegúrate de que ItemData, EquipmentSlot y AbilityData (si está en otro namespace) sean accesibles
+// using TuJuego.Inventario; // Si ItemData y EquipmentSlot están aquí
+// using TuJuego.Habilidades; // Si AbilityData está aquí
 
-/// <summary>
-/// Clase base para representar a un personaje en el juego (jugador o NPC).
-/// </summary>
 public class Character : MonoBehaviour
 {
     [Header("Información Básica del Personaje")]
-    public string characterName = "Personaje";
+    public string characterName = "PersonajeDePrueba";
     public int level = 1;
     [Tooltip("Sprite del retrato del personaje para mostrar en la UI (menús, party, etc.).")]
-    public Sprite portraitSprite; // <--- VARIABLE AÑADIDA
+    public Sprite portraitSprite;
 
-    [Header("Stats Básicos")]
-    public int maxHP = 100;
-    public int currentHP;
+    [Header("Experiencia y Progresión")]
+    [Tooltip("Puntos de experiencia actuales del personaje.")]
+    public int currentXP = 0;
+    [Tooltip("Puntos de experiencia necesarios para alcanzar el siguiente nivel.")]
+    public int experienceToNextLevel = 100;
 
-    public int maxMP = 50;
-    public int currentMP;
+    // --- NUEVO: Lista de Habilidades Conocidas ---
+    [Header("Habilidades del Personaje")]
+    [Tooltip("Lista de las habilidades que este personaje conoce y puede usar en combate.")]
+    public List<AbilityData> knownAbilities = new List<AbilityData>();
 
-    // --- Equipamiento (Placeholder - Se desarrollará más adelante) ---
-    // Un diccionario para almacenar qué ItemData está equipado en cada EquipmentSlot.
-    public Dictionary<EquipmentSlot, ItemData> equippedItems = new Dictionary<EquipmentSlot, ItemData>();
-
-
-    // --- Stats Totales (Propiedades calculadas - Se desarrollarán más adelante) ---
-    // Estas son propiedades de solo lectura que calcularán el stat total.
-    // Por ahora, devuelven el base, pero se modificarán para incluir bonos de equipo.
-    public int MaxHP => GetStatValueWithEquipment(baseMaxHP, item => item.maxHpBonus); // Ejemplo de cómo podría ser
-    public int MaxMP => GetStatValueWithEquipment(baseMaxMP, item => item.maxMpBonus);
-    public int Attack => GetStatValueWithEquipment(baseAttack, item => item.attackBonus);
-    public int Defense => GetStatValueWithEquipment(baseDefense, item => item.defenseBonus);
-    // Stats base (puedes moverlos arriba si prefieres)
+    [Header("Stats Base del Personaje")]
     public int baseMaxHP = 100;
     public int baseMaxMP = 50;
     public int baseAttack = 10;
     public int baseDefense = 5;
-    // ... puedes añadir más stats base y propiedades totales ...
+    public int baseMagicAttack = 8;
+    public int baseMagicDefense = 4;
+    public int baseSpeed = 10;
+
+    // Stats actuales
+    public int currentHP;
+    public int currentMP;
+
+    [Header("Equipo Inicial de Prueba (Opcional)")]
+    [SerializeField] private ItemData initialHeadEquipment;
+    [SerializeField] private ItemData initialMainHandEquipment;
+    [SerializeField] private ItemData initialBodyEquipment;
+    [SerializeField] private ItemData initialFeetEquipment;
+
+    public Dictionary<EquipmentSlot, ItemData> equippedItems = new Dictionary<EquipmentSlot, ItemData>();
+
+    // Propiedades para los stats totales (que consideran el equipo)
+    public int MaxHP => GetStatValueWithEquipment(baseMaxHP, item => item.maxHpBonus);
+    public int MaxMP => GetStatValueWithEquipment(baseMaxMP, item => item.maxMpBonus);
+    public int Attack => GetStatValueWithEquipment(baseAttack, item => item.attackBonus);
+    public int Defense => GetStatValueWithEquipment(baseDefense, item => item.defenseBonus);
+    public int MagicAttack => GetStatValueWithEquipment(baseMagicAttack, item => item.magicAttackBonus);
+    public int MagicDefense => GetStatValueWithEquipment(baseMagicDefense, item => item.magicDefenseBonus);
+    public int Speed => GetStatValueWithEquipment(baseSpeed, item => item.speedBonus);
 
 
     void Awake()
     {
-        
-        InitializeEquipmentSlots(); // Asegurarse de que el diccionario esté listo
-        currentHP = MaxHP; // Usar la propiedad que considera el equipo
-        currentMP = MaxMP; // Usar la propiedad que considera el equipo
         DontDestroyOnLoad(gameObject);
+        InitializeEquipmentSlots();
+
+        if (initialHeadEquipment != null) EquipItemInitially(initialHeadEquipment);
+        if (initialMainHandEquipment != null) EquipItemInitially(initialMainHandEquipment);
+        if (initialBodyEquipment != null) EquipItemInitially(initialBodyEquipment);
+        if (initialFeetEquipment != null) EquipItemInitially(initialFeetEquipment);
+
+        currentHP = MaxHP;
+        currentMP = MaxMP;
     }
 
-    // Inicializa el diccionario de equipamiento.
     private void InitializeEquipmentSlots()
     {
         if (equippedItems == null)
@@ -68,9 +88,14 @@ public class Character : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Helper para calcular un stat total incluyendo bonos de equipo.
-    /// </summary>
+    private void EquipItemInitially(ItemData itemToEquip)
+    {
+        if (itemToEquip != null && itemToEquip.isEquipable && itemToEquip.equipmentSlot != EquipmentSlot.None)
+        {
+            equippedItems[itemToEquip.equipmentSlot] = itemToEquip;
+        }
+    }
+
     private int GetStatValueWithEquipment(int baseValue, System.Func<ItemData, int> statSelector)
     {
         int totalBonus = 0;
@@ -87,96 +112,23 @@ public class Character : MonoBehaviour
         return baseValue + totalBonus;
     }
 
-
-    /// <summary>
-    /// Cura al personaje una cantidad específica de HP.
-    /// </summary>
-    /// <param name="amount">La cantidad de HP a restaurar.</param>
-    /// <returns>True si el HP fue restaurado (no estaba ya al máximo), False en caso contrario.</returns>
-    public bool Heal(int amount)
-    {
-        if (amount <= 0) return false;
-        if (currentHP >= MaxHP)
-        {
-            Debug.Log(characterName + " ya tiene el HP al máximo.");
-            return false;
-        }
-        currentHP += amount;
-        if (currentHP > MaxHP) currentHP = MaxHP;
-        Debug.Log(characterName + " se curó por " + amount + " HP. HP actual: " + currentHP + "/" + MaxHP);
-        return true;
-    }
-
-    /// <summary>
-    /// Restaura al personaje una cantidad específica de MP.
-    /// </summary>
-    /// <param name="amount">La cantidad de MP a restaurar.</param>
-    /// <returns>True si el MP fue restaurado (no estaba ya al máximo), False en caso contrario.</returns>
-    public bool RestoreMana(int amount)
-    {
-        if (amount <= 0) return false;
-        if (currentMP >= MaxMP)
-        {
-            Debug.Log(characterName + " ya tiene el MP al máximo.");
-            return false;
-        }
-        currentMP += amount;
-        if (currentMP > MaxMP) currentMP = MaxMP;
-        Debug.Log(characterName + " restauró " + amount + " MP. MP actual: " + currentMP + "/" + MaxMP);
-        return true;
-    }
-
-    public void TakeDamage(int amount)
-    {
-        if (amount <= 0) return;
-        currentHP -= amount;
-        if (currentHP < 0) currentHP = 0;
-        Debug.Log(characterName + " recibió " + amount + " de daño. HP actual: " + currentHP + "/" + MaxHP);
-        if (currentHP == 0)
-        {
-            Debug.Log(characterName + " ha sido derrotado.");
-        }
-    }
-
-    public bool SpendMana(int cost)
-    {
-        if (cost < 0) return false;
-        if (currentMP >= cost)
-        {
-            currentMP -= cost;
-            Debug.Log(characterName + " gastó " + cost + " MP. MP restante: " + currentMP + "/" + MaxMP);
-            return true;
-        }
-        else
-        {
-            Debug.Log(characterName + " no tiene suficiente MP para gastar " + cost + ". MP actual: " + currentMP);
-            return false;
-        }
-    }
-
-    // Métodos para equipar/desequipar (los que ya tenías en el documento de diseño)
     public bool EquipItem(ItemData itemToEquip, PlayerInventory inventory)
     {
         if (itemToEquip == null || !itemToEquip.isEquipable || itemToEquip.equipmentSlot == EquipmentSlot.None)
         {
-            Debug.LogWarning("Intento de equipar un objeto no válido o no equipable.");
+            Debug.LogWarning(characterName + ": Intento de equipar un objeto no válido o no equipable: " + (itemToEquip != null ? itemToEquip.itemName : "NULL"));
             return false;
         }
-
         EquipmentSlot slotToEquipIn = itemToEquip.equipmentSlot;
         ItemData previouslyEquippedItem = null;
-
         if (equippedItems.TryGetValue(slotToEquipIn, out previouslyEquippedItem) && previouslyEquippedItem != null)
         {
-            Debug.Log(characterName + " desequipó " + previouslyEquippedItem.itemName + " para equipar " + itemToEquip.itemName);
             previouslyEquippedItem.OnUnequip(this);
             if (inventory != null) inventory.AddItem(previouslyEquippedItem, 1);
             else Debug.LogWarning("PlayerInventory no proporcionado al desequipar " + previouslyEquippedItem.itemName);
         }
-
         equippedItems[slotToEquipIn] = itemToEquip;
         itemToEquip.OnEquip(this);
-        Debug.Log(characterName + " equipó " + itemToEquip.itemName + " en " + slotToEquipIn);
         RecalculateCurrentHPMPAfterEquipmentChange();
         return true;
     }
@@ -191,7 +143,6 @@ public class Character : MonoBehaviour
             equippedItems[slotToUnequip] = null;
             if (inventory != null) inventory.AddItem(unequippedItem, 1);
             else Debug.LogWarning("PlayerInventory no proporcionado al desequipar " + unequippedItem.itemName);
-            Debug.Log(characterName + " desequipó " + unequippedItem.itemName + " de " + slotToUnequip);
             RecalculateCurrentHPMPAfterEquipmentChange();
             return unequippedItem;
         }
@@ -203,8 +154,76 @@ public class Character : MonoBehaviour
         if (currentHP > MaxHP) currentHP = MaxHP;
         if (currentMP > MaxMP) currentMP = MaxMP;
     }
+
+    public bool Heal(int amount)
+    {
+        if (amount <= 0) return false;
+        if (currentHP >= MaxHP) return false;
+        currentHP += amount;
+        if (currentHP > MaxHP) currentHP = MaxHP;
+        return true;
+    }
+
+    public bool RestoreMana(int amount)
+    {
+        if (amount <= 0) return false;
+        if (currentMP >= MaxMP) return false;
+        currentMP += amount;
+        if (currentMP > MaxMP) currentMP = MaxMP;
+        return true;
+    }
+
+    // Método de ejemplo para recibir daño (para poder bajar el HP para las pruebas)
+    public void TakeDamage(int amount)
+    {
+        if (amount <= 0) return;
+        currentHP -= amount;
+        if (currentHP < 0) currentHP = 0;
+        // Debug.Log(characterName + " recibió " + amount + " de daño. HP actual: " + currentHP + "/" + MaxHP); // Para depuración
+        if (currentHP == 0)
+        {
+            Debug.Log(characterName + " ha sido derrotado.");
+            // Lógica de muerte aquí
+        }
+    }
+
+    // Gasta una cantidad de MP del personaje.
+    public bool SpendMana(int cost)
+    {
+        if (cost < 0) return false;
+        if (currentMP >= cost)
+        {
+            currentMP -= cost;
+            return true;
+        }
+        return false;
+    }
+
+    public void GainXP(int amount)
+    {
+        if (amount <= 0) return;
+        currentXP += amount;
+        Debug.Log(characterName + " ganó " + amount + " XP. XP actual: " + currentXP);
+    }
+
+    // private void CheckForLevelUp()
+    // {
+    //    if (currentXP >= experienceToNextLevel)
+    //    {
+    //        level++;
+    //        currentXP -= experienceToNextLevel; // O currentXP = 0; si la XP se resetea
+    //        experienceToNextLevel = CalculateNextLevelXP(level); // Necesitarías una función para esto
+    //        // Incrementar stats base, etc.
+    //        // Disparar evento OnLevelUp
+    //        Debug.Log(characterName + " subió al Nivel " + level + "!");
+    //    }
+    // }
+
+    // private int CalculateNextLevelXP(int currentLevel)
+    // {
+    //    // Fórmula de ejemplo para la XP necesaria
+    //    return Mathf.FloorToInt(100 * Mathf.Pow(currentLevel, 1.5f));
+    // }
 }
 
 // } // Fin del namespace (si lo usas)
-
-

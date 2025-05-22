@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: b338e18a6fbbd1a438e4517b0601a346
+guid: 411dd5b728e1b52469cdc9ca5e1e7e78
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -43,7 +43,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -108,7 +108,91 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites: []
+    sprites:
+    - serializedVersion: 2
+      name: 20240709dragonButtonB-Sheet_0
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 1
+        width: 100
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 69abafece41c18946bc7e56c8380f8a4
+      internalID: -1009189930
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 20240709dragonButtonB-Sheet_1
+      rect:
+        serializedVersion: 2
+        x: 105
+        y: 0
+        width: 103
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 96a8c576699f8894dba6f60c03bb7b58
+      internalID: -878348638
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 20240709dragonButtonB-Sheet_2
+      rect:
+        serializedVersion: 2
+        x: 211
+        y: 1
+        width: 98
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 180db04e0e44a7d42a27480d1ef52f63
+      internalID: -603715506
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 20240709dragonButtonB-Sheet_3
+      rect:
+        serializedVersion: 2
+        x: 316
+        y: 2
+        width: 96
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 77d980dced2f63e459086940da9a85a0
+      internalID: 615146201
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     physicsShape: []
     bones: []
@@ -119,7 +203,11 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      20240709dragonButtonB-Sheet_0: -1009189930
+      20240709dragonButtonB-Sheet_1: -878348638
+      20240709dragonButtonB-Sheet_2: -603715506
+      20240709dragonButtonB-Sheet_3: 615146201
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

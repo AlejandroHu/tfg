@@ -50,6 +50,11 @@ public class EquipmentScreenManager : MonoBehaviour
     [SerializeField] private Button discardButton_InfoPanel;
     [SerializeField] private Button closeInfoButton_InfoPanel;
 
+    // --- NUEVO: Botón para ir a la Pantalla de Estado/Datos ---
+    [Header("Navegación Adicional")]
+    [Tooltip("Botón en la pantalla de equipamiento para abrir la pantalla de estado/datos del personaje actual.")]
+    [SerializeField] private Button viewCharacterStatsButton;
+
     [Header("Configuración de Posición del Panel de Info")]
     [SerializeField] private float infoPanelOffsetX = 10f;
     [SerializeField] private float infoPanelOffsetY = 0f;
@@ -76,7 +81,7 @@ public class EquipmentScreenManager : MonoBehaviour
         if (equipmentScreenPanel == null) Debug.LogError("ESM: 'equipmentScreenPanel' no asignado.", this);
         if (partyMemberSelectionContainer == null) Debug.LogError("ESM: 'partyMemberSelectionContainer' no asignado.", this);
         if (partyMemberSelectIconPrefab == null) Debug.LogError("ESM: 'partyMemberSelectIconPrefab' no asignado. No se podrán crear los iconos de selección de party.", this);
-        // ... (resto de tus validaciones que ya tenías)
+        if (viewCharacterStatsButton == null) Debug.LogWarning("ESM: 'viewCharacterStatsButton' no asignado. No se podrá navegar a la pantalla de stats desde aquí.", this); // NUEVA VALIDACIÓN
         if (characterDisplayPanel == null) Debug.LogError("ESM: 'characterDisplayPanel' no asignado.", this);
         if (characterSpriteImage == null) Debug.LogError("ESM: 'characterSpriteImage' no asignado.", this);
         if (characterNameText == null) Debug.LogError("ESM: 'characterNameText' no asignado.", this);
@@ -125,6 +130,8 @@ public class EquipmentScreenManager : MonoBehaviour
         if (unequipButton_InfoPanel != null) unequipButton_InfoPanel.onClick.AddListener(OnUnequipItemClicked_InfoPanel);
         if (discardButton_InfoPanel != null) discardButton_InfoPanel.onClick.AddListener(OnDiscardItemClicked_InfoPanel);
         if (closeInfoButton_InfoPanel != null) closeInfoButton_InfoPanel.onClick.AddListener(HideItemInfoActionPanel);
+        // --- NUEVO: Listener para el botón de ver stats ---
+        if (viewCharacterStatsButton != null) viewCharacterStatsButton.onClick.AddListener(OnViewCharacterStatsClicked);
     }
 
     void Update()
@@ -744,6 +751,26 @@ public class EquipmentScreenManager : MonoBehaviour
         else
         {
             HideItemInfoActionPanel();
+        }
+    }
+
+    public void OnViewCharacterStatsClicked()
+    {
+        Debug.Log("ESM: Botón 'Ver Datos/Estado' presionado.");
+        if (_currentlyDisplayedCharacter != null && CharacterStatsScreenManager.Instance != null)
+        {
+            Debug.Log("ESM: Mostrando pantalla de stats para: " + _currentlyDisplayedCharacter.characterName);
+            CharacterStatsScreenManager.Instance.ShowScreen(_currentlyDisplayedCharacter);
+
+            // Opcional: ¿Quieres ocultar la pantalla de equipamiento cuando se abre la de stats?
+            // Si es así, descomenta la siguiente línea:
+            // if (equipmentScreenPanel != null) equipmentScreenPanel.SetActive(false);
+            // O podrías llamar a ToggleEquipmentScreen() si quieres que se ejecute toda su lógica de cierre.
+        }
+        else
+        {
+            if (_currentlyDisplayedCharacter == null) Debug.LogWarning("ESM: No hay personaje seleccionado para mostrar sus stats.");
+            if (CharacterStatsScreenManager.Instance == null) Debug.LogError("ESM: CharacterStatsScreenManager.Instance no encontrado. No se puede abrir la pantalla de stats.");
         }
     }
 }
