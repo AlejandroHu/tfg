@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 using System.Text;
+using TopDown;
 // Asegúrate de que los namespaces de tus otras clases sean accesibles
 // using TuJuego.Personajes; 
 // using TuJuego.Habilidades; // Si AbilityData.cs está en este namespace
@@ -95,6 +96,18 @@ public class CharacterStatsScreenManager : MonoBehaviour
         if (attackValueText == null) Debug.LogWarning("CharacterStatsScreenManager: 'attackValueText' no asignado.", this);
         // ... (añadir validaciones para los otros textos de stats) ...
     }
+    // --- SUSCRIPCIÓN A EVENTOS ---
+    void OnEnable()
+    {
+        // Suscribirse al evento de subida de nivel de cualquier personaje
+        Character.OnCharacterLevelUp += HandleCharacterLevelUp;
+    }
+
+    void OnDisable()
+    {
+        // Desuscribirse del evento para evitar errores si este objeto se destruye
+        Character.OnCharacterLevelUp -= HandleCharacterLevelUp;
+    }
 
     void Start()
     {
@@ -107,92 +120,49 @@ public class CharacterStatsScreenManager : MonoBehaviour
 
     void Update()
     {
-        // Ejemplo para abrir/cerrar con tecla (si esta pantalla es independiente)
         if (Input.GetKeyDown(toggleStatsScreenKey))
         {
-            // Si está abierta, la cerramos. Si está cerrada, necesitamos un personaje para mostrar.
-            // Esta lógica de apertura directa necesitaría un personaje por defecto o el último seleccionado.
             if (characterStatsScreenPanel != null && characterStatsScreenPanel.activeSelf)
             {
                 HideScreen();
             }
             else
             {
-                // Para abrirla con una tecla, necesitaríamos saber qué personaje mostrar.
-                // Esto es más fácil si se abre desde otro menú que ya tiene un personaje seleccionado.
-                // Ejemplo: ShowScreen(PartyManager.Instance?.GetSelectedMenuCharacter());
-                Debug.Log("Presionada tecla para abrir Stats Screen, pero se necesita un personaje. Abrir desde otro menú.");
+                Character charToOpenWith = null;
+                if (PartyManager.Instance != null && PartyManager.Instance.CurrentPartyMembers.Count > 0)
+                {
+                    charToOpenWith = PartyManager.Instance.CurrentPartyMembers[0];
+                }
+                else
+                {
+                    PlayerMovement pm = FindObjectOfType<PlayerMovement>();
+                    if (pm != null) charToOpenWith = pm.GetComponent<Character>();
+                }
+                if (charToOpenWith != null) ShowScreen(charToOpenWith);
+                else Debug.Log("CSSM: Tecla para abrir Stats, pero no hay personaje para mostrar.");
             }
         }
     }
 
-    /// <summary>
-    /// Muestra la pantalla de estado/datos para un personaje específico.
-    /// </summary>
     public void ShowScreen(Character characterToShow)
     {
-        if (characterStatsScreenPanel == null)
-        {
-            Debug.LogError("CharacterStatsScreenManager: 'characterStatsScreenPanel' no está asignado. No se puede mostrar la pantalla.");
-            return;
-        }
-        if (characterToShow == null)
-        {
-            Debug.LogWarning("CharacterStatsScreenManager: Se intentó mostrar la pantalla de stats sin un personaje válido.");
-            HideScreen(); // Ocultar si no hay personaje
-            return;
-        }
+        if (characterStatsScreenPanel == null) return;
+        if (characterToShow == null) { HideScreen(); return; }
 
         _currentlyDisplayedCharacter = characterToShow;
         characterStatsScreenPanel.SetActive(true);
         UpdateAllCharacterInfo();
-
-        // Aquí podrías pausar el juego si es necesario
-        // Time.timeScale = 0f; 
-        // PlayerInputManager.Instance?.DisablePlayerMovementInput();
     }
 
-    /// <summary>
-    /// Oculta la pantalla de estado/datos del personaje.
-    /// </summary>
     public void HideScreen()
     {
-        if (characterStatsScreenPanel != null)
-        {
-            characterStatsScreenPanel.SetActive(false);
-        }
-        _currentlyDisplayedCharacter = null; // Limpiar referencia
-
-        // Aquí podrías reanudar el juego si estaba pausado
-        // Time.timeScale = 1f;
-        // PlayerInputManager.Instance?.EnablePlayerMovementInput();
+        if (characterStatsScreenPanel != null) characterStatsScreenPanel.SetActive(false);
+        _currentlyDisplayedCharacter = null;
     }
 
-    /// <summary>
-    /// Actualiza todos los elementos de la UI con la información del personaje actual.
-    /// </summary>
     private void UpdateAllCharacterInfo()
     {
-        if (_currentlyDisplayedCharacter == null)
-        {
-            // Limpiar la UI si no hay personaje
-            if (characterNameText_StatsScreen != null) characterNameText_StatsScreen.text = "---";
-            if (characterLevelText_StatsScreen != null) characterLevelText_StatsScreen.text = "Nvl: --";
-            if (characterBigSpriteImage_StatsScreen != null) { characterBigSpriteImage_StatsScreen.sprite = null; characterBigSpriteImage_StatsScreen.enabled = false; }
-            if (currentXPText_StatsScreen != null) currentXPText_StatsScreen.text = "XP: --";
-            if (nextLevelXPText_StatsScreen != null) nextLevelXPText_StatsScreen.text = "Siguiente: --";
-            if (xpProgressBar_StatsScreen != null) xpProgressBar_StatsScreen.value = 0;
-            if (hpValueText != null) hpValueText.text = "--/--";
-            // ... limpiar otros textos de stats ...
-            if (abilityDescriptionText_StatsScreen != null) abilityDescriptionText_StatsScreen.text = "";
-            if (abilitiesListContainer_StatsScreen != null)
-            {
-                foreach (Transform child in abilitiesListContainer_StatsScreen) Destroy(child.gameObject);
-                _abilityListItemUIs.Clear();
-            }
-            Debug.LogWarning("CSSM: UpdateAllCharacterInfo - Personaje nulo, UI limpiada.");
-            return;
-        }
+        if (_currentlyDisplayedCharacter == null) { /* Limpiar UI */ return; }
 
         if (screenTitleText_Stats != null) screenTitleText_Stats.text = "Estado de " + _currentlyDisplayedCharacter.characterName;
         if (characterBigSpriteImage_StatsScreen != null)
@@ -214,13 +184,9 @@ public class CharacterStatsScreenManager : MonoBehaviour
         PopulateAbilitiesList();
     }
 
-    /// <summary>
-    /// Actualiza los TextMeshProUGUI que muestran los stats detallados del personaje actual.
-    /// </summary>
     private void UpdateDetailedStatsDisplay()
     {
         if (_currentlyDisplayedCharacter == null) return;
-
         if (hpValueText != null) hpValueText.text = _currentlyDisplayedCharacter.currentHP.ToString() + " / " + _currentlyDisplayedCharacter.MaxHP.ToString();
         if (mpValueText != null) mpValueText.text = _currentlyDisplayedCharacter.currentMP.ToString() + " / " + _currentlyDisplayedCharacter.MaxMP.ToString();
         if (attackValueText != null) attackValueText.text = _currentlyDisplayedCharacter.Attack.ToString();
@@ -278,6 +244,7 @@ public class CharacterStatsScreenManager : MonoBehaviour
             abilityDescriptionText_StatsScreen.text = "";
         }
     }
+
     public void OnAbilityListItemClicked(AbilityData selectedAbility)
     {
         if (selectedAbility == null)
@@ -289,22 +256,34 @@ public class CharacterStatsScreenManager : MonoBehaviour
         if (abilityDescriptionText_StatsScreen != null)
         {
             StringBuilder descBuilder = new StringBuilder();
-            descBuilder.AppendLine(selectedAbility.abilityName);
+            descBuilder.AppendLine("<b>" + selectedAbility.abilityName + "</b>");
             if (selectedAbility.mpCost > 0)
             {
                 descBuilder.AppendLine("Coste MP: " + selectedAbility.mpCost);
             }
+            descBuilder.AppendLine("<i>" + selectedAbility.effectType.ToString() + " - " + selectedAbility.targetType.ToString() + "</i>");
             descBuilder.AppendLine("--------------------");
             descBuilder.AppendLine(selectedAbility.description);
             abilityDescriptionText_StatsScreen.text = descBuilder.ToString();
         }
     }
 
-    // --- Lógica futura para Habilidades y Selección de Party en esta pantalla ---
-    // private void PopulateAbilitiesList() { /* ... */ }
-    // public void OnAbilityListItemClicked(AbilityData ability) { /* ... */ }
-    // private void PopulatePartySelectionForStatsScreen() { /* ... */ }
-    // public void OnPartyMemberIconClicked_StatsScreen(Character character) { /* ShowScreen(character); */ }
+    // --- NUEVO MÉTODO HANDLER PARA EL EVENTO DE SUBIDA DE NIVEL ---
+    /// <summary>
+    /// Se llama cuando cualquier personaje en el juego sube de nivel (gracias al evento estático).
+    /// </summary>
+    /// <param name="characterWhoLeveledUp">El personaje que subió de nivel.</param>
+    private void HandleCharacterLevelUp(Character characterWhoLeveledUp)
+    {
+        // Comprobar si la pantalla de stats está activa y si el personaje que subió de nivel
+        // es el que se está mostrando actualmente en esta pantalla.
+        if (characterStatsScreenPanel != null && characterStatsScreenPanel.activeSelf &&
+            _currentlyDisplayedCharacter == characterWhoLeveledUp)
+        {
+            Debug.Log("CSSM: El personaje mostrado (" + characterWhoLeveledUp.characterName + ") subió de nivel. Refrescando UI de stats.");
+            UpdateAllCharacterInfo(); // Volver a cargar toda la información del personaje
+        }
+    }
 }
 
 // } // Fin del namespace si lo usas

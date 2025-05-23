@@ -107,12 +107,22 @@ public class EquipmentScreenManager : MonoBehaviour
             PlayerInventory.OnInventoryChanged += HandlePlayerInventoryChanged;
         else
             Debug.LogWarning("ESM: PlayerInventory.Instance es null en OnEnable.");
+        if (PartyManager.Instance != null)
+        {
+            PartyManager.OnSelectedMenuCharacterChanged += HandleSelectedMenuCharacterChanged;
+            PartyManager.OnPartyRosterChanged += HandlePartyRosterChanged; // Para refrescar iconos si la party cambia
+        }
     }
 
     void OnDisable()
     {
         if (PlayerInventory.Instance != null)
             PlayerInventory.OnInventoryChanged -= HandlePlayerInventoryChanged;
+        if (PartyManager.Instance != null)
+        {
+            PartyManager.OnSelectedMenuCharacterChanged -= HandleSelectedMenuCharacterChanged;
+            PartyManager.OnPartyRosterChanged -= HandlePartyRosterChanged;
+        }
     }
 
     void Start()
@@ -130,7 +140,6 @@ public class EquipmentScreenManager : MonoBehaviour
         if (unequipButton_InfoPanel != null) unequipButton_InfoPanel.onClick.AddListener(OnUnequipItemClicked_InfoPanel);
         if (discardButton_InfoPanel != null) discardButton_InfoPanel.onClick.AddListener(OnDiscardItemClicked_InfoPanel);
         if (closeInfoButton_InfoPanel != null) closeInfoButton_InfoPanel.onClick.AddListener(HideItemInfoActionPanel);
-        // --- NUEVO: Listener para el botón de ver stats ---
         if (viewCharacterStatsButton != null) viewCharacterStatsButton.onClick.AddListener(OnViewCharacterStatsClicked);
     }
 
@@ -156,31 +165,30 @@ public class EquipmentScreenManager : MonoBehaviour
             PopulatePartySelection(); // Refrescar/Crear los iconos de la party
 
             Character characterToDisplay = null;
-            // --- SELECCIONAR PERSONAJE INICIAL USANDO PARTYMANAGER ---
-            if (PartyManager.Instance != null && PartyManager.Instance.CurrentPartyMembers.Count > 0)
+            // Usar el personaje seleccionado por PartyManager o el primero si no hay ninguno
+            if (PartyManager.Instance != null)
             {
-                characterToDisplay = PartyManager.Instance.CurrentPartyMembers[0]; // Mostrar el primer miembro
-                Debug.Log("ESM: Personaje por defecto para mostrar: " + characterToDisplay.characterName);
+                characterToDisplay = PartyManager.Instance.SelectedMenuCharacter; // Usar el que PartyManager tiene como seleccionado
+                if (characterToDisplay == null && PartyManager.Instance.CurrentPartyMembers.Count > 0)
+                {
+                    characterToDisplay = PartyManager.Instance.CurrentPartyMembers[0]; // Fallback al primero de la party
+                    PartyManager.Instance.SetSelectedMenuCharacter(characterToDisplay); // Establecerlo como seleccionado
+                }
             }
-            else
+            // Fallback final si no hay PartyManager o party vacía
+            if (characterToDisplay == null)
             {
-                // Fallback si no hay PartyManager o party vacía (podría ser el jugador principal si existe solo)
                 PlayerMovement pm = FindObjectOfType<PlayerMovement>();
                 if (pm != null) characterToDisplay = pm.GetComponent<Character>();
-                if (characterToDisplay == null)
-                    Debug.LogWarning("ESM: No se pudo encontrar un personaje inicial para mostrar (ni de PartyManager ni PlayerMovement).");
             }
-            // --- FIN SELECCIÓN PERSONAJE INICIAL ---
 
             SelectCharacterForDisplay(characterToDisplay);
             RefreshInventoryForEquipmentScreen();
             HideItemInfoActionPanel();
-            Debug.Log("ESM: Pantalla de Equipamiento Abierta");
         }
         else
         {
             HideItemInfoActionPanel();
-            Debug.Log("ESM: Pantalla de Equipamiento Cerrada");
         }
     }
 
@@ -753,7 +761,6 @@ public class EquipmentScreenManager : MonoBehaviour
             HideItemInfoActionPanel();
         }
     }
-
     public void OnViewCharacterStatsClicked()
     {
         Debug.Log("ESM: Botón 'Ver Datos/Estado' presionado.");
@@ -762,10 +769,8 @@ public class EquipmentScreenManager : MonoBehaviour
             Debug.Log("ESM: Mostrando pantalla de stats para: " + _currentlyDisplayedCharacter.characterName);
             CharacterStatsScreenManager.Instance.ShowScreen(_currentlyDisplayedCharacter);
 
-            // Opcional: ¿Quieres ocultar la pantalla de equipamiento cuando se abre la de stats?
-            // Si es así, descomenta la siguiente línea:
+            // Opcional: Ocultar esta pantalla de equipamiento
             // if (equipmentScreenPanel != null) equipmentScreenPanel.SetActive(false);
-            // O podrías llamar a ToggleEquipmentScreen() si quieres que se ejecute toda su lógica de cierre.
         }
         else
         {
@@ -773,4 +778,34 @@ public class EquipmentScreenManager : MonoBehaviour
             if (CharacterStatsScreenManager.Instance == null) Debug.LogError("ESM: CharacterStatsScreenManager.Instance no encontrado. No se puede abrir la pantalla de stats.");
         }
     }
+    // --- NUEVOS MÉTODOS HANDLER PARA EVENTOS DE PARTYMANAGER ---
+    private void HandleSelectedMenuCharacterChanged(Character selectedCharacter)
+    {
+        Debug.Log("ESM: Evento OnSelectedMenuCharacterChanged recibido para: " + (selectedCharacter != null ? selectedCharacter.characterName : "NULL"));
+        SelectCharacterForDisplay(selectedCharacter); // Actualizar la UI con el nuevo personaje
+    }
+
+    private void HandlePartyRosterChanged()
+    {
+        Debug.Log("ESM: Evento OnPartyRosterChanged recibido. Repoblando iconos de party.");
+        PopulatePartySelection(); // Volver a crear los iconos de selección de party
+
+        // Opcional: Si el personaje actualmente mostrado ya no está en la party, seleccionar uno nuevo
+        if (_currentlyDisplayedCharacter != null && PartyManager.Instance != null &&
+            !PartyManager.Instance.CurrentPartyMembers.Contains(_currentlyDisplayedCharacter))
+        {
+            if (PartyManager.Instance.CurrentPartyMembers.Count > 0)
+            {
+                PartyManager.Instance.SetSelectedMenuCharacter(PartyManager.Instance.CurrentPartyMembers[0]);
+                // SelectCharacterForDisplay se llamará a través del evento OnSelectedMenuCharacterChanged
+            }
+            else
+            {
+                SelectCharacterForDisplay(null); // No hay nadie en la party
+            }
+        }
+    }
+
+
+
 }

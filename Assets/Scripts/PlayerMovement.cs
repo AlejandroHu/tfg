@@ -31,7 +31,7 @@ namespace TopDown
         // Útil para pausar el movimiento del jugador durante diálogos, cinemáticas, etc.
         private bool _canProcessInput = true;
 
-  
+
         private void Awake()
         {
             rb = GetComponent<Rigidbody2D>(); // Obtiene el componente Rigidbody2D adjunto a este GameObject.
@@ -62,14 +62,23 @@ namespace TopDown
             UpdateLastFacingVectorFromString(lastDirectionString);
         }
 
-     
+
         private void Update()
         {
             // Llama al método que maneja las animaciones en cada frame.
             HandleAnimations();
+            // En Update() de algún script de prueba o PlayerMovement
+            if (Input.GetKeyDown(KeyCode.X))
+            {
+                Character playerChar = GetComponent<Character>(); // O FindObjectOfType<PlayerMovement>().GetComponent<Character>();
+                if (playerChar != null)
+                {
+                    playerChar.GainXP(50); // O la cantidad que quieras, ej: 100 para subir de nivel si experienceToNextLevel es 100
+                }
+            }
         }
 
-       
+
         private void FixedUpdate()
         {
             if (_canProcessInput) // Solo aplica movimiento si el input está habilitado.
@@ -206,5 +215,6 @@ namespace TopDown
             // Al re-habilitar (_canProcessInput = true), no es necesario hacer nada especial aquí.
             // El método OnMove tomará el siguiente input del jugador cuando ocurra.
         }
+
     }
 }

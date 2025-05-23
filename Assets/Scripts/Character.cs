@@ -1,13 +1,13 @@
 using UnityEngine;
-using System.Collections.Generic; // Necesario para List y Dictionary
+using System.Collections.Generic;
 
 // Puedes poner esto en un namespace si estás organizando así tu código
 // namespace TuJuego.Personajes
 // {
 
 // Asegúrate de que ItemData, EquipmentSlot y AbilityData (si está en otro namespace) sean accesibles
-// using TuJuego.Inventario; // Si ItemData y EquipmentSlot están aquí
-// using TuJuego.Habilidades; // Si AbilityData está aquí
+// using TuJuego.Inventario; 
+// using TuJuego.Habilidades; 
 
 public class Character : MonoBehaviour
 {
@@ -23,7 +23,6 @@ public class Character : MonoBehaviour
     [Tooltip("Puntos de experiencia necesarios para alcanzar el siguiente nivel.")]
     public int experienceToNextLevel = 100;
 
-    // --- NUEVO: Lista de Habilidades Conocidas ---
     [Header("Habilidades del Personaje")]
     [Tooltip("Lista de las habilidades que este personaje conoce y puede usar en combate.")]
     public List<AbilityData> knownAbilities = new List<AbilityData>();
@@ -36,6 +35,14 @@ public class Character : MonoBehaviour
     public int baseMagicAttack = 8;
     public int baseMagicDefense = 4;
     public int baseSpeed = 10;
+    // --- NUEVO: Stats de crecimiento por nivel (ejemplos) ---
+    [Header("Crecimiento de Stats por Nivel")]
+    public int hpGrowth = 20;
+    public int mpGrowth = 5;
+    public int attackGrowth = 2;
+    public int defenseGrowth = 1;
+    // (Añade más para los otros stats si quieres que crezcan)
+
 
     // Stats actuales
     public int currentHP;
@@ -58,6 +65,9 @@ public class Character : MonoBehaviour
     public int MagicDefense => GetStatValueWithEquipment(baseMagicDefense, item => item.magicDefenseBonus);
     public int Speed => GetStatValueWithEquipment(baseSpeed, item => item.speedBonus);
 
+    // Evento para notificar cuando el personaje sube de nivel (útil para la UI)
+    public static event System.Action<Character> OnCharacterLevelUp;
+
 
     void Awake()
     {
@@ -68,6 +78,9 @@ public class Character : MonoBehaviour
         if (initialMainHandEquipment != null) EquipItemInitially(initialMainHandEquipment);
         if (initialBodyEquipment != null) EquipItemInitially(initialBodyEquipment);
         if (initialFeetEquipment != null) EquipItemInitially(initialFeetEquipment);
+
+        // Asegurarse de que la XP al siguiente nivel sea la correcta para el nivel inicial
+        experienceToNextLevel = CalculateNextLevelXP(level);
 
         currentHP = MaxHP;
         currentMP = MaxMP;
@@ -114,18 +127,13 @@ public class Character : MonoBehaviour
 
     public bool EquipItem(ItemData itemToEquip, PlayerInventory inventory)
     {
-        if (itemToEquip == null || !itemToEquip.isEquipable || itemToEquip.equipmentSlot == EquipmentSlot.None)
-        {
-            Debug.LogWarning(characterName + ": Intento de equipar un objeto no válido o no equipable: " + (itemToEquip != null ? itemToEquip.itemName : "NULL"));
-            return false;
-        }
+        if (itemToEquip == null || !itemToEquip.isEquipable || itemToEquip.equipmentSlot == EquipmentSlot.None) return false;
         EquipmentSlot slotToEquipIn = itemToEquip.equipmentSlot;
         ItemData previouslyEquippedItem = null;
         if (equippedItems.TryGetValue(slotToEquipIn, out previouslyEquippedItem) && previouslyEquippedItem != null)
         {
             previouslyEquippedItem.OnUnequip(this);
             if (inventory != null) inventory.AddItem(previouslyEquippedItem, 1);
-            else Debug.LogWarning("PlayerInventory no proporcionado al desequipar " + previouslyEquippedItem.itemName);
         }
         equippedItems[slotToEquipIn] = itemToEquip;
         itemToEquip.OnEquip(this);
@@ -142,7 +150,6 @@ public class Character : MonoBehaviour
             unequippedItem.OnUnequip(this);
             equippedItems[slotToUnequip] = null;
             if (inventory != null) inventory.AddItem(unequippedItem, 1);
-            else Debug.LogWarning("PlayerInventory no proporcionado al desequipar " + unequippedItem.itemName);
             RecalculateCurrentHPMPAfterEquipmentChange();
             return unequippedItem;
         }
@@ -199,31 +206,69 @@ public class Character : MonoBehaviour
         return false;
     }
 
+    // --- LÓGICA DE EXPERIENCIA Y SUBIDA DE NIVEL ---
+    /// <summary>
+    /// Añade la cantidad especificada de XP al personaje y comprueba si sube de nivel.
+    /// </summary>
     public void GainXP(int amount)
     {
         if (amount <= 0) return;
+
         currentXP += amount;
-        Debug.Log(characterName + " ganó " + amount + " XP. XP actual: " + currentXP);
+        Debug.Log(characterName + " ganó " + amount + " XP. XP actual: " + currentXP + "/" + experienceToNextLevel);
+
+        // Comprobar si se sube de nivel (puede haber múltiples subidas si se gana mucha XP)
+        while (currentXP >= experienceToNextLevel)
+        {
+            LevelUp();
+        }
     }
 
-    // private void CheckForLevelUp()
-    // {
-    //    if (currentXP >= experienceToNextLevel)
-    //    {
-    //        level++;
-    //        currentXP -= experienceToNextLevel; // O currentXP = 0; si la XP se resetea
-    //        experienceToNextLevel = CalculateNextLevelXP(level); // Necesitarías una función para esto
-    //        // Incrementar stats base, etc.
-    //        // Disparar evento OnLevelUp
-    //        Debug.Log(characterName + " subió al Nivel " + level + "!");
-    //    }
-    // }
+    /// <summary>
+    /// Procesa la subida de nivel del personaje.
+    /// </summary>
+    private void LevelUp()
+    {
+        level++;
+        currentXP -= experienceToNextLevel; // Restar la XP usada para este nivel
+        // Si currentXP queda negativo, significa que sobró XP del nivel anterior, pero para simplificar, lo dejamos así o lo ajustamos a 0.
+        // Una lógica más precisa sería: currentXP = currentXP - experienceToNextLevel;
+        if (currentXP < 0) currentXP = 0; // Evitar XP negativa
 
-    // private int CalculateNextLevelXP(int currentLevel)
-    // {
-    //    // Fórmula de ejemplo para la XP necesaria
-    //    return Mathf.FloorToInt(100 * Mathf.Pow(currentLevel, 1.5f));
-    // }
+        experienceToNextLevel = CalculateNextLevelXP(level); // Calcular XP para el siguiente nuevo nivel
+
+        // Incrementar stats base (ejemplos)
+        baseMaxHP += hpGrowth;
+        baseMaxMP += mpGrowth;
+        baseAttack += attackGrowth;
+        baseDefense += defenseGrowth;
+        // Añade aquí el crecimiento para otros stats base que tengas
+
+        // Restaurar HP y MP al nuevo máximo (común en muchos RPGs)
+        currentHP = MaxHP;
+        currentMP = MaxMP;
+
+        Debug.Log(characterName + " subió al Nivel " + level + "! Stats aumentados. Próximo nivel a los " + experienceToNextLevel + " XP.");
+
+        // Disparar evento para que la UI u otros sistemas se actualicen
+        OnCharacterLevelUp?.Invoke(this);
+    }
+
+    /// <summary>
+    /// Calcula la cantidad de XP necesaria para el siguiente nivel.
+    /// Esta es una fórmula de ejemplo, puedes ajustarla.
+    /// </summary>
+    /// <param name="newLevel">El nivel para el cual se calcula la XP necesaria.</param>
+    /// <returns>XP necesaria para alcanzar el 'newLevel + 1'.</returns>
+    private int CalculateNextLevelXP(int currentCharacterLevel)
+    {
+        // Fórmula de ejemplo: (nivel_actual^1.5) * 100
+        // Para nivel 1 -> 100 XP para nivel 2
+        // Para nivel 2 -> (2^1.5)*100 ~= 282 XP para nivel 3
+        // Para nivel 3 -> (3^1.5)*100 ~= 519 XP para nivel 4
+        if (currentCharacterLevel <= 0) currentCharacterLevel = 1; // Evitar errores con nivel 0 o negativo
+        return Mathf.FloorToInt(Mathf.Pow(currentCharacterLevel, 1.5f) * 100f);
+    }
 }
 
 // } // Fin del namespace (si lo usas)
