@@ -1,25 +1,31 @@
-using System.Collections;
-using System.Collections.Generic;
-using TopDown;
 using UnityEngine;
-// Asegúrate de que los namespaces de Character, EnemyData, PlayerMovement sean accesibles
-// using TuJuego.Personajes; // Si Character.cs está aquí
-// using TuJuego.Enemigos;   // Si EnemyData.cs está aquí
-// using TopDown;          // Si PlayerMovement.cs está aquí
+using System.Collections.Generic; // Necesario para List
 
+// Asegúrate de que los namespaces de Character, EnemyData, PlayerMovement sean accesibles
+// Si están en un namespace como "TopDown", necesitarás:
+ using TopDown; 
+// O los namespaces específicos si son diferentes:
+// using TuJuego.Personajes; 
+// using TuJuego.Enemigos;   
+
+/// <summary>
+/// Gestiona el inicio, el flujo y el final de las secuencias de combate.
+/// </summary>
 public class CombatManager : MonoBehaviour
 {
     // --- Singleton Pattern ---
     public static CombatManager Instance { get; private set; }
 
     [Header("Estado del Combate")]
+    [Tooltip("Indica si una secuencia de combate está actualmente activa.")]
     [SerializeField] private bool isCombatActive = false;
+    public bool IsCombatActive => isCombatActive; // Propiedad para leer el estado desde fuera
 
     // Referencias a los participantes del combate actual
     private List<Character> currentPlayerParty;
     private List<EnemyData> currentEnemyGroup;
 
-    // Referencia al script de movimiento del jugador para pausarlo
+    // Referencia al script de movimiento del jugador para pausarlo/reanudarlo
     private PlayerMovement playerMovementController;
 
     void Awake()
@@ -32,30 +38,30 @@ public class CombatManager : MonoBehaviour
             return;
         }
         Instance = this;
-        // DontDestroyOnLoad(gameObject); // Considera si este manager debe persistir entre escenas
-        // o si cada escena de exploración con combate tendrá el suyo.
-        // Si el combate ocurre en la misma escena, podría no ser necesario
-        // si el CombatManager está en un objeto que no se destruye con la escena principal.
-        // Si tienes escenas de combate separadas, SÍ necesitará persistir o pasar datos.
+        // DontDestroyOnLoad(gameObject); // Considerar si este manager debe persistir entre escenas.
+        // Si el combate siempre ocurre en la misma escena de exploración
+        // y este manager está en un objeto de esa escena, podría no ser necesario.
+        // Si tienes escenas de combate separadas, SÍ necesitará persistir.
     }
 
     void Start()
     {
-        // Intentar encontrar el PlayerMovement automáticamente
+        // Intentar encontrar el PlayerMovement automáticamente al inicio.
         // Esto asume que solo hay un PlayerMovement activo en la escena.
         playerMovementController = FindObjectOfType<PlayerMovement>();
         if (playerMovementController == null)
         {
-            Debug.LogWarning("CombatManager: No se encontró el script PlayerMovement en la escena.");
+            Debug.LogWarning("CombatManager: No se encontró el script PlayerMovement en la escena. La pausa del jugador podría no funcionar.", this);
         }
     }
 
     /// <summary>
-    /// Inicia una secuencia de combate.
+    /// Inicia una secuencia de combate con la party del jugador y un grupo de enemigos.
     /// </summary>
-    /// <param name="playerParty">La lista de personajes del jugador que participarán.</param>
-    /// <param name="enemyGroup">La lista de datos de los enemigos para este encuentro.</param>
-    public void StartCombat(List<Character> playerParty, List<EnemyData> enemyGroup)
+    /// <param name="playerParty">La lista de componentes Character de los personajes del jugador que participarán.</param>
+    /// <param name="enemyGroup">La lista de ScriptableObjects EnemyData para los enemigos de este encuentro.</param>
+    /// <param name="encounterReference">La referencia al EnemyEncounter que inició el combate (para marcarlo como derrotado después).</param>
+    public void StartCombat(List<Character> playerParty, List<EnemyData> enemyGroup, EnemyEncounter encounterReference)
     {
         if (isCombatActive)
         {
@@ -69,40 +75,52 @@ public class CombatManager : MonoBehaviour
         }
         if (enemyGroup == null || enemyGroup.Count == 0)
         {
-            Debug.LogError("CombatManager: Se intentó iniciar combate sin enemigos.");
+            Debug.LogError("CombatManager: Se intentó iniciar combate sin enemigos en el enemyGroup.");
+            return;
+        }
+        if (encounterReference == null)
+        {
+            Debug.LogError("CombatManager: Se intentó iniciar combate sin una referencia al EnemyEncounter.");
             return;
         }
 
+        Debug.Log("--- ¡COMBATE INICIADO! ---");
         isCombatActive = true;
-        this.currentPlayerParty = new List<Character>(playerParty); // Copiar la lista
-        this.currentEnemyGroup = new List<EnemyData>(enemyGroup);   // Copiar la lista
 
-        // 1. Pausar al jugador (y quizás a otros NPCs en el mapa)
+        // Guardar copias de las listas de participantes para este combate.
+        this.currentPlayerParty = new List<Character>(playerParty);
+        this.currentEnemyGroup = new List<EnemyData>(enemyGroup);
+        // Guardar la referencia al encuentro para poder marcarlo como derrotado después.
+        // private EnemyEncounter _activeEncounter = encounterReference; // Necesitarás declarar _activeEncounter
+
+        // 1. Pausar al jugador (y potencialmente otros sistemas de exploración)
         if (playerMovementController != null)
         {
-            //playerMovementController.SetCanMove(false); // Asume que PlayerMovement tiene un método SetCanMove
+            playerMovementController.SetCanMove(false);
             Debug.Log("CombatManager: Movimiento del jugador DESACTIVADO.");
         }
 
-        // 2. (Futuro) Realizar transición visual a la "arena" de combate
-        //    Esto podría implicar activar/desactivar GameObjects, cambiar la cámara, etc.
-        Debug.Log("--- ¡COMBATE INICIADO! ---");
-        Debug.Log("Party del Jugador:");
+        // 2. (FUTURO) Realizar transición visual a la "arena" de combate.
+        //    Esto podría implicar activar/desactivar GameObjects, cambiar la cámara,
+        //    cargar un fondo de batalla específico, etc.
+        //    Ejemplo: UIManager.Instance.ShowBattleTransition();
+
+        Debug.Log("Party del Jugador en combate:");
         foreach (Character member in currentPlayerParty)
         {
-            Debug.Log("- " + member.characterName);
+            if (member != null) Debug.Log("- " + member.characterName);
         }
-        Debug.Log("Grupo de Enemigos:");
+        Debug.Log("Grupo de Enemigos en combate:");
         foreach (EnemyData enemy in currentEnemyGroup)
         {
-            Debug.Log("- " + enemy.enemyName);
+            if (enemy != null) Debug.Log("- " + enemy.enemyName);
         }
 
-        // 3. (Futuro) Activar la UI de combate
-        //    UIManager.Instance.ShowCombatUI(currentPlayerParty, currentEnemyGroup);
+        // 3. (FUTURO) Activar la Interfaz de Usuario (UI) de combate.
+        //    Ejemplo: CombatUIManager.Instance.ShowCombatUI(currentPlayerParty, currentEnemyGroup);
 
-        // 4. (Futuro) Iniciar el sistema de turnos
-        //    TurnSystem.StartCombat(currentPlayerParty, currentEnemyGroup);
+        // 4. (FUTURO) Iniciar el sistema de turnos y la lógica del combate.
+        //    Ejemplo: TurnBasedSystem.StartCombat(currentPlayerParty, currentEnemyGroup);
     }
 
     /// <summary>
@@ -111,44 +129,64 @@ public class CombatManager : MonoBehaviour
     /// <param name="playerWon">True si el jugador ganó, false si perdió o huyó.</param>
     public void EndCombat(bool playerWon)
     {
-        if (!isCombatActive) return;
+        if (!isCombatActive)
+        {
+            // Debug.LogWarning("CombatManager: Se intentó terminar un combate que no estaba activo."); // Puede ser muy verboso
+            return;
+        }
 
         Debug.Log("--- COMBATE FINALIZADO --- ¿Jugador ganó?: " + playerWon);
 
-        // 1. (Futuro) Dar recompensas si el jugador ganó (XP, items)
+        // 1. (FUTURO) Procesar resultados del combate.
         if (playerWon)
         {
-            // Distribuir XP, generar loot, etc.
+            // Dar recompensas (XP, objetos, etc.)
+            // DistributeRewards();
+
+            // Marcar el encuentro como derrotado (si es necesario)
+            // if (_activeEncounter != null)
+            // {
+            //    _activeEncounter.MarkAsDefeated();
+            // }
+        }
+        else
+        {
+            // Lógica de Game Over o penalización.
+            // HandlePlayerDefeat();
         }
 
-        // 2. (Futuro) Realizar transición visual de vuelta a la exploración
+        // 2. (FUTURO) Realizar transición visual de vuelta a la exploración.
+        //    Ejemplo: UIManager.Instance.HideBattleTransition();
         //    Desactivar UI de combate, reactivar UI de exploración.
 
-        // 3. Reactivar el movimiento del jugador
+        // 3. Reactivar el movimiento del jugador (y otros sistemas de exploración).
         if (playerMovementController != null)
         {
-            //playerMovementController.SetCanMove(true); // Asume que PlayerMovement tiene un método SetCanMove
+            playerMovementController.SetCanMove(true);
             Debug.Log("CombatManager: Movimiento del jugador REACTIVADO.");
         }
 
-        // 4. Limpiar datos del combate actual
+        // 4. Limpiar datos del combate actual.
         isCombatActive = false;
         currentPlayerParty = null;
         currentEnemyGroup = null;
-
-        // 5. (Futuro) Actualizar el estado del EnemyEncounter (ej: marcar como derrotado)
-        //    Esto podría hacerse antes, justo después de la victoria.
+        // _activeEncounter = null;
     }
 
-    // Método de prueba para terminar el combate (ej: con una tecla)
+    // Método de prueba para terminar el combate (ej: con una tecla).
+    // Esto es útil durante el desarrollo antes de tener las condiciones de victoria/derrota implementadas.
     void Update()
     {
-        if (isCombatActive && Input.GetKeyDown(KeyCode.Alpha0)) // Ejemplo: Tecla 0 para terminar combate (ganando)
+        if (!isCombatActive) return; // Solo procesar si el combate está activo.
+
+        if (Input.GetKeyDown(KeyCode.Alpha0)) // Ejemplo: Tecla 0 para simular victoria del jugador.
         {
+            Debug.Log("CombatManager: Forzando fin de combate (VICTORIA) con tecla 0.");
             EndCombat(true);
         }
-        else if (isCombatActive && Input.GetKeyDown(KeyCode.Alpha9)) // Ejemplo: Tecla 9 para terminar combate (perdiendo)
+        else if (Input.GetKeyDown(KeyCode.Alpha9)) // Ejemplo: Tecla 9 para simular derrota del jugador.
         {
+            Debug.Log("CombatManager: Forzando fin de combate (DERROTA) con tecla 9.");
             EndCombat(false);
         }
     }

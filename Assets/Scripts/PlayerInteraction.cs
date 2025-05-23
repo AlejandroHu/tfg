@@ -47,7 +47,7 @@ public class PlayerInteraction : MonoBehaviour
                 if (!currentActiveDialogue.IsDialogueActive())
                 {
                     Debug.Log("PlayerInteraction: Diálogo terminado (detectado por PlayerInteraction). Habilitando input del jugador.");
-                    playerMovement.SetCanProcessInput(true); // RE-HABILITAR el input del jugador a través de PlayerMovement.
+                    playerMovement.SetCanMove(true); // RE-HABILITAR el input del jugador a través de PlayerMovement.
                     currentActiveDialogue = null; // Limpiar la referencia, ya no hay diálogo activo.
                 }
             }
@@ -114,7 +114,7 @@ public class PlayerInteraction : MonoBehaviour
                     Debug.Log("PlayerInteraction: Iniciando diálogo con " + hit.collider.name + ". Deshabilitando input del jugador.");
                     npcDialogue.StartDialogue(this.transform); // Llama al método para iniciar el diálogo en el NPC, pasando el Transform del jugador.
                     currentActiveDialogue = npcDialogue;       // Guarda la referencia a este diálogo como el activo.
-                    playerMovement.SetCanProcessInput(false);  // DESHABILITAR el input del jugador a través de PlayerMovement.
+                    playerMovement.SetCanMove(false);  // DESHABILITAR el input del jugador a través de PlayerMovement.
                 }
 
             }
