@@ -1,7 +1,4 @@
 using UnityEngine;
-// Asegúrate de que el namespace sea correcto si ItemData y PlayerInventory están en uno.
-// Por ejemplo, si tus scripts de inventario están en "TuJuego.Inventario":
-// using TuJuego.Inventario; 
 
 public class InventoryTestAdder : MonoBehaviour
 {
@@ -12,9 +9,7 @@ public class InventoryTestAdder : MonoBehaviour
     [Tooltip("Arrastra aquí tu asset de ItemData para la 'Espada de Acero' desde la ventana de Proyecto.")]
     public ItemData itemEspadaDeAcero;
 
-    // Puedes añadir más items de prueba aquí si lo necesitas
-    // public ItemData itemPocion;
-    // public int cantidadPocion = 1;
+
 
     [Header("Teclas de Prueba")]
     [Tooltip("Tecla para añadir la Espada de Hierro.")]
@@ -64,7 +59,7 @@ public class InventoryTestAdder : MonoBehaviour
             }
         }
 
-        // Ejemplo para añadir poción (si lo necesitas)
+        // Ejemplo para añadir poción 
         /*
         if (Input.GetKeyDown(addPocionKey)) 
         {
@@ -118,7 +113,7 @@ public class InventoryTestAdder : MonoBehaviour
                 {
                     Debug.Log("- Slot nulo detectado en la lista (esto podría indicar un problema en cómo se añaden/quitan slots).");
                 }
-                // No es necesario un 'else' para slot.item == null si el slot existe pero está lógicamente vacío.
+                
             }
             Debug.Log("-----------------------------");
         }

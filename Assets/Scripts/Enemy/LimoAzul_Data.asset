@@ -24,5 +24,5 @@ MonoBehaviour:
   baseSpeed: 5
   abilities: []
   xpReward: 10
-  itemDrop: {fileID: 0}
+  itemDrop: {fileID: 11400000, guid: 239648efade2599418f2508e6c3db91c, type: 2}
   itemDropChance: 0.1

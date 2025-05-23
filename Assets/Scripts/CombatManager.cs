@@ -1,193 +1,233 @@
 using UnityEngine;
-using System.Collections.Generic; // Necesario para List
+using System.Collections;
+using System.Collections.Generic;
+using Cinemachine;
+using TopDown;
 
-// Asegúrate de que los namespaces de Character, EnemyData, PlayerMovement sean accesibles
-// Si están en un namespace como "TopDown", necesitarás:
- using TopDown; 
-// O los namespaces específicos si son diferentes:
-// using TuJuego.Personajes; 
-// using TuJuego.Enemigos;   
-
-/// <summary>
-/// Gestiona el inicio, el flujo y el final de las secuencias de combate.
-/// </summary>
 public class CombatManager : MonoBehaviour
 {
-    // --- Singleton Pattern ---
     public static CombatManager Instance { get; private set; }
 
     [Header("Estado del Combate")]
-    [Tooltip("Indica si una secuencia de combate está actualmente activa.")]
     [SerializeField] private bool isCombatActive = false;
-    public bool IsCombatActive => isCombatActive; // Propiedad para leer el estado desde fuera
+    public bool IsCombatActive => isCombatActive;
 
-    // Referencias a los participantes del combate actual
+    [Header("Configuración de Escena y UI")]
+    [Tooltip("GameObject raíz que contiene todos los elementos de la exploración.")]
+    [SerializeField] private GameObject explorationRootGameObject;
+    [Tooltip("GameObject raíz que contiene la arena de combate actual.")]
+    [SerializeField] private GameObject currentCombatArenaGameObject;
+    [Tooltip("Cámara virtual de Cinemachine para la exploración.")]
+    [SerializeField] private CinemachineVirtualCamera explorationCamera;
+    [Tooltip("Cámara virtual de Cinemachine para el combate.")]
+    [SerializeField] private CinemachineVirtualCamera combatCamera;
+    [Tooltip("GameObject raíz del panel de UI para la pantalla de combate.")]
+    [SerializeField] private GameObject combatScreenUIPanel;
+    [Tooltip("Referencia al CanvasGroup del panel de fundido (fade).")]
+    [SerializeField] private CanvasGroup fadePanelCanvasGroup;
+    [SerializeField] private float fadeDuration = 0.3f; // Un poco más rápido puede sentirse mejor
+
+    [Header("Posiciones de Combate (Dentro de la Arena de Combate)")]
+    [SerializeField] private List<Transform> partySpawnPoints = new List<Transform>();
+    [SerializeField] private List<Transform> enemySpawnPoints = new List<Transform>();
+
     private List<Character> currentPlayerParty;
     private List<EnemyData> currentEnemyGroup;
-
-    // Referencia al script de movimiento del jugador para pausarlo/reanudarlo
     private PlayerMovement playerMovementController;
+    private EnemyEncounter _activeEncounter;
+
+    private List<GameObject> _partyCombatSprites = new List<GameObject>();
+    private List<GameObject> _enemyCombatSprites = new List<GameObject>();
 
     void Awake()
     {
-        // Lógica del Singleton
-        if (Instance != null && Instance != this)
-        {
-            Debug.LogWarning("CombatManager: Se encontró otra instancia. Destruyendo este GameObject.");
-            Destroy(gameObject);
-            return;
-        }
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
-        // DontDestroyOnLoad(gameObject); // Considerar si este manager debe persistir entre escenas.
-        // Si el combate siempre ocurre en la misma escena de exploración
-        // y este manager está en un objeto de esa escena, podría no ser necesario.
-        // Si tienes escenas de combate separadas, SÍ necesitará persistir.
     }
 
     void Start()
     {
-        // Intentar encontrar el PlayerMovement automáticamente al inicio.
-        // Esto asume que solo hay un PlayerMovement activo en la escena.
         playerMovementController = FindObjectOfType<PlayerMovement>();
-        if (playerMovementController == null)
+        if (playerMovementController == null) Debug.LogWarning("CombatManager: No se encontró PlayerMovement.", this);
+
+        if (fadePanelCanvasGroup != null)
         {
-            Debug.LogWarning("CombatManager: No se encontró el script PlayerMovement en la escena. La pausa del jugador podría no funcionar.", this);
-        }
-    }
-
-    /// <summary>
-    /// Inicia una secuencia de combate con la party del jugador y un grupo de enemigos.
-    /// </summary>
-    /// <param name="playerParty">La lista de componentes Character de los personajes del jugador que participarán.</param>
-    /// <param name="enemyGroup">La lista de ScriptableObjects EnemyData para los enemigos de este encuentro.</param>
-    /// <param name="encounterReference">La referencia al EnemyEncounter que inició el combate (para marcarlo como derrotado después).</param>
-    public void StartCombat(List<Character> playerParty, List<EnemyData> enemyGroup, EnemyEncounter encounterReference)
-    {
-        if (isCombatActive)
-        {
-            Debug.LogWarning("CombatManager: Se intentó iniciar un combate mientras otro ya estaba activo.");
-            return;
-        }
-        if (playerParty == null || playerParty.Count == 0)
-        {
-            Debug.LogError("CombatManager: Se intentó iniciar combate sin personajes en la party del jugador.");
-            return;
-        }
-        if (enemyGroup == null || enemyGroup.Count == 0)
-        {
-            Debug.LogError("CombatManager: Se intentó iniciar combate sin enemigos en el enemyGroup.");
-            return;
-        }
-        if (encounterReference == null)
-        {
-            Debug.LogError("CombatManager: Se intentó iniciar combate sin una referencia al EnemyEncounter.");
-            return;
-        }
-
-        Debug.Log("--- ¡COMBATE INICIADO! ---");
-        isCombatActive = true;
-
-        // Guardar copias de las listas de participantes para este combate.
-        this.currentPlayerParty = new List<Character>(playerParty);
-        this.currentEnemyGroup = new List<EnemyData>(enemyGroup);
-        // Guardar la referencia al encuentro para poder marcarlo como derrotado después.
-        // private EnemyEncounter _activeEncounter = encounterReference; // Necesitarás declarar _activeEncounter
-
-        // 1. Pausar al jugador (y potencialmente otros sistemas de exploración)
-        if (playerMovementController != null)
-        {
-            playerMovementController.SetCanMove(false);
-            Debug.Log("CombatManager: Movimiento del jugador DESACTIVADO.");
-        }
-
-        // 2. (FUTURO) Realizar transición visual a la "arena" de combate.
-        //    Esto podría implicar activar/desactivar GameObjects, cambiar la cámara,
-        //    cargar un fondo de batalla específico, etc.
-        //    Ejemplo: UIManager.Instance.ShowBattleTransition();
-
-        Debug.Log("Party del Jugador en combate:");
-        foreach (Character member in currentPlayerParty)
-        {
-            if (member != null) Debug.Log("- " + member.characterName);
-        }
-        Debug.Log("Grupo de Enemigos en combate:");
-        foreach (EnemyData enemy in currentEnemyGroup)
-        {
-            if (enemy != null) Debug.Log("- " + enemy.enemyName);
-        }
-
-        // 3. (FUTURO) Activar la Interfaz de Usuario (UI) de combate.
-        //    Ejemplo: CombatUIManager.Instance.ShowCombatUI(currentPlayerParty, currentEnemyGroup);
-
-        // 4. (FUTURO) Iniciar el sistema de turnos y la lógica del combate.
-        //    Ejemplo: TurnBasedSystem.StartCombat(currentPlayerParty, currentEnemyGroup);
-    }
-
-    /// <summary>
-    /// Termina la secuencia de combate actual.
-    /// </summary>
-    /// <param name="playerWon">True si el jugador ganó, false si perdió o huyó.</param>
-    public void EndCombat(bool playerWon)
-    {
-        if (!isCombatActive)
-        {
-            // Debug.LogWarning("CombatManager: Se intentó terminar un combate que no estaba activo."); // Puede ser muy verboso
-            return;
-        }
-
-        Debug.Log("--- COMBATE FINALIZADO --- ¿Jugador ganó?: " + playerWon);
-
-        // 1. (FUTURO) Procesar resultados del combate.
-        if (playerWon)
-        {
-            // Dar recompensas (XP, objetos, etc.)
-            // DistributeRewards();
-
-            // Marcar el encuentro como derrotado (si es necesario)
-            // if (_activeEncounter != null)
-            // {
-            //    _activeEncounter.MarkAsDefeated();
-            // }
+            fadePanelCanvasGroup.alpha = 0f; // Asegurarse de que esté transparente al inicio
+            fadePanelCanvasGroup.gameObject.SetActive(false); // Y desactivado
         }
         else
         {
-            // Lógica de Game Over o penalización.
-            // HandlePlayerDefeat();
+            Debug.LogWarning("CombatManager: 'fadePanelCanvasGroup' no asignado. El fundido no funcionará.", this);
         }
 
-        // 2. (FUTURO) Realizar transición visual de vuelta a la exploración.
-        //    Ejemplo: UIManager.Instance.HideBattleTransition();
-        //    Desactivar UI de combate, reactivar UI de exploración.
+        if (combatScreenUIPanel != null) combatScreenUIPanel.SetActive(false);
+        if (currentCombatArenaGameObject != null) currentCombatArenaGameObject.SetActive(false);
+        if (explorationRootGameObject != null) explorationRootGameObject.SetActive(true); // Asegurar que la exploración esté activa
 
-        // 3. Reactivar el movimiento del jugador (y otros sistemas de exploración).
-        if (playerMovementController != null)
-        {
-            playerMovementController.SetCanMove(true);
-            Debug.Log("CombatManager: Movimiento del jugador REACTIVADO.");
-        }
-
-        // 4. Limpiar datos del combate actual.
-        isCombatActive = false;
-        currentPlayerParty = null;
-        currentEnemyGroup = null;
-        // _activeEncounter = null;
+        if (explorationCamera != null) explorationCamera.Priority = 10;
+        if (combatCamera != null) combatCamera.Priority = 9;
     }
 
-    // Método de prueba para terminar el combate (ej: con una tecla).
-    // Esto es útil durante el desarrollo antes de tener las condiciones de victoria/derrota implementadas.
+    public void StartCombat(List<Character> playerParty, List<EnemyData> enemyGroup, EnemyEncounter encounterReference)
+    {
+        if (isCombatActive) return;
+        if (playerParty == null || playerParty.Count == 0) { Debug.LogError("CombatManager: Party vacía."); return; }
+        if (enemyGroup == null || enemyGroup.Count == 0) { Debug.LogError("CombatManager: Grupo de enemigos vacío."); return; }
+        if (encounterReference == null) { Debug.LogError("CombatManager: Referencia a EnemyEncounter nula."); return; }
+
+        this.currentPlayerParty = new List<Character>(playerParty);
+        this.currentEnemyGroup = new List<EnemyData>(enemyGroup);
+        this._activeEncounter = encounterReference;
+
+        StartCoroutine(CombatTransitionCoroutine(true));
+    }
+
+    public void EndCombat(bool playerWon)
+    {
+        if (!isCombatActive) return;
+        StartCoroutine(CombatTransitionCoroutine(false, playerWon));
+    }
+
+    private IEnumerator CombatTransitionCoroutine(bool startingCombat, bool playerWon = false)
+    {
+        isCombatActive = startingCombat;
+        if (playerMovementController != null) playerMovementController.SetCanMove(false);
+
+        // Fade Out
+        if (fadePanelCanvasGroup != null)
+        {
+            fadePanelCanvasGroup.gameObject.SetActive(true); // Activar el panel antes de empezar el fade
+            float timer = 0f;
+            while (timer < fadeDuration)
+            {
+                fadePanelCanvasGroup.alpha = Mathf.Lerp(0f, 1f, timer / fadeDuration);
+                timer += Time.deltaTime;
+                yield return null;
+            }
+            fadePanelCanvasGroup.alpha = 1f; // Asegurar opacidad completa
+        }
+        else
+        {
+            yield return new WaitForSeconds(0.1f); // Pequeña pausa si no hay fade panel
+        }
+
+        // --- Configuración/Restauración MIENTRAS la pantalla está en negro ---
+        if (startingCombat)
+        {
+            Debug.Log("--- ¡COMBATE INICIADO! (Configurando escena en negro) ---");
+            if (explorationRootGameObject != null) explorationRootGameObject.SetActive(false);
+            if (currentCombatArenaGameObject != null) currentCombatArenaGameObject.SetActive(true);
+
+            if (playerMovementController != null && playerMovementController.TryGetComponent<SpriteRenderer>(out SpriteRenderer playerSpriteRenderer))
+            {
+                playerSpriteRenderer.enabled = false;
+            }
+
+            SetupCombatants();
+
+            if (combatCamera != null) combatCamera.Priority = 11;
+            if (explorationCamera != null) explorationCamera.Priority = 9;
+            if (combatScreenUIPanel != null) combatScreenUIPanel.SetActive(true);
+        }
+        else // Terminando el combate
+        {
+            Debug.Log("--- COMBATE FINALIZADO (Restaurando escena en negro) --- ¿Jugador ganó?: " + playerWon);
+            if (explorationRootGameObject != null) explorationRootGameObject.SetActive(true);
+            if (currentCombatArenaGameObject != null) currentCombatArenaGameObject.SetActive(false);
+
+            if (playerMovementController != null && playerMovementController.TryGetComponent<SpriteRenderer>(out SpriteRenderer playerSpriteRenderer))
+            {
+                playerSpriteRenderer.enabled = true;
+            }
+
+            CleanupCombatants();
+
+            if (explorationCamera != null) explorationCamera.Priority = 10;
+            if (combatCamera != null) combatCamera.Priority = 9;
+            if (combatScreenUIPanel != null) combatScreenUIPanel.SetActive(false);
+
+            if (playerWon && _activeEncounter != null)
+            {
+                _activeEncounter.MarkAsDefeated();
+            }
+        }
+        // --- Fin Configuración/Restauración ---
+
+        // Esperar un frame extra puede ayudar a que los SetActive se procesen antes del Fade In
+        yield return null;
+
+        // Fade In
+        if (fadePanelCanvasGroup != null)
+        {
+            float timer = 0f;
+            while (timer < fadeDuration)
+            {
+                fadePanelCanvasGroup.alpha = Mathf.Lerp(1f, 0f, timer / fadeDuration);
+                timer += Time.deltaTime;
+                yield return null;
+            }
+            fadePanelCanvasGroup.alpha = 0f;
+            fadePanelCanvasGroup.gameObject.SetActive(false); // Desactivar el panel cuando es transparente
+        }
+
+        if (!startingCombat)
+        {
+            if (playerMovementController != null) playerMovementController.SetCanMove(true);
+            this.currentPlayerParty = null;
+            this.currentEnemyGroup = null;
+            this._activeEncounter = null;
+            isCombatActive = false;
+        }
+        else
+        {
+            Debug.Log("CombatManager: Combate listo para empezar la lógica de turnos.");
+            // Aquí iniciarías la lógica de turnos
+        }
+    }
+
+    private void SetupCombatants()
+    {
+        CleanupCombatants();
+        for (int i = 0; i < currentPlayerParty.Count; i++)
+        {
+            if (i < partySpawnPoints.Count && partySpawnPoints[i] != null && currentPlayerParty[i] != null)
+            {
+                GameObject partyMemberSpriteGO = new GameObject("PartyCombatSprite_" + currentPlayerParty[i].characterName);
+                SpriteRenderer sr = partyMemberSpriteGO.AddComponent<SpriteRenderer>();
+                sr.sprite = currentPlayerParty[i].portraitSprite;
+                sr.sortingLayerName = "Characters_Combat";
+                partyMemberSpriteGO.transform.position = partySpawnPoints[i].position;
+                if (currentCombatArenaGameObject != null) partyMemberSpriteGO.transform.SetParent(currentCombatArenaGameObject.transform);
+                _partyCombatSprites.Add(partyMemberSpriteGO);
+            }
+        }
+        for (int i = 0; i < currentEnemyGroup.Count; i++)
+        {
+            if (i < enemySpawnPoints.Count && enemySpawnPoints[i] != null && currentEnemyGroup[i] != null)
+            {
+                GameObject enemySpriteGO = new GameObject("EnemyCombatSprite_" + currentEnemyGroup[i].enemyName);
+                SpriteRenderer sr = enemySpriteGO.AddComponent<SpriteRenderer>();
+                sr.sprite = currentEnemyGroup[i].battleSprite;
+                sr.sortingLayerName = "Characters_Combat";
+                enemySpriteGO.transform.position = enemySpawnPoints[i].position;
+                if (currentCombatArenaGameObject != null) enemySpriteGO.transform.SetParent(currentCombatArenaGameObject.transform);
+                _enemyCombatSprites.Add(enemySpriteGO);
+            }
+        }
+    }
+
+    private void CleanupCombatants()
+    {
+        foreach (GameObject go in _partyCombatSprites) Destroy(go);
+        _partyCombatSprites.Clear();
+        foreach (GameObject go in _enemyCombatSprites) Destroy(go);
+        _enemyCombatSprites.Clear();
+    }
+
     void Update()
     {
-        if (!isCombatActive) return; // Solo procesar si el combate está activo.
-
-        if (Input.GetKeyDown(KeyCode.Alpha0)) // Ejemplo: Tecla 0 para simular victoria del jugador.
-        {
-            Debug.Log("CombatManager: Forzando fin de combate (VICTORIA) con tecla 0.");
-            EndCombat(true);
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha9)) // Ejemplo: Tecla 9 para simular derrota del jugador.
-        {
-            Debug.Log("CombatManager: Forzando fin de combate (DERROTA) con tecla 9.");
-            EndCombat(false);
-        }
+        if (!isCombatActive) return;
+        if (Input.GetKeyDown(KeyCode.Alpha0)) EndCombat(true);
+        else if (Input.GetKeyDown(KeyCode.Alpha9)) EndCombat(false);
     }
 }
