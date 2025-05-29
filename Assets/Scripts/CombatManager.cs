@@ -1,74 +1,69 @@
 using UnityEngine;
-using UnityEngine.UI; // Necesario para Button
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq; // Necesario para OrderBy
+using System.Linq;
 using Cinemachine;
-using TopDown; // Asumiendo que PlayerMovement y Character están aquí
+using TopDown;
 
-// Clase simple para representar a cualquier participante en el combate
+// (Clase Combatant sin cambios)
 public class Combatant
 {
-    public Character characterData; // Si es un personaje del jugador
-    public EnemyData enemyData;     // Si es un enemigo
-    public GameObject combatSpriteGO; // El GameObject del sprite en la arena de combate
+    public Character characterData;
+    public EnemyData enemyData;
+    public GameObject combatSpriteGO;
     public int speed;
     public bool isPlayerCharacter;
     public int currentHP;
     public int maxHP;
-    // (Añadir más datos necesarios como currentMP, maxMP, etc.)
+    public bool isDefeated = false;
 
-    // Constructor para personajes del jugador
     public Combatant(Character character, GameObject spriteGO)
     {
         characterData = character;
-        enemyData = null; // No es un enemigo
+        enemyData = null;
         combatSpriteGO = spriteGO;
-        speed = character.Speed; // Asume que Character tiene una propiedad Speed
+        speed = character.Speed;
         isPlayerCharacter = true;
-        currentHP = character.currentHP; // Iniciar con HP actual del personaje
+        currentHP = character.currentHP;
         maxHP = character.MaxHP;
+        isDefeated = (currentHP <= 0);
     }
 
-    // Constructor para enemigos
     public Combatant(EnemyData enemy, GameObject spriteGO)
     {
-        characterData = null; // No es un personaje del jugador
+        characterData = null;
         enemyData = enemy;
         combatSpriteGO = spriteGO;
-        speed = enemy.baseSpeed; // Asume que EnemyData tiene baseSpeed
+        speed = enemy.baseSpeed;
         isPlayerCharacter = false;
-        currentHP = enemy.maxHP; // Los enemigos empiezan con HP al máximo
+        currentHP = enemy.maxHP;
         maxHP = enemy.maxHP;
+        isDefeated = false;
     }
 
-    public string GetName()
-    {
-        return isPlayerCharacter ? characterData.characterName : enemyData.enemyName;
-    }
-
-    public int GetCurrentHP()
-    {
-        return currentHP;
-    }
-
-    public int GetMaxHP()
-    {
-        return isPlayerCharacter ? characterData.MaxHP : enemyData.maxHP;
-    }
+    public string GetName() { return isPlayerCharacter ? characterData.characterName : enemyData.enemyName; }
+    public int GetCurrentHP() { return currentHP; }
+    public int GetMaxHP() { return isPlayerCharacter ? characterData.MaxHP : enemyData.maxHP; }
+    public int GetAttack() { return isPlayerCharacter ? (characterData != null ? characterData.Attack : 0) : (enemyData != null ? enemyData.baseAttack : 0); }
+    public int GetDefense() { return isPlayerCharacter ? (characterData != null ? characterData.Defense : 0) : (enemyData != null ? enemyData.baseDefense : 0); }
 
     public void TakeDamage(int amount)
     {
+        if (isDefeated) return;
         currentHP -= amount;
         if (currentHP < 0) currentHP = 0;
-        Debug.Log($"{GetName()} recibe {amount} de daño. HP restante: {currentHP}");
-
-        // Actualizar el HUD de la party si el objetivo es un personaje del jugador
+        Debug.Log($"{GetName()} recibe {amount} de daño. HP restante: {currentHP}/{GetMaxHP()}");
+        if (currentHP <= 0)
+        {
+            isDefeated = true;
+            Debug.Log($"{GetName()} ha sido derrotado!");
+            if (combatSpriteGO != null) combatSpriteGO.SetActive(false);
+        }
         if (isPlayerCharacter && CombatManager.Instance != null)
         {
             CombatManager.Instance.UpdatePartyStatusHUD();
         }
-        // (FUTURO: Lógica para actualizar HUD de enemigos si el objetivo es un enemigo)
     }
 }
 
@@ -83,7 +78,6 @@ public class CombatManager : MonoBehaviour
     private bool isSelectingTargetForAttack = false;
     private Combatant attackerForTargetSelection;
 
-
     [Header("Configuración de Escena y UI")]
     [SerializeField] private GameObject explorationRootGameObject;
     [SerializeField] private GameObject currentCombatArenaGameObject;
@@ -92,15 +86,12 @@ public class CombatManager : MonoBehaviour
     [SerializeField] private GameObject combatScreenUIPanel;
     [SerializeField] private CanvasGroup fadePanelCanvasGroup;
     [SerializeField] private float fadeDuration = 0.3f;
-
     [Header("Posiciones de Combate")]
     [SerializeField] private List<Transform> partySpawnPoints = new List<Transform>();
     [SerializeField] private List<Transform> enemySpawnPoints = new List<Transform>();
-
     [Header("HUD de Combate - Estado de la Party")]
     [SerializeField] private Transform partyStatusAreaContainer;
     [SerializeField] private GameObject partyMemberStatusUIPrefab;
-
     [Header("HUD de Combate - Menú de Acciones")]
     [SerializeField] private GameObject actionMenuPanel;
     [SerializeField] private Button attackButton;
@@ -108,29 +99,30 @@ public class CombatManager : MonoBehaviour
     [SerializeField] private Button defendButton;
     [SerializeField] private Button itemsButton;
     [SerializeField] private Button fleeButton;
-
     [Header("Capa de los Combatientes")]
-    [Tooltip("La LayerMask que deben tener los colliders de los enemigos para ser seleccionables.")]
     [SerializeField] private LayerMask combatantLayerMask;
 
     private List<Character> currentPlayerPartyData;
     private List<EnemyData> currentEnemyGroupData;
-
     private PlayerMovement playerMovementController;
     private EnemyEncounter _activeEncounter;
-
     private List<GameObject> _partyCombatSpriteGOs = new List<GameObject>();
     private List<GameObject> _enemyCombatSpriteGOs = new List<GameObject>();
     private List<PartyMemberCombatStatusUI> _partyStatusUIs = new List<PartyMemberCombatStatusUI>();
-
     private List<Combatant> _combatants = new List<Combatant>();
     private int _currentCombatantIndex = -1;
     private Combatant _activeCombatant;
 
     void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        if (Instance != null && Instance != this)
+        {
+            Debug.LogWarning("CombatManager: Instancia DUPLICADA. Destruyendo este: " + gameObject.name);
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
+        Debug.Log("CombatManager: Awake - Instancia configurada.");
     }
 
     void Start()
@@ -167,10 +159,17 @@ public class CombatManager : MonoBehaviour
 
     public void StartCombat(List<Character> playerParty, List<EnemyData> enemyGroup, EnemyEncounter encounterReference)
     {
-        if (isCombatActive) return;
+        if (isCombatActive)
+        {
+            Debug.LogWarning("CombatManager: StartCombat llamado pero isCombatActive ya es true.");
+            return;
+        }
         if (playerParty == null || playerParty.Count == 0) { Debug.LogError("CombatManager: Party vacía al iniciar combate."); return; }
         if (enemyGroup == null || enemyGroup.Count == 0) { Debug.LogError("CombatManager: Grupo de enemigos vacío al iniciar combate."); return; }
         if (encounterReference == null) { Debug.LogError("CombatManager: Referencia a EnemyEncounter nula al iniciar combate."); return; }
+
+        Debug.Log("CombatManager: StartCombat - INICIANDO. Estableciendo isCombatActive a true.");
+        isCombatActive = true; // Establecer aquí antes de la corrutina
 
         this.currentPlayerPartyData = new List<Character>(playerParty);
         this.currentEnemyGroupData = new List<EnemyData>(enemyGroup);
@@ -181,12 +180,24 @@ public class CombatManager : MonoBehaviour
 
     public void EndCombat(bool playerWon)
     {
-        if (!isCombatActive) return;
+        if (!isCombatActive && !isSelectingTargetForAttack)
+        {
+            Debug.LogWarning("CombatManager: EndCombat llamado pero isCombatActive ya era false y no se estaba seleccionando objetivo.");
+            // return; // Permitir que se ejecute para limpiar la UI por si acaso
+        }
+        Debug.Log("CombatManager: EndCombat - INICIANDO. Estableciendo isCombatActive a false.");
+        isCombatActive = false;
+        isSelectingTargetForAttack = false;
+        attackerForTargetSelection = null;
+
         StartCoroutine(CombatTransitionCoroutine(false, playerWon));
     }
 
     private IEnumerator CombatTransitionCoroutine(bool startingCombat, bool playerWon = false)
     {
+        Debug.Log($"CombatManager: CombatTransitionCoroutine - startingCombat: {startingCombat}, isCombatActive actual: {isCombatActive}");
+        // isCombatActive ya debería estar establecido por StartCombat o EndCombat ANTES de llamar a esta corrutina.
+
         if (playerMovementController != null) playerMovementController.SetCanMove(false);
 
         // Fade Out
@@ -208,8 +219,10 @@ public class CombatManager : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
 
+        // Configuración/Restauración MIENTRAS la pantalla está en negro
         if (startingCombat)
         {
+            if (actionMenuPanel != null) actionMenuPanel.SetActive(false);
             if (explorationRootGameObject != null) explorationRootGameObject.SetActive(false);
             if (currentCombatArenaGameObject != null) currentCombatArenaGameObject.SetActive(true);
             if (playerMovementController != null && playerMovementController.TryGetComponent<SpriteRenderer>(out SpriteRenderer pr)) pr.enabled = false;
@@ -220,10 +233,10 @@ public class CombatManager : MonoBehaviour
             if (combatCamera != null) combatCamera.Priority = 11;
             if (explorationCamera != null) explorationCamera.Priority = 9;
             if (combatScreenUIPanel != null) combatScreenUIPanel.SetActive(true);
-            if (actionMenuPanel != null) actionMenuPanel.SetActive(false);
         }
-        else
+        else // Terminando el combate
         {
+            if (actionMenuPanel != null) actionMenuPanel.SetActive(false);
             if (explorationRootGameObject != null) explorationRootGameObject.SetActive(true);
             if (currentCombatArenaGameObject != null) currentCombatArenaGameObject.SetActive(false);
             if (playerMovementController != null && playerMovementController.TryGetComponent<SpriteRenderer>(out SpriteRenderer pr)) pr.enabled = true;
@@ -235,12 +248,16 @@ public class CombatManager : MonoBehaviour
             if (combatCamera != null) combatCamera.Priority = 9;
             if (combatScreenUIPanel != null) combatScreenUIPanel.SetActive(false);
 
-            if (playerWon && _activeEncounter != null) _activeEncounter.MarkAsDefeated();
+            if (playerWon && _activeEncounter != null)
+            {
+                _activeEncounter.MarkAsDefeated();
+            }
         }
 
         Canvas.ForceUpdateCanvases();
         yield return new WaitForEndOfFrame();
 
+        // Fade In
         if (fadePanelCanvasGroup != null)
         {
             float timer = 0f;
@@ -260,12 +277,13 @@ public class CombatManager : MonoBehaviour
             this.currentPlayerPartyData = null;
             this.currentEnemyGroupData = null;
             this._activeEncounter = null;
-            isCombatActive = false;
+            // isCombatActive ya se estableció a false en EndCombat()
+            Debug.Log("CombatManager: CombatTransitionCoroutine - Fin de EndCombat. isCombatActive: " + isCombatActive);
         }
-        else
+        else // Al iniciar el combate
         {
-            isCombatActive = true;
-            Debug.Log("CombatManager: Combate listo. Iniciando primer turno.");
+            // isCombatActive ya se estableció a true en StartCombat()
+            Debug.Log("CombatManager: CombatTransitionCoroutine - Fin de StartCombat. isCombatActive: " + isCombatActive + ". Llamando a NextTurn.");
             NextTurn();
         }
     }
@@ -275,48 +293,55 @@ public class CombatManager : MonoBehaviour
         CleanupCombatants();
         _combatants.Clear();
 
-        // Añadir personajes de la party
-        for (int i = 0; i < currentPlayerPartyData.Count; i++)
+        if (currentPlayerPartyData != null)
         {
-            if (i < partySpawnPoints.Count && partySpawnPoints[i] != null && currentPlayerPartyData[i] != null)
+            for (int i = 0; i < currentPlayerPartyData.Count; i++)
             {
-                GameObject partyMemberSpriteGO = new GameObject("PartyCombatSprite_" + currentPlayerPartyData[i].characterName);
-                partyMemberSpriteGO.transform.position = partySpawnPoints[i].position;
-                if (currentCombatArenaGameObject != null) partyMemberSpriteGO.transform.SetParent(currentCombatArenaGameObject.transform);
+                if (i < partySpawnPoints.Count && partySpawnPoints[i] != null && currentPlayerPartyData[i] != null)
+                {
+                    GameObject partyMemberSpriteGO = new GameObject("PartyCombatSprite_" + currentPlayerPartyData[i].characterName);
+                    partyMemberSpriteGO.transform.position = partySpawnPoints[i].position;
+                    if (currentCombatArenaGameObject != null) partyMemberSpriteGO.transform.SetParent(currentCombatArenaGameObject.transform);
 
-                SpriteRenderer sr = partyMemberSpriteGO.AddComponent<SpriteRenderer>();
-                sr.sprite = currentPlayerPartyData[i].portraitSprite; // O un campo battleSprite si lo tienes
-                sr.sortingLayerName = "Characters_Combat";
-                // (Añadir BoxCollider2D para selección de aliados si es necesario)
-                // partyMemberSpriteGO.layer = LayerMask.NameToLayer("PlayerParty"); // Capa para aliados
+                    SpriteRenderer sr = partyMemberSpriteGO.AddComponent<SpriteRenderer>();
+                    sr.sprite = currentPlayerPartyData[i].portraitSprite;
+                    sr.sortingLayerName = "Characters_Combat";
 
-                _partyCombatSpriteGOs.Add(partyMemberSpriteGO);
-                _combatants.Add(new Combatant(currentPlayerPartyData[i], partyMemberSpriteGO));
+                    _partyCombatSpriteGOs.Add(partyMemberSpriteGO);
+                    _combatants.Add(new Combatant(currentPlayerPartyData[i], partyMemberSpriteGO));
+                }
             }
         }
 
-        // Añadir enemigos
-        for (int i = 0; i < currentEnemyGroupData.Count; i++)
+        if (currentEnemyGroupData != null)
         {
-            if (i < enemySpawnPoints.Count && enemySpawnPoints[i] != null && currentEnemyGroupData[i] != null)
+            for (int i = 0; i < currentEnemyGroupData.Count; i++)
             {
-                GameObject enemySpriteGO = new GameObject("EnemyCombatSprite_" + currentEnemyGroupData[i].enemyName);
-                enemySpriteGO.transform.position = enemySpawnPoints[i].position;
-                if (currentCombatArenaGameObject != null) enemySpriteGO.transform.SetParent(currentCombatArenaGameObject.transform);
+                if (i < enemySpawnPoints.Count && enemySpawnPoints[i] != null && currentEnemyGroupData[i] != null)
+                {
+                    GameObject enemySpriteGO = new GameObject("EnemyCombatSprite_" + currentEnemyGroupData[i].enemyName);
+                    enemySpriteGO.transform.position = enemySpawnPoints[i].position;
+                    if (currentCombatArenaGameObject != null) enemySpriteGO.transform.SetParent(currentCombatArenaGameObject.transform);
 
-                SpriteRenderer sr = enemySpriteGO.AddComponent<SpriteRenderer>();
-                sr.sprite = currentEnemyGroupData[i].battleSprite;
-                sr.sortingLayerName = "Characters_Combat";
+                    SpriteRenderer sr = enemySpriteGO.AddComponent<SpriteRenderer>();
+                    sr.sprite = currentEnemyGroupData[i].battleSprite;
+                    sr.sortingLayerName = "Characters_Combat";
 
-                BoxCollider2D col = enemySpriteGO.AddComponent<BoxCollider2D>();
-                col.isTrigger = true; // O false si prefieres colisión física para el raycast
-                                      // Ajustar col.size si es necesario
+                    BoxCollider2D col = enemySpriteGO.AddComponent<BoxCollider2D>();
+                    col.isTrigger = true;
+                    if (sr.sprite != null)
+                    {
+                        col.size = new Vector2(sr.sprite.bounds.size.x * 0.8f, sr.sprite.bounds.size.y * 0.8f);
+                        // float yOffset = -sr.sprite.bounds.extents.y * 0.2f; 
+                        // col.offset = new Vector2(0, yOffset); 
+                    }
+                    else col.size = new Vector2(0.5f, 0.5f);
 
-                // Asignar la capa para que el Raycast lo detecte
-                enemySpriteGO.layer = LayerMask.NameToLayer("EnemiesInCombat"); // Asegúrate de que esta capa exista y esté en combatantLayerMask
+                    enemySpriteGO.layer = LayerMask.NameToLayer("EnemiesInCombat");
 
-                _enemyCombatSpriteGOs.Add(enemySpriteGO);
-                _combatants.Add(new Combatant(currentEnemyGroupData[i], enemySpriteGO));
+                    _enemyCombatSpriteGOs.Add(enemySpriteGO);
+                    _combatants.Add(new Combatant(currentEnemyGroupData[i], enemySpriteGO));
+                }
             }
         }
 
@@ -375,16 +400,24 @@ public class CombatManager : MonoBehaviour
 
     private void NextTurn()
     {
-        if (!isCombatActive) return;
+        Debug.Log($"CombatManager: NextTurn() - INICIO. isCombatActive: {isCombatActive}");
+        if (!isCombatActive)
+        {
+            Debug.LogWarning("CombatManager: NextTurn() - Saliendo porque isCombatActive es false.");
+            return;
+        }
 
-        // (FUTURO: Comprobar condiciones de victoria/derrota aquí antes de cada turno)
-        // if (IsPartyDefeated() || IsEnemyGroupDefeated()) { /* ... EndCombat ... */ return; }
+        if (CheckCombatEndConditions())
+        {
+            Debug.Log("CombatManager: NextTurn() - Saliendo porque CheckCombatEndConditions() devolvió true (combate terminado).");
+            return;
+        }
 
         _currentCombatantIndex++;
         if (_currentCombatantIndex >= _combatants.Count)
         {
             _currentCombatantIndex = 0;
-            Debug.Log("CombatManager: Nueva Ronda de Combate Iniciada.");
+            Debug.Log("CombatManager: ----- Nueva Ronda de Combate Iniciada -----");
         }
 
         if (_combatants.Count == 0)
@@ -394,14 +427,23 @@ public class CombatManager : MonoBehaviour
             return;
         }
         _activeCombatant = _combatants[_currentCombatantIndex];
+
+        if (_activeCombatant.isDefeated)
+        {
+            Debug.Log($"CombatManager: {_activeCombatant.GetName()} está derrotado. Saltando turno.");
+            NextTurn();
+            return;
+        }
+
         StartTurnForActiveCombatant();
     }
 
     private void StartTurnForActiveCombatant()
     {
-        if (_activeCombatant == null)
+        Debug.Log($"CombatManager: StartTurnForActiveCombatant() - INICIO para {_activeCombatant?.GetName()}. isCombatActive: {isCombatActive}");
+        if (_activeCombatant == null || _activeCombatant.isDefeated)
         {
-            Debug.LogError("CombatManager: _activeCombatant es nulo. Saltando turno.");
+            Debug.LogWarning($"CombatManager: StartTurnForActiveCombatant - _activeCombatant es nulo o derrotado. Intentando NextTurn.");
             NextTurn();
             return;
         }
@@ -410,7 +452,12 @@ public class CombatManager : MonoBehaviour
 
         if (_activeCombatant.isPlayerCharacter)
         {
-            if (actionMenuPanel != null) actionMenuPanel.SetActive(true);
+            if (actionMenuPanel != null)
+            {
+                Debug.Log("CombatManager: Activando actionMenuPanel para jugador.");
+                actionMenuPanel.SetActive(true);
+            }
+            else Debug.LogError("CombatManager: actionMenuPanel es NULO al intentar activarlo para jugador.");
         }
         else
         {
@@ -422,26 +469,31 @@ public class CombatManager : MonoBehaviour
     private IEnumerator EnemyTurnCoroutine(Combatant enemy)
     {
         Debug.Log($"CombatManager: {enemy.GetName()} está pensando...");
-        yield return new WaitForSeconds(1.0f);
+        yield return new WaitForSeconds(1.5f);
 
-        if (currentPlayerPartyData.Count > 0)
+        if (enemy.isDefeated)
         {
-            List<Character> livingPartyMembers = currentPlayerPartyData.Where(p => p.currentHP > 0).ToList();
-            if (livingPartyMembers.Count > 0)
-            {
-                Character targetCharacter = livingPartyMembers[Random.Range(0, livingPartyMembers.Count)];
-                Debug.Log($"{enemy.GetName()} ataca a {targetCharacter.characterName}!");
-                // (FUTURO: Aplicar daño real)
-                // targetCharacter.TakeDamage(enemy.enemyData.baseAttack); 
-                // UpdatePartyStatusHUD(); 
-            }
-            else
-            {
-                Debug.Log($"{enemy.GetName()} no tiene objetivos vivos en la party.");
-            }
+            NextTurn();
+            yield break;
+        }
+
+        List<Combatant> livingPlayerCombatants = _combatants.Where(c => c.isPlayerCharacter && !c.isDefeated).ToList();
+
+        if (livingPlayerCombatants.Count > 0)
+        {
+            Combatant target = livingPlayerCombatants[Random.Range(0, livingPlayerCombatants.Count)];
+            Debug.Log($"{enemy.GetName()} ataca a {target.GetName()}!");
+
+            int damage = Mathf.Max(1, enemy.GetAttack() - target.GetDefense());
+            target.TakeDamage(damage);
+        }
+        else
+        {
+            Debug.Log($"{enemy.GetName()} no tiene objetivos vivos en la party.");
         }
 
         Debug.Log($"CombatManager: Turno de {enemy.GetName()} finalizado.");
+        yield return new WaitForSeconds(0.5f);
         NextTurn();
     }
 
@@ -449,7 +501,7 @@ public class CombatManager : MonoBehaviour
     {
         if (!isCombatActive || _activeCombatant == null || !_activeCombatant.isPlayerCharacter || isSelectingTargetForAttack) return;
 
-        Debug.Log($"{_activeCombatant.GetName()} seleccionó ATACAR. Por favor, selecciona un objetivo.");
+        Debug.Log($"{_activeCombatant.GetName()} seleccionó ATACAR. Por favor, selecciona un objetivo enemigo.");
         isSelectingTargetForAttack = true;
         attackerForTargetSelection = _activeCombatant;
 
@@ -458,23 +510,49 @@ public class CombatManager : MonoBehaviour
 
     private void ExecuteAttack(Combatant attacker, Combatant target)
     {
-        if (attacker == null || target == null) return;
+        if (attacker == null || target == null || target.isDefeated)
+        {
+            Debug.LogWarning("ExecuteAttack: Atacante, objetivo no válido o ya derrotado.");
+            isSelectingTargetForAttack = false;
+            if (attacker != null && attacker.isPlayerCharacter && actionMenuPanel != null) actionMenuPanel.SetActive(true);
+            return;
+        }
 
         Debug.Log($"{attacker.GetName()} ataca a {target.GetName()}!");
-        int damage = 0;
-        if (attacker.isPlayerCharacter && attacker.characterData != null)
-        {
-            damage = attacker.characterData.Attack;
-        }
-        else if (!attacker.isPlayerCharacter && attacker.enemyData != null)
-        {
-            damage = attacker.enemyData.baseAttack;
-        }
+
+        int damage = Mathf.Max(1, attacker.GetAttack() - target.GetDefense());
         target.TakeDamage(damage);
 
         isSelectingTargetForAttack = false;
         attackerForTargetSelection = null;
+
+        StartCoroutine(EndPlayerActionAndProceedToNextTurn(0.5f));
+    }
+
+    private IEnumerator EndPlayerActionAndProceedToNextTurn(float delay)
+    {
+        yield return new WaitForSeconds(delay);
         NextTurn();
+    }
+
+    private bool CheckCombatEndConditions()
+    {
+        bool allEnemiesDefeated = _combatants.Where(c => !c.isPlayerCharacter).All(e => e.isDefeated);
+        if (allEnemiesDefeated && _combatants.Any(c => !c.isPlayerCharacter))
+        {
+            Debug.Log("CombatManager: ¡Todos los enemigos derrotados! El jugador gana.");
+            EndCombat(true);
+            return true;
+        }
+
+        bool allPlayersDefeated = _combatants.Where(c => c.isPlayerCharacter).All(p => p.isDefeated);
+        if (allPlayersDefeated && _combatants.Any(c => c.isPlayerCharacter))
+        {
+            Debug.Log("CombatManager: ¡Toda la party derrotada! Game Over.");
+            EndCombat(false);
+            return true;
+        }
+        return false;
     }
 
     void Update()
@@ -485,20 +563,14 @@ public class CombatManager : MonoBehaviour
             {
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                 RaycastHit2D hit = Physics2D.GetRayIntersection(ray, Mathf.Infinity, combatantLayerMask);
-
                 if (hit.collider != null)
                 {
-                    // Debug.Log("Clic detectado en: " + hit.collider.gameObject.name);
-                    Combatant targetCombatant = _combatants.FirstOrDefault(c => c.combatSpriteGO == hit.collider.gameObject && !c.isPlayerCharacter);
-
+                    Combatant targetCombatant = _combatants.FirstOrDefault(c => !c.isDefeated && c.combatSpriteGO == hit.collider.gameObject && !c.isPlayerCharacter);
                     if (targetCombatant != null)
                     {
-                        Debug.Log("Objetivo seleccionado: " + targetCombatant.GetName());
                         ExecuteAttack(attackerForTargetSelection, targetCombatant);
                     }
-                    // else Debug.Log("Clic en un objeto, pero no es un enemigo válido.");
                 }
-                // else Debug.Log("Clic en el vacío, no se seleccionó objetivo.");
             }
 
             if (!isSelectingTargetForAttack)
