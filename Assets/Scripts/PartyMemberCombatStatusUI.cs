@@ -73,6 +73,7 @@ public class PartyMemberCombatStatusUI : MonoBehaviour
     {
         if (_linkedCharacter == null)
         {
+            Debug.LogWarning("PartyMemberCombatStatusUI (" + gameObject.name + "): UpdateUIElements llamado pero _linkedCharacter es NULL.");
             //Debug.LogWarning("PartyMemberCombatStatusUI: No hay personaje vinculado para actualizar UI en " + gameObject.name);
             // Podrías poner valores por defecto o dejarlo como está si se va a desactivar.
             if (characterNameText != null) characterNameText.text = "---";
@@ -83,6 +84,7 @@ public class PartyMemberCombatStatusUI : MonoBehaviour
             if (portraitImage != null) portraitImage.enabled = false;
             return;
         }
+        Debug.Log($"PartyMemberCombatStatusUI ({gameObject.name}): UpdateUIElements para '{_linkedCharacter.characterName}'. HP Actual Leído: {_linkedCharacter.currentHP}, MaxHP: {_linkedCharacter.MaxHP}");
 
         if (characterNameText != null)
         {
