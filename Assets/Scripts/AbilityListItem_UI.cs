@@ -1,12 +1,12 @@
 using UnityEngine;
 using UnityEngine.UI;       // Necesario para Button
 using TMPro;                // Necesario para TextMeshProUGUI
-using UnityEngine.EventSystems; // Necesario para IPointerClickHandler (si quieres clic en todo el item y no solo un botón)
-using System;               // Necesario para Action (si usaras un callback más genérico)
+using UnityEngine.EventSystems; // Necesario para IPointerClickHandler
+using System;
 
-// Asegúrate de que el namespace de AbilityData y CharacterStatsScreenManager sea accesible
-// using TuJuego.Habilidades; // Si AbilityData.cs está en este namespace
-// using TuJuego.UI; // Si CharacterStatsScreenManager.cs está en este namespace
+// Asegúrate de que el namespace de AbilityData y los Managers sea accesible
+// using TuJuego.Habilidades; 
+// using TuJuego.UI; 
 
 public class AbilityListItem_UI : MonoBehaviour, IPointerClickHandler
 {
@@ -23,13 +23,14 @@ public class AbilityListItem_UI : MonoBehaviour, IPointerClickHandler
     [Tooltip("Opcional: El componente Button de este item de lista, si se usa uno.")]
     [SerializeField] private Button itemButton;
 
-    private AbilityData _representedAbility; // La habilidad que este UI representa
-
-    // --- NUEVA PROPIEDAD PÚBLICA ---
-    /// <summary>
-    /// Devuelve los datos de la habilidad que este ítem de UI está representando.
-    /// </summary>
+    private AbilityData _representedAbility;
     public AbilityData CurrentAbilityData => _representedAbility;
+
+    // --- NUEVO: Callback genérico para cuando se selecciona el ítem ---
+    // El script que instancia este UI (CombatManager o CharacterStatsScreenManager)
+    // asignará un método a esta acción.
+    public Action<AbilityData> OnItemSelectedCallback;
+
 
     void Awake()
     {
@@ -39,13 +40,7 @@ public class AbilityListItem_UI : MonoBehaviour, IPointerClickHandler
             if (abilityNameText == null)
                 Debug.LogError("AbilityListItem_UI: 'abilityNameText' no asignado/encontrado en " + gameObject.name, this);
         }
-        if (abilityIconImage == null)
-        {
-            Image[] images = GetComponentsInChildren<Image>();
-            if (images.Length > 1 && images[0].gameObject != this.gameObject) abilityIconImage = images[0]; // Intenta tomar la primera imagen hija
-            else if (images.Length > 1 && images[1].gameObject != this.gameObject) abilityIconImage = images[1]; // O la segunda si la primera es el fondo
-            // Es mejor asignarlo manualmente en el Inspector.
-        }
+        // (Fallback para abilityIconImage y mpCostText si es necesario)
 
         if (itemButton == null)
         {
@@ -59,11 +54,13 @@ public class AbilityListItem_UI : MonoBehaviour, IPointerClickHandler
     }
 
     /// <summary>
-    /// Configura este elemento de UI con los datos de una habilidad específica.
+    /// Configura este elemento de UI con los datos de una habilidad específica
+    /// y un callback para cuando se seleccione.
     /// </summary>
-    public void SetupAbilityItem(AbilityData abilityData)
+    public void SetupAbilityItem(AbilityData abilityData, Action<AbilityData> selectionCallback)
     {
         _representedAbility = abilityData;
+        OnItemSelectedCallback = selectionCallback; // Guardar el callback
 
         if (_representedAbility == null)
         {
@@ -123,15 +120,15 @@ public class AbilityListItem_UI : MonoBehaviour, IPointerClickHandler
 
     private void HandleSelection()
     {
-        if (_representedAbility != null && CharacterStatsScreenManager.Instance != null)
+        if (_representedAbility != null && OnItemSelectedCallback != null)
         {
-            // Debug.Log("AbilityListItem_UI: Clic en habilidad: " + _representedAbility.abilityName); // Puedes descomentar para depurar
-            CharacterStatsScreenManager.Instance.OnAbilityListItemClicked(_representedAbility);
+            // Debug.Log("AbilityListItem_UI: Clic en habilidad: " + _representedAbility.abilityName + ". Llamando al callback.");
+            OnItemSelectedCallback.Invoke(_representedAbility); // Llamar al callback asignado
         }
         else
         {
             if (_representedAbility == null) Debug.LogWarning("AbilityListItem_UI: _representedAbility es null al hacer clic.");
-            if (CharacterStatsScreenManager.Instance == null) Debug.LogWarning("AbilityListItem_UI: CharacterStatsScreenManager.Instance es null al hacer clic.");
+            if (OnItemSelectedCallback == null) Debug.LogWarning("AbilityListItem_UI: OnItemSelectedCallback es null. ¿Se configuró desde el Manager?");
         }
     }
 }
