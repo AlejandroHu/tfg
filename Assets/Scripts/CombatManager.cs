@@ -340,6 +340,21 @@ public class CombatManager : MonoBehaviour
                     SpriteRenderer sr = partyMemberSpriteGO.AddComponent<SpriteRenderer>();
                     sr.sprite = currentPlayerPartyData[i].portraitSprite;
                     sr.sortingLayerName = "Characters_Combat";
+                    // --- AÑADIR COLLIDER AL PERSONAJE DE LA PARTY ---
+                    BoxCollider2D partyCol = partyMemberSpriteGO.AddComponent<BoxCollider2D>();
+                    // partyCol.isTrigger = true; // Opcional, para raycast no es estrictamente necesario que sea trigger si está en la LayerMask
+                    if (sr.sprite != null)
+                    {
+                        // Ajustar tamaño al 80% del sprite, por ejemplo, o al tamaño que consideres adecuado
+                        partyCol.size = new Vector2(sr.sprite.bounds.size.x * 0.8f, sr.sprite.bounds.size.y * 0.8f);
+                    }
+                    else
+                    {
+                        partyCol.size = new Vector2(0.5f, 0.5f); // Tamaño por defecto si no hay sprite
+                    }
+                    // (Opcional pero RECOMENDADO) Asignar una capa específica para los miembros de la party
+                    // partyMemberSpriteGO.layer = LayerMask.NameToLayer("PlayerPartyInCombat"); // Crea esta capa en Unity
+                    // --- FIN COLLIDER PARTY ---
                     _partyCombatSpriteGOs.Add(partyMemberSpriteGO);
                     _combatants.Add(new Combatant(currentPlayerPartyData[i], partyMemberSpriteGO));
                 }
@@ -708,7 +723,8 @@ public class CombatManager : MonoBehaviour
             if (isSelectingTargetForAttack && Input.GetMouseButtonDown(0))
             {
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit2D hit = Physics2D.GetRayIntersection(ray, Mathf.Infinity, combatantLayerMask);
+                RaycastHit2D hit = Physics2D.GetRayIntersection(ray, Mathf.Infinity, LayerMask.GetMask("EnemiesInCombat"));
+
                 if (hit.collider != null)
                 {
                     Combatant targetCombatant = _combatants.FirstOrDefault(c => !c.isDefeated && c.combatSpriteGO == hit.collider.gameObject && !c.isPlayerCharacter);
@@ -722,9 +738,11 @@ public class CombatManager : MonoBehaviour
             {
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                 RaycastHit2D hit = Physics2D.GetRayIntersection(ray, Mathf.Infinity, combatantLayerMask);
+
                 if (hit.collider != null)
                 {
                     Combatant targetCombatant = _combatants.FirstOrDefault(c => !c.isDefeated && c.combatSpriteGO == hit.collider.gameObject);
+
                     if (targetCombatant != null && _selectedAbility != null)
                     {
                         bool isValidTargetType = false;
@@ -737,11 +755,16 @@ public class CombatManager : MonoBehaviour
                                 if (targetCombatant.isPlayerCharacter) isValidTargetType = true;
                                 break;
                         }
+
                         if (isValidTargetType)
                         {
                             ExecuteSkill(attackerForTargetSelection, targetCombatant, _selectedAbility);
                         }
-                        else CloseSkillSelectionPanel();
+                        else
+                        {
+                            Debug.LogWarning($"CombatManager: Objetivo '{targetCombatant.GetName()}' NO es válido para la habilidad '{_selectedAbility.abilityName}' (Tipo esperado: {_selectedAbility.targetType}, Tipo real: {(targetCombatant.isPlayerCharacter ? "Aliado" : "Enemigo")}).");
+                            CloseSkillSelectionPanel();
+                        }
                     }
                 }
             }
