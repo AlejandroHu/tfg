@@ -6,7 +6,7 @@ using System.Linq;
 using Cinemachine;
 using TopDown;
 
-// (Clase Combatant - la versión con el campo enemyStatusUI y el constructor modificado ya está en el Canvas)
+// Clase Combatant (CON LA CORRECCIÓN PARA LA SINCRONIZACIÓN DE HP)
 public class Combatant
 {
     public Character characterData;
@@ -14,6 +14,9 @@ public class Combatant
     public GameObject combatSpriteGO;
     public int speed;
     public bool isPlayerCharacter;
+    // 'currentHP' y 'maxHP' en Combatant ahora sirven principalmente para enemigos 
+    // o como un reflejo temporal para personajes si se decide gestionarlo así.
+    // Para personajes, la fuente de verdad de currentHP/MaxHP es characterData.
     public int currentHP;
     public int maxHP;
     public bool isDefeated = false;
@@ -28,10 +31,12 @@ public class Combatant
         combatSpriteGO = spriteGO;
         speed = character.Speed;
         isPlayerCharacter = true;
-        currentHP = character.currentHP;
-        maxHP = character.MaxHP;
-        isDefeated = (currentHP <= 0);
+        // Inicializar desde el Character. Sus valores son la fuente de verdad.
+        this.currentHP = character.currentHP;
+        this.maxHP = character.MaxHP;
+        isDefeated = (this.currentHP <= 0);
         isDefending = false;
+        Debug.Log($"Combatant CREADO para JUGADOR: {GetName()}, HP Inicial: {this.currentHP}/{this.maxHP} (Desde Character: {character.currentHP}/{character.MaxHP})");
     }
 
     public Combatant(EnemyData enemy, GameObject spriteGO, EnemyCombatStatusUI statusUIScript = null)
@@ -49,8 +54,19 @@ public class Combatant
     }
 
     public string GetName() { return isPlayerCharacter ? characterData.characterName : enemyData.enemyName; }
-    public int GetCurrentHP() { return isPlayerCharacter && characterData != null ? characterData.currentHP : currentHP; }
-    public int GetMaxHP() { return isPlayerCharacter && characterData != null ? characterData.MaxHP : maxHP; }
+
+    public int GetCurrentHP()
+    {
+        // Para personajes, siempre leer del characterData que es la fuente de verdad.
+        // Para enemigos, leer del currentHP local del Combatant.
+        return isPlayerCharacter && characterData != null ? characterData.currentHP : this.currentHP;
+    }
+
+    public int GetMaxHP()
+    {
+        return isPlayerCharacter && characterData != null ? characterData.MaxHP : this.maxHP;
+    }
+
     public int GetAttack() { return isPlayerCharacter ? (characterData != null ? characterData.Attack : 0) : (enemyData != null ? enemyData.baseAttack : 0); }
     public int GetDefense()
     {
@@ -59,26 +75,45 @@ public class Combatant
         return baseDef;
     }
 
-    public void TakeDamage(int amount)
+    public void TakeDamage(int damageAmount)
     {
         if (isDefeated) return;
-        int actualDamage = amount;
-        currentHP -= actualDamage;
-        if (currentHP < 0) currentHP = 0;
-        if (isPlayerCharacter && characterData != null) characterData.currentHP = currentHP;
 
-        Debug.Log($"{GetName()} recibe {actualDamage} de daño. HP restante: {currentHP}/{GetMaxHP()}");
+        int hpBeforeDamage = GetCurrentHP(); // Usar GetCurrentHP() para leer el valor correcto
 
-        if (currentHP <= 0)
+        int newHP = hpBeforeDamage - damageAmount;
+        if (newHP < 0) newHP = 0;
+
+        // Actualizar la fuente de verdad y la copia local
+        if (isPlayerCharacter && characterData != null)
+        {
+            characterData.currentHP = newHP; // ACTUALIZA EL CHARACTER ORIGINAL
+            this.currentHP = newHP;          // Sincroniza la copia local del Combatant
+        }
+        else
+        {
+            this.currentHP = newHP; // Para enemigos, Combatant.currentHP es la fuente
+        }
+
+        Debug.Log($"{GetName()} recibe {damageAmount} de daño. HP antes: {hpBeforeDamage}, HP después: {GetCurrentHP()}. Vida restante: {GetCurrentHP()}/{GetMaxHP()}");
+
+        if (GetCurrentHP() <= 0)
         {
             isDefeated = true;
             Debug.Log($"{GetName()} ha sido derrotado!");
             if (combatSpriteGO != null) combatSpriteGO.SetActive(false);
-            if (enemyStatusUI != null) enemyStatusUI.gameObject.SetActive(false);
+            if (enemyStatusUI != null && !isPlayerCharacter) enemyStatusUI.gameObject.SetActive(false); // Ocultar solo si es enemigo
         }
 
-        if (isPlayerCharacter && CombatManager.Instance != null) CombatManager.Instance.UpdatePartyStatusHUD();
-        else if (!isPlayerCharacter && enemyStatusUI != null) enemyStatusUI.UpdateHPDisplay();
+        // Actualizar HUDs
+        if (isPlayerCharacter && CombatManager.Instance != null)
+        {
+            CombatManager.Instance.UpdatePartyStatusHUD();
+        }
+        else if (!isPlayerCharacter && enemyStatusUI != null)
+        {
+            enemyStatusUI.UpdateHPDisplay(); // Actualizar su propia barra de HP
+        }
     }
 
     public void StartDefending()
@@ -133,6 +168,7 @@ public class CombatManager : MonoBehaviour
     [SerializeField] private GameObject skillSelectionPanel;
     [SerializeField] private Transform skillListContainer;
     [SerializeField] private GameObject abilityListItemPrefab;
+    [SerializeField] private Button closeSkillSelectionButton;
     [Header("HUD de Combate - Estado de Enemigos")]
     [SerializeField] private GameObject enemyStatusUIPrefab;
     [SerializeField] private float enemyHPBarOffsetY = 0.7f;
@@ -203,6 +239,14 @@ public class CombatManager : MonoBehaviour
         else Debug.LogWarning("CombatManager: 'defendButton' no asignado.", this);
         if (skillsButton != null) skillsButton.onClick.AddListener(OnSkillsButtonClicked);
         else Debug.LogWarning("CombatManager: 'skillsButton' no asignado.", this);
+        if (closeSkillSelectionButton != null)
+        {
+            closeSkillSelectionButton.onClick.AddListener(CloseSkillSelectionPanel);
+        }
+        else
+        {
+            Debug.LogWarning("CombatManager: 'closeSkillSelectionButton' no asignado en el panel de habilidades. No se podrá cerrar con ese botón.", this);
+        }
     }
 
     public void StartCombat(List<Character> playerParty, List<EnemyData> enemyGroup, EnemyEncounter encounterReference)
@@ -604,7 +648,7 @@ public class CombatManager : MonoBehaviour
         isSelectingSkill = false;
         isSelectingTargetForSkill = false;
         _selectedAbility = null;
-        attackerForTargetSelection = null;
+        attackerForTargetSelection = null; // Asegurarse de resetear esto también por si acaso
         if (skillSelectionPanel != null) skillSelectionPanel.SetActive(false);
         if (actionMenuPanel != null && _activeCombatant != null && _activeCombatant.isPlayerCharacter)
         {
@@ -621,8 +665,10 @@ public class CombatManager : MonoBehaviour
             return;
         }
         Debug.Log($"{attacker.GetName()} ataca a {target.GetName()}! (Defensa del objetivo: {target.GetDefense()})");
+
         int damage = Mathf.Max(1, attacker.GetAttack() - target.GetDefense());
-        target.TakeDamage(damage);
+        target.TakeDamage(damage); // <--- ESTA LLAMADA ES LA IMPORTANTE
+
         isSelectingTargetForAttack = false;
         attackerForTargetSelection = null;
         StartCoroutine(EndPlayerActionAndProceedToNextTurn(0.5f));

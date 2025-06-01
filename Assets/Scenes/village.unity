@@ -64641,6 +64641,7 @@ MonoBehaviour:
   skillSelectionPanel: {fileID: 500755450}
   skillListContainer: {fileID: 825014716}
   abilityListItemPrefab: {fileID: 3171696437099275918, guid: b98ca898f8b54ef4f803604f77c4ca41, type: 3}
+  closeSkillSelectionButton: {fileID: 1607967879}
   enemyStatusUIPrefab: {fileID: 5321041547003569874, guid: 53669b8e6a503f04d8112f1696bddd83, type: 3}
   enemyHPBarOffsetY: 0.3
   combatantLayerMask:
