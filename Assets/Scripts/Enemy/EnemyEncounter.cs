@@ -20,6 +20,10 @@ public class EnemyEncounter : MonoBehaviour
     [Tooltip("¿Este grupo de enemigos desaparece permanentemente después de ser derrotado una vez?")]
     public bool defeatPermanently = false;
 
+    // --- NUEVO: Bandera para controlar si se puede huir ---
+    [Tooltip("Si está marcado, el jugador podrá intentar huir de este encuentro. Desmarcar para jefes.")]
+    public bool canFleeFromThisEncounter = true;
+
     [HideInInspector]
     public bool isDefeated = false;
 

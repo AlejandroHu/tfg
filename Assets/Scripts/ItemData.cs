@@ -1,9 +1,5 @@
-// Puedes poner esto en el mismo namespace que Character.cs si estás usando uno.
-// namespace TuJuego.Inventario
-// {
-
 using UnityEngine;
-using System.Collections.Generic; // Necesario si vas a usar Listas para restricciones, etc.
+using TopDown; // Asumiendo que Character.cs está en este namespace
 
 /// <summary>
 /// Define los diferentes tipos de objetos que pueden existir en el juego.
@@ -14,6 +10,7 @@ public enum ItemType
     Armor,      // Piezas de armadura que se pueden equipar (Casco, Pechera, Botas).
     Consumable, // Objetos que se usan y generalmente se gastan (pociones, comida, etc.).
     Quest       // Objetos específicos de misión, a menudo necesarios para progresar en la historia.
+    // Key y Material eliminados según tu definición
 }
 
 /// <summary>
@@ -26,6 +23,7 @@ public enum EquipmentSlot
     Head,       // Para cascos, sombreros, etc.
     Body,       // Para armaduras de cuerpo, pecheras, ropas.
     Feet        // Para botas, calzado.
+    // Accessory1 y Accessory2 eliminados según tu definición
 }
 
 /// <summary>
@@ -92,102 +90,73 @@ public class ItemData : ScriptableObject
     [Tooltip("Cantidad de Puntos de Maná (MP) que este objeto restaura al usarse.")]
     public int mpToRestore = 0;
 
-    /// <summary>
-    /// Lógica para cuando el objeto es usado.
-    /// </summary>
-    /// <param name="targetCharacter">El personaje sobre el que se usa el objeto. Puede ser null si el objeto no requiere un objetivo.</param>
-    /// <returns>True si el objeto se consumió porque tuvo algún efecto, False en caso contrario.</returns>
     public virtual bool Use(Character targetCharacter)
     {
-        // Comprobar si el objeto es realmente un consumible.
         if (!isConsumable)
         {
-            Debug.Log(itemName + " no es un consumible y no puede ser usado de esta manera.");
-            return false; // No se usó/consumió.
+            Debug.LogWarning($"ItemData: '{itemName}' no es consumible y se intentó usar.");
+            return false;
         }
 
-        Debug.Log("Intentando usar " + itemName + (targetCharacter != null ? " en " + targetCharacter.characterName : " (sin objetivo específico)"));
-
-        bool effectWasActuallyApplied = false; // Bandera para rastrear si algún efecto real ocurrió.
-
-        // Solo intentar aplicar efectos si se proporcionó un personaje objetivo.
-        if (targetCharacter != null)
+        if (targetCharacter == null && (hpToRestore > 0 || mpToRestore > 0))
         {
-            // Intentar restaurar HP si el objeto tiene hpToRestore > 0.
-            if (hpToRestore > 0)
+            Debug.LogWarning($"ItemData: '{itemName}' requiere un objetivo para restaurar HP/MP, pero targetCharacter es null.");
+            return false;
+        }
+
+        bool effectApplied = false;
+
+        if (hpToRestore > 0 && targetCharacter != null)
+        {
+            if (targetCharacter.Heal(hpToRestore))
             {
-                if (targetCharacter.Heal(hpToRestore)) // El método Heal() ahora devuelve true si curó algo.
-                {
-                    effectWasActuallyApplied = true; // Marcar que un efecto se aplicó.
-                }
+                Debug.Log($"{targetCharacter.characterName} usó {itemName}, restauró {hpToRestore} HP. Ahora tiene {targetCharacter.currentHP}/{targetCharacter.MaxHP} HP.");
+                effectApplied = true;
             }
-
-            // Intentar restaurar MP si el objeto tiene mpToRestore > 0.
-            if (mpToRestore > 0)
+            else
             {
-                if (targetCharacter.RestoreMana(mpToRestore)) // El método RestoreMana() ahora devuelve true si restauró algo.
-                {
-                    effectWasActuallyApplied = true; // Marcar que un efecto se aplicó.
-                }
+                Debug.Log($"{itemName} no se usó en {targetCharacter.characterName} para HP (ya estaba al máximo o no se pudo curar).");
             }
-            // Aquí podrías añadir lógica para otros efectos consumibles (curar estados, etc.)
-            // y actualizar effectWasActuallyApplied si tienen éxito.
-        }
-        else if (hpToRestore > 0 || mpToRestore > 0) // Si el objeto tiene efectos de restauración pero no se dio un objetivo.
-        {
-            Debug.Log(itemName + " es un objeto de restauración pero no se especificó un objetivo (targetCharacter es null). No se puede usar.");
-            return false; // No se puede usar sin objetivo si tiene efectos que lo requieren.
-        }
-        else
-        {
-            // Si es un consumible pero no tiene efectos de HP/MP y no se le dio objetivo,
-            // podría ser un tipo de consumible diferente (ej: una llave que se gasta, una bengala).
-            // Para esos casos, podrías querer que siempre devuelva true para que se consuma.
-            // O añadir otra propiedad a ItemData para "seConsumeAlUsarIndependientementeDelEfecto".
-            // Por ahora, si no tuvo efectos de restauración y no hubo objetivo, consideramos que no se "usó efectivamente"
-            // a menos que añadas lógica específica para otros tipos de consumibles.
-            Debug.Log(itemName + " es consumible pero no tuvo efectos de restauración o no se aplicaron (sin objetivo / objetivo ya al máximo).");
-            // Si quieres que CUALQUIER consumible se gaste al "intentar" usarlo, incluso si no tuvo efecto,
-            // podrías simplemente hacer 'return true;' aquí (después del Debug.Log).
-            // Pero para que solo se gaste si HIZO algo, dependemos de effectWasActuallyApplied.
         }
 
-        // El objeto se considera "usado con éxito" (y por lo tanto se debe consumir del inventario)
-        // solo si realmente tuvo algún efecto.
-        if (effectWasActuallyApplied)
+        if (mpToRestore > 0 && targetCharacter != null)
         {
-            Debug.Log(itemName + " fue usado con éxito y tuvo efecto.");
+            if (targetCharacter.RestoreMana(mpToRestore))
+            {
+                Debug.Log($"{targetCharacter.characterName} usó {itemName}, restauró {mpToRestore} MP. Ahora tiene {targetCharacter.currentMP}/{targetCharacter.MaxMP} MP.");
+                effectApplied = true;
+            }
+            else
+            {
+                Debug.Log($"{itemName} no se usó en {targetCharacter.characterName} para MP (ya estaba al máximo o no se pudo restaurar).");
+            }
+        }
+
+        if (effectApplied)
+        {
+            Debug.Log($"ItemData: '{itemName}' se usó con éxito y tuvo efecto. Debería consumirse.");
             return true;
         }
         else
         {
-            // Si no se aplicó ningún efecto (ej: HP/MP ya estaban al máximo, o no había objetivo para un objeto que lo requería),
-            // el objeto no se consume.
-            Debug.Log(itemName + " se intentó usar, pero no tuvo ningún efecto. No se consumirá.");
+            Debug.Log($"ItemData: '{itemName}' se intentó usar, pero no tuvo ningún efecto aplicable. No debería consumirse.");
             return false;
         }
     }
 
-    // Método llamado cuando el objeto es equipado.
     public virtual void OnEquip(Character characterEquipping)
     {
         if (isEquipable)
         {
-            Debug.Log((characterEquipping != null ? characterEquipping.characterName : "Alguien") + " equipó " + itemName);
-            // Aquí podrías añadir lógica para efectos que se activan al equipar,
-            // además de los bonus de stats que se manejarían en el sistema de equipamiento del personaje.
+            // Debug.Log((characterEquipping != null ? characterEquipping.characterName : "Alguien") + " equipó " + itemName);
         }
     }
 
-    // Método llamado cuando el objeto es desequipado.
     public virtual void OnUnequip(Character characterUnequipping)
     {
         if (isEquipable)
         {
-            Debug.Log((characterUnequipping != null ? characterUnequipping.characterName : "Alguien") + " desequipó " + itemName);
-            // Aquí podrías añadir lógica para quitar efectos que se activaron al equipar.
+            // Debug.Log((characterUnequipping != null ? characterUnequipping.characterName : "Alguien") + " desequipó " + itemName);
         }
     }
 }
-
-// } // Fin del namespace (si lo usas)

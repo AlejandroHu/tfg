@@ -142,6 +142,10 @@ public class CombatManager : MonoBehaviour
     private bool isSelectingSkill = false; // <-- DECLARACIÓN DE LA VARIABLE
     private bool isSelectingTargetForSkill = false;
     private AbilityData _selectedAbility = null;
+    private bool isSelectingItem = false;
+    private bool isSelectingTargetForItem = false;
+    private ItemData _selectedItemData = null;
+
 
     [Header("Configuración de Escena y UI")]
     [SerializeField] private GameObject explorationRootGameObject;
@@ -169,11 +173,26 @@ public class CombatManager : MonoBehaviour
     [SerializeField] private Transform skillListContainer;
     [SerializeField] private GameObject abilityListItemPrefab;
     [SerializeField] private Button closeSkillSelectionButton;
+    [Header("HUD de Combate - Selección de Objetos")]
+    [Tooltip("El Panel que contiene la lista de objetos usables en combate.")]
+    [SerializeField] private GameObject itemSelectionPanel_Combat;
+    [Tooltip("El Transform 'Content' del ScrollView donde se instanciarán los ítems de objeto.")]
+    [SerializeField] private Transform itemListContainer_Combat;
+    [Tooltip("Prefab para un ítem de objeto en la lista (debe tener CombatItemListItem_UI.cs).")]
+    [SerializeField] private GameObject combatItemListItemPrefab;
+    [Tooltip("Botón dentro del ItemSelectionPanel para volver al menú de acciones principal.")]
+    [SerializeField] private Button closeItemSelectionButton;
     [Header("HUD de Combate - Estado de Enemigos")]
     [SerializeField] private GameObject enemyStatusUIPrefab;
     [SerializeField] private float enemyHPBarOffsetY = 0.7f;
     [Header("Capa de los Combatientes")]
     [SerializeField] private LayerMask combatantLayerMask;
+
+    // --- NUEVA VARIABLE PARA LA PROBABILIDAD DE HUIR ---
+    [Header("Mecánicas de Huida")]
+    [Tooltip("Probabilidad de éxito al intentar huir (0.0 a 1.0).")]
+    [Range(0f, 1f)]
+    [SerializeField] private float fleeSuccessChance = 0.7f; // 70% de probabilidad por defecto
 
     private List<Character> currentPlayerPartyData;
     private List<EnemyData> currentEnemyGroupData;
@@ -186,6 +205,8 @@ public class CombatManager : MonoBehaviour
     private int _currentCombatantIndex = -1;
     private Combatant _activeCombatant;
     private List<AbilityListItem_UI> _currentSkillListUIs = new List<AbilityListItem_UI>();
+    private List<CombatItemListItem_UI> _currentCombatItemListUIs = new List<CombatItemListItem_UI>();
+
 
     void Awake()
     {
@@ -233,12 +254,26 @@ public class CombatManager : MonoBehaviour
         if (skillListContainer == null) Debug.LogError("CombatManager: 'skillListContainer' no asignado.", this);
         if (abilityListItemPrefab == null) Debug.LogError("CombatManager: 'abilityListItemPrefab' no asignado.", this);
 
+        // --- NUEVAS VALIDACIONES Y LISTENERS PARA OBJETOS ---
+        if (itemSelectionPanel_Combat == null) Debug.LogError("CombatManager: 'itemSelectionPanel_Combat' no asignado.", this);
+        else itemSelectionPanel_Combat.SetActive(false);
+        if (itemListContainer_Combat == null) Debug.LogError("CombatManager: 'itemListContainer_Combat' no asignado.", this);
+        if (combatItemListItemPrefab == null) Debug.LogError("CombatManager: 'combatItemListItemPrefab' no asignado.", this);
+        if (closeItemSelectionButton != null) closeItemSelectionButton.onClick.AddListener(CloseItemSelectionPanel);
+        else Debug.LogWarning("CombatManager: 'closeItemSelectionButton' (para panel de ítems) no asignado.", this);
+
+        if (itemsButton != null) itemsButton.onClick.AddListener(OnItemsButtonClicked);
+        else Debug.LogWarning("CombatManager: 'itemsButton' no asignado.", this);
+        // --- FIN NUEVAS VALIDACIONES Y LISTENERS ---
+
 
         if (attackButton != null) attackButton.onClick.AddListener(OnAttackButtonClicked);
         if (defendButton != null) defendButton.onClick.AddListener(OnDefendButtonClicked);
         else Debug.LogWarning("CombatManager: 'defendButton' no asignado.", this);
         if (skillsButton != null) skillsButton.onClick.AddListener(OnSkillsButtonClicked);
         else Debug.LogWarning("CombatManager: 'skillsButton' no asignado.", this);
+        if (fleeButton != null) fleeButton.onClick.AddListener(OnFleeButtonClicked); // --- AÑADIR LISTENER ---
+        else Debug.LogWarning("CombatManager: 'fleeButton' no asignado.", this);
         if (closeSkillSelectionButton != null)
         {
             closeSkillSelectionButton.onClick.AddListener(CloseSkillSelectionPanel);
@@ -276,8 +311,12 @@ public class CombatManager : MonoBehaviour
         isCombatActive = false;
         isSelectingTargetForAttack = false;
         attackerForTargetSelection = null;
+        isSelectingSkill = false;
         isSelectingTargetForSkill = false;
         _selectedAbility = null;
+        isSelectingItem = false; // Resetear estado de selección de ítem
+        isSelectingTargetForItem = false;
+        _selectedItemData = null;
 
         StartCoroutine(CombatTransitionCoroutine(false, playerWon));
     }
@@ -308,6 +347,7 @@ public class CombatManager : MonoBehaviour
         {
             if (actionMenuPanel != null) actionMenuPanel.SetActive(false);
             if (skillSelectionPanel != null) skillSelectionPanel.SetActive(false);
+            if (itemSelectionPanel_Combat != null) itemSelectionPanel_Combat.SetActive(false); // Asegurar que esté oculto
             if (explorationRootGameObject != null) explorationRootGameObject.SetActive(false);
             if (currentCombatArenaGameObject != null) currentCombatArenaGameObject.SetActive(true);
             if (playerMovementController != null && playerMovementController.TryGetComponent<SpriteRenderer>(out SpriteRenderer pr)) pr.enabled = false;
@@ -323,6 +363,7 @@ public class CombatManager : MonoBehaviour
         {
             if (actionMenuPanel != null) actionMenuPanel.SetActive(false);
             if (skillSelectionPanel != null) skillSelectionPanel.SetActive(false);
+            if (itemSelectionPanel_Combat != null) itemSelectionPanel_Combat.SetActive(false);
             if (explorationRootGameObject != null) explorationRootGameObject.SetActive(true);
             if (currentCombatArenaGameObject != null) currentCombatArenaGameObject.SetActive(false);
             if (playerMovementController != null && playerMovementController.TryGetComponent<SpriteRenderer>(out SpriteRenderer pr)) pr.enabled = true;
@@ -762,6 +803,198 @@ public class CombatManager : MonoBehaviour
         return false;
     }
 
+    // --- MANEJADORES Y LÓGICA PARA LA ACCIÓN "OBJETOS" ---
+    public void OnItemsButtonClicked()
+    {
+        if (!isCombatActive || _activeCombatant == null || !_activeCombatant.isPlayerCharacter ||
+            isSelectingTargetForAttack || isSelectingSkill || isSelectingTargetForSkill ||
+            isSelectingItem || isSelectingTargetForItem) // Comprobar todos los estados de selección
+        {
+            return;
+        }
+
+        Debug.Log($"{_activeCombatant.GetName()} seleccionó OBJETOS.");
+        isSelectingItem = true;
+
+        if (actionMenuPanel != null) actionMenuPanel.SetActive(false);
+        PopulateCombatItemList();
+        if (itemSelectionPanel_Combat != null) itemSelectionPanel_Combat.SetActive(true);
+    }
+
+    private void PopulateCombatItemList()
+    {
+        if (itemListContainer_Combat == null || combatItemListItemPrefab == null || PlayerInventory.Instance == null)
+        {
+            Debug.LogError("CombatManager: No se puede poblar la lista de objetos. Faltan referencias.");
+            if (itemSelectionPanel_Combat != null) itemSelectionPanel_Combat.SetActive(false);
+            return;
+        }
+
+        foreach (Transform child in itemListContainer_Combat) Destroy(child.gameObject);
+        _currentCombatItemListUIs.Clear();
+
+        // Filtrar por objetos que sean consumibles y tengan un efecto de uso definido
+        var usableItems = PlayerInventory.Instance.inventorySlots
+            .Where(slot => slot.item != null && slot.item.isConsumable &&
+                           (slot.item.hpToRestore > 0 || slot.item.mpToRestore > 0 /*|| otros efectos de itemData.Use()*/ ))
+            .ToList();
+
+        if (usableItems.Count == 0)
+        {
+            Debug.Log("No hay objetos usables en combate en el inventario.");
+            // (FUTURO: Mostrar mensaje en la UI de objetos "Sin objetos usables")
+            // Considerar llamar a CloseItemSelectionPanel() para volver al menú de acción si está vacío
+            // CloseItemSelectionPanel(); 
+            return;
+        }
+
+        foreach (InventorySlot invSlot in usableItems)
+        {
+            GameObject listItemGO = Instantiate(combatItemListItemPrefab, itemListContainer_Combat);
+            CombatItemListItem_UI listItemUI = listItemGO.GetComponent<CombatItemListItem_UI>();
+            if (listItemUI != null)
+            {
+                listItemUI.SetupItem(invSlot.item, invSlot.quantity, this.OnCombatItemSelected);
+                _currentCombatItemListUIs.Add(listItemUI);
+            }
+            else
+            {
+                Debug.LogError("CombatManager: El prefab 'combatItemListItemPrefab' no tiene el componente CombatItemListItem_UI.", this);
+                Destroy(listItemGO);
+            }
+        }
+    }
+
+    public void OnCombatItemSelected(ItemData selectedItem)
+    {
+        if (!isSelectingItem || selectedItem == null || _activeCombatant == null || _activeCombatant.characterData == null) return;
+
+        Debug.Log($"{_activeCombatant.GetName()} seleccionó el objeto: {selectedItem.itemName}");
+        _selectedItemData = selectedItem;
+        isSelectingItem = false;
+        if (itemSelectionPanel_Combat != null) itemSelectionPanel_Combat.SetActive(false);
+
+        // Determinar si el objeto necesita selección de objetivo
+        // Por ahora, asumimos que los consumibles de HP/MP se pueden usar en aliados/self
+        if (selectedItem.itemType == ItemType.Consumable && (selectedItem.hpToRestore > 0 || selectedItem.mpToRestore > 0))
+        {
+            isSelectingTargetForItem = true;
+            attackerForTargetSelection = _activeCombatant; // El personaje que usa el objeto
+            Debug.Log($"Por favor, selecciona un objetivo para el objeto: {selectedItem.itemName} (Aliado).");
+        }
+        // (Añadir 'else if' para objetos de ataque a enemigos si los tienes, ej: bombas)
+        // else if (selectedItem.itemType == ItemType.Bomb_Damage_Enemy) { 
+        //     isSelectingTargetForItem = true; 
+        //     attackerForTargetSelection = _activeCombatant;
+        //     Debug.Log($"Por favor, selecciona un objetivo para el objeto: {selectedItem.itemName} (Enemigo).");
+        // }
+        else
+        {
+            // Si el objeto no necesita objetivo explícito o se usa sobre sí mismo por defecto
+            ExecuteItem(_activeCombatant, _activeCombatant, _selectedItemData);
+        }
+    }
+
+    public void CloseItemSelectionPanel()
+    {
+        isSelectingItem = false;
+        isSelectingTargetForItem = false;
+        _selectedItemData = null;
+        // attackerForTargetSelection no se resetea aquí necesariamente, podría ser útil si se cancela la selección de objetivo
+
+        if (itemSelectionPanel_Combat != null) itemSelectionPanel_Combat.SetActive(false);
+        if (actionMenuPanel != null && _activeCombatant != null && _activeCombatant.isPlayerCharacter)
+        {
+            actionMenuPanel.SetActive(true);
+        }
+    }
+
+    private void ExecuteItem(Combatant caster, Combatant directTarget, ItemData item)
+    {
+        if (caster == null || item == null)
+        {
+            Debug.LogError("ExecuteItem: Lanzador u objeto nulos.");
+            ResetSelectionStatesAndPassTurn();
+            return;
+        }
+        if (caster.isPlayerCharacter == false || caster.characterData == null)
+        {
+            Debug.LogWarning("ExecuteItem: Solo los jugadores pueden usar objetos desde este flujo por ahora.");
+            ResetSelectionStatesAndPassTurn();
+            return;
+        }
+
+        Combatant actualTarget = null;
+
+        // Lógica de objetivo para ítems (simplificada)
+        if (item.itemType == ItemType.Consumable && (item.hpToRestore > 0 || item.mpToRestore > 0))
+        {
+            if (directTarget != null && directTarget.isPlayerCharacter && !directTarget.isDefeated)
+            {
+                actualTarget = directTarget;
+            }
+            else if (caster != null && !caster.isDefeated)
+            {
+                actualTarget = caster;
+                Debug.Log($"El objeto {item.itemName} se usará sobre {caster.GetName()} (objetivo por defecto).");
+            }
+        }
+        // (Añadir lógica para otros tipos de ítems y sus objetivos)
+
+
+        if (actualTarget == null || actualTarget.characterData == null)
+        {
+            Debug.LogWarning($"No se pudo aplicar {item.itemName}, objetivo ({directTarget?.GetName()}) no válido o no es personaje de la party.");
+            ResetSelectionStatesAndPassTurn(true); // Reabrir menú de acciones
+            return;
+        }
+
+        Debug.Log($"{caster.GetName()} usa el objeto '{item.itemName}' sobre {actualTarget.GetName()}");
+
+        bool itemUsedSuccessfully = item.Use(actualTarget.characterData);
+
+        if (itemUsedSuccessfully)
+        {
+            if (PlayerInventory.Instance != null)
+            {
+                PlayerInventory.Instance.RemoveItem(item, 1);
+            }
+            UpdatePartyStatusHUD();
+        }
+        else
+        {
+            Debug.LogWarning($"{item.itemName} no pudo ser usado sobre {actualTarget.GetName()} (ej: HP/MP ya al máximo).");
+            // No consumir el turno si el uso no fue "efectivo"
+            ResetSelectionStatesAndPassTurn(true); // Reabrir menú de acciones
+            return;
+        }
+
+        ResetSelectionStatesAndPassTurn();
+    }
+
+    private void ResetSelectionStatesAndPassTurn(bool reOpenActionMenu = false)
+    {
+        isSelectingItem = false;
+        isSelectingTargetForItem = false;
+        isSelectingSkill = false;
+        isSelectingTargetForSkill = false;
+        isSelectingTargetForAttack = false;
+        _selectedItemData = null;
+        _selectedAbility = null;
+        attackerForTargetSelection = null;
+
+        if (reOpenActionMenu && actionMenuPanel != null && _activeCombatant != null && _activeCombatant.isPlayerCharacter)
+        {
+            actionMenuPanel.SetActive(true);
+        }
+        else
+        {
+            StartCoroutine(EndPlayerActionAndProceedToNextTurn(0.5f));
+        }
+    }
+
+
+
     void Update()
     {
         if (isCombatActive)
@@ -814,11 +1047,99 @@ public class CombatManager : MonoBehaviour
                     }
                 }
             }
-            else if (!isSelectingTargetForAttack && !isSelectingTargetForSkill)
+            else if (isSelectingTargetForItem && Input.GetMouseButtonDown(0))
+            {
+                if (Camera.main == null) { Debug.LogError("Camera.main es NULL."); return; }
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit2D hit = Physics2D.GetRayIntersection(ray, Mathf.Infinity, combatantLayerMask);
+
+                if (hit.collider != null)
+                {
+                    Combatant targetCombatant = _combatants.FirstOrDefault(c => !c.isDefeated && c.combatSpriteGO == hit.collider.gameObject);
+
+                    if (targetCombatant != null && _selectedItemData != null)
+                    {
+                        bool isValidTarget = false;
+                        if (_selectedItemData.itemType == ItemType.Consumable && (_selectedItemData.hpToRestore > 0 || _selectedItemData.mpToRestore > 0))
+                        {
+                            if (targetCombatant.isPlayerCharacter) isValidTarget = true;
+                        }
+                        // (Añadir validación para otros tipos de ítems)
+
+                        if (isValidTarget)
+                        {
+                            ExecuteItem(attackerForTargetSelection, targetCombatant, _selectedItemData);
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"Objetivo '{targetCombatant.GetName()}' NO es válido para el objeto '{_selectedItemData.itemName}'.");
+                            CloseItemSelectionPanel();
+                        }
+                    }
+                }
+            }
+            else if (!isSelectingTargetForAttack && !isSelectingTargetForSkill && !isSelectingTargetForItem)
             {
                 if (Input.GetKeyDown(KeyCode.Alpha0)) EndCombat(true);
                 else if (Input.GetKeyDown(KeyCode.Alpha9)) EndCombat(false);
             }
         }
     }
+    public void OnFleeButtonClicked()
+    {
+        if (!isCombatActive || _activeCombatant == null || !_activeCombatant.isPlayerCharacter ||
+            isSelectingTargetForAttack || isSelectingSkill || isSelectingTargetForSkill ||
+            isSelectingItem || isSelectingTargetForItem)
+        {
+            return; // No hacer nada si no es el momento adecuado
+        }
+
+        Debug.Log($"{_activeCombatant.GetName()} intenta HUIR.");
+
+        if (actionMenuPanel != null)
+        {
+            actionMenuPanel.SetActive(false); // Ocultar menú inmediatamente
+        }
+
+        // Comprobar si se puede huir de este encuentro específico
+        if (_activeEncounter != null && !_activeEncounter.canFleeFromThisEncounter)
+        {
+            Debug.Log("¡No se puede huir de este combate (Jefe)!");
+            // (FUTURO: Mostrar mensaje en UI "¡No puedes huir de este enemigo!")
+            // El personaje pierde el turno
+            StartCoroutine(ShowMessageAndEndPlayerTurn("¡No puedes huir!", 1.5f));
+            return;
+        }
+
+        // Calcular si la huida tiene éxito
+        if (Random.value < fleeSuccessChance) // Random.value devuelve un float entre 0.0 (inclusive) y 1.0 (inclusive)
+        {
+            Debug.Log("¡Huida exitosa!");
+            // (FUTURO: Mostrar mensaje en UI "¡Escapaste con éxito!")
+            // Podrías añadir una pequeña pausa antes de llamar a EndCombat
+            // StartCoroutine(DelayedEndCombat(false, 0.5f)); 
+            EndCombat(false); // Terminar el combate, el jugador no "gana"
+        }
+        else
+        {
+            Debug.Log("¡La huida falló!");
+            // (FUTURO: Mostrar mensaje en UI "La huida falló...")
+            // El personaje pierde el turno
+            StartCoroutine(ShowMessageAndEndPlayerTurn("¡La huida falló!", 1.5f));
+        }
+    }
+    private IEnumerator ShowMessageAndEndPlayerTurn(string message, float delay)
+    {
+        // (FUTURO: Aquí mostrarías 'message' en una UI temporal de feedback)
+        Debug.Log("Mensaje de Combate: " + message);
+        yield return new WaitForSeconds(delay);
+        NextTurn();
+    }
+    // (Opcional) Corrutina para un pequeño delay antes de terminar el combate al huir
+    // private IEnumerator DelayedEndCombat(bool playerWon, float delay)
+    // {
+    //    yield return new WaitForSeconds(delay);
+    //    EndCombat(playerWon);
+    // }
+
 }
