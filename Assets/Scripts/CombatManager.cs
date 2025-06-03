@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Cinemachine;
 using TopDown;
+using TMPro; // Necesario para TextMeshProUGUI en ShowFloatingText
+
 
 // Clase Combatant (CON LA CORRECCIÓN PARA LA SINCRONIZACIÓN DE HP)
 public class Combatant
@@ -77,7 +79,7 @@ public class Combatant
 
     public void TakeDamage(int damageAmount)
     {
-        if (isDefeated) return;
+        if (isDefeated || damageAmount <= 0) return;
 
         int hpBeforeDamage = GetCurrentHP(); // Usar GetCurrentHP() para leer el valor correcto
 
@@ -96,6 +98,12 @@ public class Combatant
         }
 
         Debug.Log($"{GetName()} recibe {damageAmount} de daño. HP antes: {hpBeforeDamage}, HP después: {GetCurrentHP()}. Vida restante: {GetCurrentHP()}/{GetMaxHP()}");
+        // Mostrar texto flotante para el daño
+        if (CombatManager.Instance != null && combatSpriteGO != null)
+        {
+            CombatManager.Instance.ShowFloatingText("-" + damageAmount.ToString(), combatSpriteGO.transform.position, Color.red, this);
+        }
+        Debug.Log($"{GetName()} recibe {damageAmount} de daño. HP restante: {GetCurrentHP()}/{GetMaxHP()}");
 
         if (GetCurrentHP() <= 0)
         {
@@ -113,6 +121,81 @@ public class Combatant
         else if (!isPlayerCharacter && enemyStatusUI != null)
         {
             enemyStatusUI.UpdateHPDisplay(); // Actualizar su propia barra de HP
+        }
+    }
+
+    public void ApplyHeal(int healAmount)
+    {
+        if (isDefeated || healAmount <= 0) return;
+
+        int hpBeforeHeal = GetCurrentHP();
+        int actualHealedAmount = 0;
+
+        if (isPlayerCharacter && characterData != null)
+        {
+            if (characterData.Heal(healAmount)) // Character.Heal devuelve true si curó algo
+            {
+                actualHealedAmount = characterData.currentHP - hpBeforeHeal;
+                this.currentHP = characterData.currentHP; // Sincronizar
+            }
+        }
+        else // Para enemigos (o si characterData fuera null)
+        {
+            int maxHealable = GetMaxHP() - hpBeforeHeal;
+            if (maxHealable > 0)
+            {
+                actualHealedAmount = Mathf.Min(healAmount, maxHealable);
+                this.currentHP += actualHealedAmount;
+                if (this.currentHP > GetMaxHP()) this.currentHP = GetMaxHP();
+            }
+        }
+
+        if (actualHealedAmount > 0)
+        {
+            if (CombatManager.Instance != null && combatSpriteGO != null)
+            {
+                CombatManager.Instance.ShowFloatingText("+" + actualHealedAmount.ToString(), combatSpriteGO.transform.position, Color.green, this);
+            }
+            Debug.Log($"{GetName()} se cura {actualHealedAmount}. HP actual: {GetCurrentHP()}/{GetMaxHP()}");
+        }
+        else
+        {
+            Debug.Log($"{GetName()} intentó curarse {healAmount} pero no tuvo efecto (HP ya al máximo o no se pudo curar).");
+        }
+
+
+        if (isPlayerCharacter && CombatManager.Instance != null) CombatManager.Instance.UpdatePartyStatusHUD();
+        else if (!isPlayerCharacter && enemyStatusUI != null) enemyStatusUI.UpdateHPDisplay();
+    }
+
+    public void ApplyManaRestore(int manaAmount)
+    {
+        if (isDefeated || manaAmount <= 0) return;
+
+        int actualRestoredAmount = 0;
+
+        if (isPlayerCharacter && characterData != null)
+        {
+            int mpBeforeRestore = characterData.currentMP;
+            if (characterData.RestoreMana(manaAmount)) // Character.RestoreMana devuelve true si restauró algo
+            {
+                actualRestoredAmount = characterData.currentMP - mpBeforeRestore;
+            }
+        }
+        // (Podrías añadir lógica para enemigos si usan MP y pueden restaurarlo)
+
+        if (actualRestoredAmount > 0)
+        {
+            if (CombatManager.Instance != null && combatSpriteGO != null)
+            {
+                CombatManager.Instance.ShowFloatingText("+" + actualRestoredAmount.ToString() + " MP", combatSpriteGO.transform.position, Color.blue, this);
+            }
+            Debug.Log($"{GetName()} restaura {actualRestoredAmount} MP. MP actual: {characterData.currentMP}/{characterData.MaxMP}");
+            CombatManager.Instance.UpdatePartyStatusHUD(); // Asume que esto actualiza el MP en la UI
+        }
+        else
+        {
+            Debug.Log($"{GetName()} intentó restaurar {manaAmount} MP pero no tuvo efecto.");
         }
     }
 
@@ -155,12 +238,15 @@ public class CombatManager : MonoBehaviour
     [SerializeField] private GameObject combatScreenUIPanel;
     [SerializeField] private CanvasGroup fadePanelCanvasGroup;
     [SerializeField] private float fadeDuration = 0.3f;
+
     [Header("Posiciones de Combate")]
     [SerializeField] private List<Transform> partySpawnPoints = new List<Transform>();
     [SerializeField] private List<Transform> enemySpawnPoints = new List<Transform>();
+
     [Header("HUD de Combate - Estado de la Party")]
     [SerializeField] private Transform partyStatusAreaContainer;
     [SerializeField] private GameObject partyMemberStatusUIPrefab;
+
     [Header("HUD de Combate - Menú de Acciones")]
     [SerializeField] private GameObject actionMenuPanel;
     [SerializeField] private Button attackButton;
@@ -168,11 +254,13 @@ public class CombatManager : MonoBehaviour
     [SerializeField] private Button defendButton;
     [SerializeField] private Button itemsButton;
     [SerializeField] private Button fleeButton;
+
     [Header("HUD de Combate - Selección de Habilidades")]
     [SerializeField] private GameObject skillSelectionPanel;
     [SerializeField] private Transform skillListContainer;
     [SerializeField] private GameObject abilityListItemPrefab;
     [SerializeField] private Button closeSkillSelectionButton;
+
     [Header("HUD de Combate - Selección de Objetos")]
     [Tooltip("El Panel que contiene la lista de objetos usables en combate.")]
     [SerializeField] private GameObject itemSelectionPanel_Combat;
@@ -182,9 +270,11 @@ public class CombatManager : MonoBehaviour
     [SerializeField] private GameObject combatItemListItemPrefab;
     [Tooltip("Botón dentro del ItemSelectionPanel para volver al menú de acciones principal.")]
     [SerializeField] private Button closeItemSelectionButton;
+
     [Header("HUD de Combate - Estado de Enemigos")]
     [SerializeField] private GameObject enemyStatusUIPrefab;
     [SerializeField] private float enemyHPBarOffsetY = 0.7f;
+
     [Header("Capa de los Combatientes")]
     [SerializeField] private LayerMask combatantLayerMask;
 
@@ -193,6 +283,15 @@ public class CombatManager : MonoBehaviour
     [Tooltip("Probabilidad de éxito al intentar huir (0.0 a 1.0).")]
     [Range(0f, 1f)]
     [SerializeField] private float fleeSuccessChance = 0.7f; // 70% de probabilidad por defecto
+
+    // --- NUEVAS VARIABLES PARA TEXTO FLOTANTE ---
+    [Header("Feedback de Combate")]
+    [Tooltip("Prefab para el texto flotante de daño/curación (debe tener FloatingCombatText.cs).")]
+    [SerializeField] private GameObject floatingTextPrefab;
+    [Tooltip("Transform padre para los textos flotantes. Si es null, se instanciarán como hijos del combatiente (para World Space Canvas en el prefab del texto). Si se asigna un Canvas ScreenSpace, se intentará convertir la posición.")]
+    [SerializeField] private Transform floatingTextCanvasTransform;
+    [SerializeField] private float floatingTextDefaultFontSize = 20f;
+    [SerializeField] private float floatingTextYOffset = 0.6f;
 
     private List<Character> currentPlayerPartyData;
     private List<EnemyData> currentEnemyGroupData;
@@ -265,6 +364,9 @@ public class CombatManager : MonoBehaviour
         if (itemsButton != null) itemsButton.onClick.AddListener(OnItemsButtonClicked);
         else Debug.LogWarning("CombatManager: 'itemsButton' no asignado.", this);
         // --- FIN NUEVAS VALIDACIONES Y LISTENERS ---
+        if (floatingTextPrefab == null) Debug.LogError("CombatManager: 'floatingTextPrefab' no asignado. No se mostrará texto flotante.", this);
+        // floatingTextCanvasTransform es opcional, así que un LogWarning está bien si está vacío.
+        if (floatingTextCanvasTransform == null) Debug.LogWarning("CombatManager: 'floatingTextCanvasTransform' no asignado. Los textos flotantes se instanciarán como hijos del combatiente (asume World Space Canvas en prefab) o en la raíz de la escena.", this);
 
 
         if (attackButton != null) attackButton.onClick.AddListener(OnAttackButtonClicked);
@@ -717,8 +819,8 @@ public class CombatManager : MonoBehaviour
 
     private void ExecuteSkill(Combatant attacker, Combatant directTarget, AbilityData skill)
     {
-        if (attacker == null || skill == null) return;
-        if (attacker.isPlayerCharacter == false) { NextTurn(); return; }
+        if (attacker == null || skill == null) { ResetSelectionStatesAndPassTurn(); return; }
+        if (attacker.isPlayerCharacter == false || attacker.characterData == null) { ResetSelectionStatesAndPassTurn(); return; }
 
         Debug.Log($"{attacker.GetName()} usa la habilidad '{skill.abilityName}'" + (directTarget != null ? $" sobre {directTarget.GetName()}" : ""));
 
@@ -726,58 +828,41 @@ public class CombatManager : MonoBehaviour
         {
             if (!attacker.characterData.SpendMana(skill.mpCost))
             {
-                NextTurn();
+                Debug.LogWarning($"{attacker.GetName()} no tiene suficiente MP para {skill.abilityName}.");
+                ResetSelectionStatesAndPassTurn(true); // Reabrir menú si no hay MP
                 return;
             }
             UpdatePartyStatusHUD();
         }
 
-        List<Combatant> actualTargets = new List<Combatant>();
-        switch (skill.targetType)
-        {
-            case AbilityTargetType.Self:
-                if (attacker != null && !attacker.isDefeated) actualTargets.Add(attacker);
-                break;
-            case AbilityTargetType.SingleAlly:
-                if (directTarget != null && directTarget.isPlayerCharacter && !directTarget.isDefeated) actualTargets.Add(directTarget);
-                break;
-            case AbilityTargetType.AllAllies:
-                actualTargets.AddRange(_combatants.Where(c => c.isPlayerCharacter && !c.isDefeated));
-                break;
-            case AbilityTargetType.SingleEnemy:
-                if (directTarget != null && !directTarget.isPlayerCharacter && !directTarget.isDefeated) actualTargets.Add(directTarget);
-                break;
-            case AbilityTargetType.AllEnemies:
-                actualTargets.AddRange(_combatants.Where(c => !c.isPlayerCharacter && !c.isDefeated));
-                break;
-        }
-
-        if (actualTargets.Count == 0)
+        List<Combatant> actualTargets = DetermineActualTargets(skill.targetType, attacker, directTarget);
+        if (actualTargets.Count == 0 && skill.targetType != AbilityTargetType.None)
         {
             Debug.LogWarning($"No se encontraron objetivos válidos para la habilidad {skill.abilityName}.");
-            NextTurn();
+            ResetSelectionStatesAndPassTurn(true); // Reabrir menú si no hay objetivos
             return;
         }
 
         Debug.Log($"Ejecutando efecto de {skill.abilityName} sobre {actualTargets.Count} objetivo(s). Tipo: {skill.effectType}, Potencia: {skill.power}");
         foreach (Combatant t in actualTargets)
         {
+            if (t.isDefeated && skill.effectType != AbilityEffectType.Special) continue;
+
             if (skill.effectType == AbilityEffectType.Damage)
             {
                 int damage = Mathf.Max(1, (int)skill.power + attacker.GetAttack() / 2 - t.GetDefense());
                 t.TakeDamage(damage);
             }
-            else if (skill.effectType == AbilityEffectType.Heal && t.isPlayerCharacter && t.characterData != null)
+            else if (skill.effectType == AbilityEffectType.Heal)
             {
-                t.characterData.Heal((int)skill.power);
-                UpdatePartyStatusHUD();
+                t.ApplyHeal((int)skill.power);
+            }
+            else if (skill.effectType == AbilityEffectType.RestoreMP)
+            {
+                if (t.isPlayerCharacter && t.characterData != null) t.ApplyManaRestore((int)skill.power);
             }
         }
-
-        isSelectingTargetForSkill = false;
-        _selectedAbility = null;
-        attackerForTargetSelection = null;
-        StartCoroutine(EndPlayerActionAndProceedToNextTurn(0.5f));
+        ResetSelectionStatesAndPassTurn();
     }
 
     private IEnumerator EndPlayerActionAndProceedToNextTurn(float delay)
@@ -911,65 +996,121 @@ public class CombatManager : MonoBehaviour
 
     private void ExecuteItem(Combatant caster, Combatant directTarget, ItemData item)
     {
-        if (caster == null || item == null)
-        {
-            Debug.LogError("ExecuteItem: Lanzador u objeto nulos.");
-            ResetSelectionStatesAndPassTurn();
-            return;
-        }
-        if (caster.isPlayerCharacter == false || caster.characterData == null)
-        {
-            Debug.LogWarning("ExecuteItem: Solo los jugadores pueden usar objetos desde este flujo por ahora.");
-            ResetSelectionStatesAndPassTurn();
-            return;
-        }
+        if (caster == null || item == null) { ResetSelectionStatesAndPassTurn(); return; }
+        if (caster.isPlayerCharacter == false || caster.characterData == null) { ResetSelectionStatesAndPassTurn(); return; }
 
-        Combatant actualTarget = null;
-
-        // Lógica de objetivo para ítems (simplificada)
-        if (item.itemType == ItemType.Consumable && (item.hpToRestore > 0 || item.mpToRestore > 0))
+        Combatant actualTarget = DetermineItemTarget(item, caster, directTarget);
+        if (actualTarget == null || (actualTarget.isPlayerCharacter && actualTarget.characterData == null))
         {
-            if (directTarget != null && directTarget.isPlayerCharacter && !directTarget.isDefeated)
-            {
-                actualTarget = directTarget;
-            }
-            else if (caster != null && !caster.isDefeated)
-            {
-                actualTarget = caster;
-                Debug.Log($"El objeto {item.itemName} se usará sobre {caster.GetName()} (objetivo por defecto).");
-            }
-        }
-        // (Añadir lógica para otros tipos de ítems y sus objetivos)
-
-
-        if (actualTarget == null || actualTarget.characterData == null)
-        {
-            Debug.LogWarning($"No se pudo aplicar {item.itemName}, objetivo ({directTarget?.GetName()}) no válido o no es personaje de la party.");
-            ResetSelectionStatesAndPassTurn(true); // Reabrir menú de acciones
+            ResetSelectionStatesAndPassTurn(true);
             return;
         }
 
         Debug.Log($"{caster.GetName()} usa el objeto '{item.itemName}' sobre {actualTarget.GetName()}");
+        bool itemUsedSuccessfully = false;
 
-        bool itemUsedSuccessfully = item.Use(actualTarget.characterData);
+        // La lógica de Use() en ItemData devuelve true si el efecto se aplicó (ej: HP no estaba lleno)
+        if (item.Use(actualTarget.characterData)) // Asumimos que los objetos solo se usan en Characters por ahora
+        {
+            itemUsedSuccessfully = true;
+            // Mostrar texto flotante DESPUÉS de que el HP/MP del Character se haya actualizado
+            if (item.hpToRestore > 0 && actualTarget.isPlayerCharacter)
+            {
+                ShowFloatingText("+" + item.hpToRestore, actualTarget.combatSpriteGO.transform.position, Color.green, actualTarget);
+            }
+            if (item.mpToRestore > 0 && actualTarget.isPlayerCharacter)
+            {
+                ShowFloatingText("+" + item.mpToRestore + " MP", actualTarget.combatSpriteGO.transform.position, Color.blue, actualTarget);
+            }
+        }
 
         if (itemUsedSuccessfully)
         {
-            if (PlayerInventory.Instance != null)
-            {
-                PlayerInventory.Instance.RemoveItem(item, 1);
-            }
+            if (PlayerInventory.Instance != null) PlayerInventory.Instance.RemoveItem(item, 1);
             UpdatePartyStatusHUD();
         }
-        else
+        else Debug.LogWarning($"{item.itemName} no pudo ser usado sobre {actualTarget.GetName()}.");
+
+        ResetSelectionStatesAndPassTurn(!itemUsedSuccessfully);
+    }
+
+    public void ShowFloatingText(string text, Vector3 worldPosition, Color textColor, Combatant targetCombatant = null)
+    {
+        if (floatingTextPrefab == null)
         {
-            Debug.LogWarning($"{item.itemName} no pudo ser usado sobre {actualTarget.GetName()} (ej: HP/MP ya al máximo).");
-            // No consumir el turno si el uso no fue "efectivo"
-            ResetSelectionStatesAndPassTurn(true); // Reabrir menú de acciones
+            Debug.LogWarning("CombatManager: floatingTextPrefab no asignado. No se puede mostrar texto flotante.");
             return;
         }
 
-        ResetSelectionStatesAndPassTurn();
+        GameObject textGO;
+        Vector3 targetPosition = worldPosition; // Posición base del sprite del objetivo
+
+        // Ajustar la posición Y para que el texto aparezca encima del pivote del sprite del objetivo
+        if (targetCombatant != null && targetCombatant.combatSpriteGO != null)
+        {
+            SpriteRenderer sr = targetCombatant.combatSpriteGO.GetComponent<SpriteRenderer>();
+            if (sr != null && sr.sprite != null)
+            {
+                // El offset se aplica sobre el centro del sprite si el pivote es central,
+                // o sobre la base si el pivote está en los pies.
+                // floatingTextYOffset debería ser en unidades del mundo.
+                targetPosition = targetCombatant.combatSpriteGO.transform.position + new Vector3(0, floatingTextYOffset, 0);
+            }
+        }
+        else
+        { // Si no hay combatiente específico, usar la worldPosition directamente con el offset
+            targetPosition = worldPosition + new Vector3(0, floatingTextYOffset, 0);
+        }
+
+
+        // Decidir el padre y la posición del texto flotante
+        if (floatingTextCanvasTransform != null) // Si se asignó un Canvas padre (Screen Space)
+        {
+            textGO = Instantiate(floatingTextPrefab, floatingTextCanvasTransform);
+            Canvas canvas = floatingTextCanvasTransform.GetComponent<Canvas>();
+            if (canvas != null && Camera.main != null)
+            {
+                if (canvas.renderMode == RenderMode.ScreenSpaceOverlay)
+                {
+                    Vector2 screenPoint = Camera.main.WorldToScreenPoint(targetPosition);
+                    textGO.transform.position = screenPoint;
+                }
+                else // ScreenSpaceCamera o WorldSpace (si el canvas padre es WorldSpace)
+                {
+                    textGO.transform.position = targetPosition;
+                }
+            }
+            else
+            { // Fallback si no hay canvas o cámara
+                textGO.transform.position = targetPosition;
+            }
+        }
+        else if (targetCombatant != null && targetCombatant.combatSpriteGO != null &&
+                 floatingTextPrefab.GetComponent<Canvas>() != null &&
+                 floatingTextPrefab.GetComponent<Canvas>().renderMode == RenderMode.WorldSpace)
+        {
+            // Si el PREFAB de texto flotante tiene su PROPIO Canvas en World Space, hacerlo hijo del target
+            textGO = Instantiate(floatingTextPrefab, targetCombatant.combatSpriteGO.transform);
+            // El localPosition se ajusta para que el pivote del texto quede en el offset Y deseado
+            // Asumiendo que el pivote del texto flotante está en su centro.
+            textGO.transform.localPosition = new Vector3(0, floatingTextYOffset, 0);
+        }
+        else // Fallback: instanciar en el mundo sin padre específico (requiere que el prefab tenga su propio Canvas WorldSpace)
+        {
+            textGO = Instantiate(floatingTextPrefab, targetPosition, Quaternion.identity);
+        }
+
+
+        FloatingCombatText floatingTextScript = textGO.GetComponent<FloatingCombatText>();
+        if (floatingTextScript != null)
+        {
+            floatingTextScript.Init(text, textColor, floatingTextDefaultFontSize);
+        }
+        else
+        {
+            Debug.LogError("El prefab 'floatingTextPrefab' no tiene el script FloatingCombatText.", this);
+            Destroy(textGO);
+        }
     }
 
     private void ResetSelectionStatesAndPassTurn(bool reOpenActionMenu = false)
@@ -1011,7 +1152,9 @@ public class CombatManager : MonoBehaviour
                     {
                         ExecuteAttack(attackerForTargetSelection, targetCombatant);
                     }
+                    else { Debug.Log("Raycast golpeó algo en capa Enemigos, pero no es un combatiente válido."); ResetSelectionStatesAndPassTurn(true); }
                 }
+                // else { Debug.Log("Ataque: Clic en el vacío."); ResetSelectionStatesAndPassTurn(true); } // Opcional: cancelar si se hace clic en el vacío
             }
             else if (isSelectingTargetForSkill && Input.GetMouseButtonDown(0))
             {
@@ -1041,11 +1184,13 @@ public class CombatManager : MonoBehaviour
                         }
                         else
                         {
-                            Debug.LogWarning($"CombatManager: Objetivo '{targetCombatant.GetName()}' NO es válido para la habilidad '{_selectedAbility.abilityName}' (Tipo esperado: {_selectedAbility.targetType}, Tipo real: {(targetCombatant.isPlayerCharacter ? "Aliado" : "Enemigo")}).");
-                            CloseSkillSelectionPanel();
+                            Debug.LogWarning($"CombatManager: Objetivo '{targetCombatant.GetName()}' NO es válido para la habilidad '{_selectedAbility.abilityName}'.");
+                            ResetSelectionStatesAndPassTurn(true); // Volver al menú de acciones
                         }
                     }
+                    // else { Debug.Log("Habilidad: Clic en algo, pero no es un combatiente válido o no hay habilidad seleccionada."); ResetSelectionStatesAndPassTurn(true); }
                 }
+                // else { Debug.Log("Habilidad: Clic en el vacío."); ResetSelectionStatesAndPassTurn(true); } // Opcional
             }
             else if (isSelectingTargetForItem && Input.GetMouseButtonDown(0))
             {
@@ -1073,10 +1218,12 @@ public class CombatManager : MonoBehaviour
                         else
                         {
                             Debug.LogWarning($"Objetivo '{targetCombatant.GetName()}' NO es válido para el objeto '{_selectedItemData.itemName}'.");
-                            CloseItemSelectionPanel();
+                            ResetSelectionStatesAndPassTurn(true);
                         }
                     }
+                    // else { Debug.Log("Objeto: Clic en algo, pero no es un combatiente válido o no hay ítem seleccionado."); ResetSelectionStatesAndPassTurn(true); }
                 }
+                // else { Debug.Log("Objeto: Clic en el vacío."); ResetSelectionStatesAndPassTurn(true); } // Opcional
             }
             else if (!isSelectingTargetForAttack && !isSelectingTargetForSkill && !isSelectingTargetForItem)
             {
@@ -1141,5 +1288,54 @@ public class CombatManager : MonoBehaviour
     //    yield return new WaitForSeconds(delay);
     //    EndCombat(playerWon);
     // }
+    private Combatant DetermineItemTarget(ItemData item, Combatant caster, Combatant directTarget)
+    {
+        // Lógica simplificada: si es consumible de HP/MP, el objetivo es un aliado o el lanzador.
+        if (item.itemType == ItemType.Consumable && (item.hpToRestore > 0 || item.mpToRestore > 0))
+        {
+            if (directTarget != null && directTarget.isPlayerCharacter && !directTarget.isDefeated) return directTarget;
+            if (caster != null && !caster.isDefeated && caster.isPlayerCharacter) return caster;
+        }
+        // (Añadir lógica para otros tipos de ítems, ej: bombas que apuntan a enemigos)
+        // else if (item.itemType == ItemType.Bomb_Damage_Enemy_Etc) {
+        //    if (directTarget != null && !directTarget.isPlayerCharacter && !directTarget.isDefeated) return directTarget;
+        // }
+        return null;
+    }
+
+    private List<Combatant> DetermineActualTargets(AbilityTargetType targetType, Combatant attacker, Combatant directTarget)
+    {
+        List<Combatant> actualTargets = new List<Combatant>();
+        if (attacker == null) return actualTargets; // Necesitamos un atacante
+
+        switch (targetType)
+        {
+            case AbilityTargetType.Self:
+                if (!attacker.isDefeated) actualTargets.Add(attacker);
+                break;
+            case AbilityTargetType.SingleAlly:
+                if (directTarget != null && directTarget.isPlayerCharacter && !directTarget.isDefeated) actualTargets.Add(directTarget);
+                break;
+            case AbilityTargetType.AllAllies:
+                actualTargets.AddRange(_combatants.Where(c => c.isPlayerCharacter && !c.isDefeated));
+                break;
+            case AbilityTargetType.SingleEnemy:
+                if (directTarget != null && !directTarget.isPlayerCharacter && !directTarget.isDefeated) actualTargets.Add(directTarget);
+                break;
+            case AbilityTargetType.AllEnemies:
+                actualTargets.AddRange(_combatants.Where(c => !c.isPlayerCharacter && !c.isDefeated));
+                break;
+            case AbilityTargetType.None:
+                // Para habilidades que no tienen un objetivo específico (ej: un buff de área que no se selecciona)
+                // O podría aplicarse a todos, o a un grupo predefinido.
+                // Si es para todos los aliados, se debería usar AllAllies.
+                // Si es para todos los enemigos, AllEnemies.
+                // Si es para el propio lanzador, Self.
+                // Si es "None" y tiene un efecto, la habilidad misma debe saber a quién aplicarlo o cómo.
+                // Por ahora, si es None, no se añaden objetivos aquí.
+                break;
+        }
+        return actualTargets;
+    }
 
 }

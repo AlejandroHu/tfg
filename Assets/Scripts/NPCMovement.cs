@@ -4,41 +4,37 @@ using UnityEngine;
 
 public class NPCMovement : MonoBehaviour
 {
-   
-    [Header("Movement")] 
-    [SerializeField] private float moveSpeed = 2f; // Velocidad de movimiento del NPC
+    [Header("Movement")]
+    [SerializeField] private float moveSpeed = 2f;
 
-    // --- VARIABLES INTERNAS DE MOVIMIENTO ---
-    private Vector2 currentMovementVector; // Almacena la dirección y magnitud del movimiento actual del NPC. Se pone a (0,0) cuando está quieto.
-    private Vector3 startPosition;         // Posición inicial del NPC, usada como referencia para el patrón de patrulla.
+    private Vector2 currentMovementVector;
+    private Vector3 startPosition;
 
-    [Header("Animations")] 
-    [SerializeField] private Animator anim; // Referencia al componente Animator del NPC 
-    private string lastDirectionAnimKey = "Down"; // Almacena la última dirección como un string ("Up", "Down", "Left", "Right") para construir nombres de animación.
+    [Header("Animations")]
+    [SerializeField] private Animator anim;
+    private string lastDirectionAnimKey = "Down";
 
-    private Rigidbody2D rb; // Referencia al componente Rigidbody2D del NPC, usado para el movimiento físico.
+    private Rigidbody2D rb;
 
-    [Header("Movement Pattern")] 
-    [SerializeField] private float moveDistance = 1.28f; // Distancia que el NPC se moverá desde su startPosition en la patrolDirection.
-    [SerializeField] private float waitTime = 1f;       // Tiempo que el NPC esperará al llegar al final de un tramo de patrulla o a su startPosition.
+    [Header("Movement Pattern")]
+    [SerializeField] private float moveDistance = 1.28f;
+    [SerializeField] private float waitTime = 1f;
 
-    [Header("Movement Direction")] 
-    [SerializeField] private Vector2 patrolDirection = Vector2.right; // Dirección base en la que el NPC realizará su patrulla (ej: Vector2.right para moverse a la derecha).
-    [SerializeField] private LayerMask detectionLayerMask; // LayerMask para filtrar qué golpea el raycast.
+    [Header("Movement Direction")]
+    [SerializeField] private Vector2 patrolDirection = Vector2.right;
+    [SerializeField] private LayerMask detectionLayerMask;
 
 
-    private Coroutine movementCoroutine; // Referencia a la corrutina de movimiento principal (MovePattern), para poder detenerla si es necesario.
-
-    // Bandera pública (solo lectura externa) para saber si el movimiento del NPC está pausado por un sistema externo (como el diálogo).
+    private Coroutine movementCoroutine;
     public bool IsExternallyPaused { get; private set; } = false;
+
+    private bool _wasInitialized = false; // Para asegurar que Start() se complete antes de OnEnable
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody2D>();         // Obtiene el Rigidbody2D del mismo GameObject.
-        startPosition = transform.position;     // Guarda la posición inicial del NPC.
+        rb = GetComponent<Rigidbody2D>();
+        startPosition = transform.position;
 
-        // Obtener el Animator, buscando en un hijo "CharacterSprite" si no está en el mismo GameObject.
-        // (Asumiendo que el Animator podría estar en un hijo llamado "CharacterSprite" según tu estructura)
         if (anim == null)
         {
             Transform characterSprite = transform.Find("CharacterSprite"); // Nombre exacto del hijo
@@ -48,288 +44,269 @@ public class NPCMovement : MonoBehaviour
             }
             else
             {
-                anim = GetComponent<Animator>(); // Fallback al mismo GameObject
+                anim = GetComponent<Animator>();
             }
         }
         if (anim == null)
         {
             Debug.LogError("NPCMovement: Animator no encontrado en " + gameObject.name + " o su hijo 'CharacterSprite'. Las animaciones no funcionarán.", this);
-            enabled = false; // Deshabilitar script si falta el Animator
+            enabled = false;
         }
+        Debug.Log($"[{Time.frameCount}] {gameObject.name} - Awake completado.");
     }
 
     private void Start()
     {
-        // Asegurarse de tener las referencias (aunque Awake ya debería haberlas obtenido).
         if (rb == null) rb = GetComponent<Rigidbody2D>();
 
-        // Establece la dirección de animación inicial basada en la patrolDirection configurada.
         if (patrolDirection.normalized != Vector2.zero)
         {
             UpdateLastDirectionAnimKey(patrolDirection.normalized);
         }
 
-        currentMovementVector = Vector2.zero; // El NPC empieza quieto.
-        HandleAnimations();                   // Reproduce la animación de Idle inicial.
+        currentMovementVector = Vector2.zero;
+        HandleAnimations();
 
-        // Inicia la corrutina de patrulla solo si no está pausado externamente desde el principio.
-        if (!IsExternallyPaused)
+        _wasInitialized = true; // Marcar como inicializado
+        Debug.Log($"[{Time.frameCount}] {gameObject.name} - Start completado. _wasInitialized = true.");
+
+        if (!IsExternallyPaused && gameObject.activeInHierarchy && enabled)
         {
+            Debug.Log($"[{Time.frameCount}] {gameObject.name} - Start: Llamando a StartPatrol() porque no está pausado externamente.");
             StartPatrol();
         }
-    }
-
-
-    // Método para manejar qué animación se debe reproducir.
-    private void HandleAnimations()
-    {
-        if (anim == null) return; // Si no hay Animator, no hacer nada.
-
-        // Determina el prefijo del nombre de la animación ("Idle" o "Walking").
-        string statePrefix = (currentMovementVector == Vector2.zero) ? "Idle" : "Walking";
-        // Construye el nombre completo de la animación (ej: "IdleDown", "WalkingRight").
-        string fullAnimationName = statePrefix + lastDirectionAnimKey;
-
-        // Comprueba si la animación actual ya es la que se quiere reproducir.
-        // Esto evita reiniciar la animación en cada frame si ya está corriendo, lo cual es bueno.
-        if (!anim.GetCurrentAnimatorStateInfo(0).IsName(fullAnimationName))
+        else if (IsExternallyPaused)
         {
-            anim.Play(fullAnimationName); // Reproduce la animación.
+            Debug.LogWarning($"[{Time.frameCount}] {gameObject.name} - Start: No se inicia patrulla porque IsExternallyPaused es true al final de Start().");
         }
     }
 
-    // Actualiza la variable lastDirectionAnimKey ("Up", "Down", "Left", "Right")
-    // basándose en el vector de dirección de movimiento.
+    void OnEnable()
+    {
+        Debug.Log($"[{Time.frameCount}] {gameObject.name} - OnEnable llamado. _wasInitialized: {_wasInitialized}, IsExternallyPaused: {IsExternallyPaused}, movementCoroutine: {(movementCoroutine == null ? "NULL" : "ACTIVO")}");
+        // Si _wasInitialized es true (Start ya se ejecutó) y no está pausado, y la corrutina es null (pudo ser detenida por OnDisable)
+        // entonces reiniciar patrulla. Esto maneja la reactivación después de un combate.
+        if (_wasInitialized && !IsExternallyPaused && movementCoroutine == null && gameObject.activeInHierarchy && enabled)
+        {
+            Debug.Log($"[{Time.frameCount}] {gameObject.name} - OnEnable: Condiciones cumplidas para reiniciar patrulla (ej: post-combate), llamando a StartPatrol().");
+            StartPatrol();
+        }
+        else
+        {
+            if (!_wasInitialized) Debug.LogWarning($"[{Time.frameCount}] {gameObject.name} - OnEnable: No se inicia patrulla porque _wasInitialized es false (Start aún no se ha completado).");
+            if (IsExternallyPaused) Debug.LogWarning($"[{Time.frameCount}] {gameObject.name} - OnEnable: No se inicia patrulla porque IsExternallyPaused es true.");
+            if (movementCoroutine != null) Debug.LogWarning($"[{Time.frameCount}] {gameObject.name} - OnEnable: No se inicia patrulla porque movementCoroutine ya está activo.");
+        }
+    }
+
+    void OnDisable()
+    {
+        Debug.Log($"[{Time.frameCount}] {gameObject.name} - OnDisable llamado. Deteniendo corrutina si existe.");
+        if (movementCoroutine != null)
+        {
+            StopCoroutine(movementCoroutine);
+            movementCoroutine = null;
+            Debug.Log($"[{Time.frameCount}] {gameObject.name} - OnDisable: movementCoroutine puesto a NULL.");
+        }
+        currentMovementVector = Vector2.zero;
+        // Es arriesgado llamar a HandleAnimations aquí si el objeto se está destruyendo o el animador no es válido
+        // if (anim != null && gameObject.activeInHierarchy) 
+        // {
+        //     HandleAnimations();
+        // }
+    }
+
+    private void HandleAnimations()
+    {
+        if (anim == null) return;
+        string statePrefix = (currentMovementVector == Vector2.zero) ? "Idle" : "Walking";
+        string fullAnimationName = statePrefix + lastDirectionAnimKey;
+        if (!anim.GetCurrentAnimatorStateInfo(0).IsName(fullAnimationName))
+        {
+            anim.Play(fullAnimationName);
+        }
+    }
+
     private void UpdateLastDirectionAnimKey(Vector2 direction)
     {
-        // Si no hay dirección (o es muy pequeña), no cambiar la última dirección conocida.
         if (direction.sqrMagnitude < 0.01f) return;
-
-        // Compara la magnitud de X e Y para determinar si el movimiento es más horizontal o vertical.
-        if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y)) // Movimiento horizontal predomina.
+        if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
         {
             if (direction.x > 0) lastDirectionAnimKey = "Right";
             else lastDirectionAnimKey = "Left";
         }
-        else // Movimiento vertical predomina (o son iguales, se prioriza Y).
+        else
         {
             if (direction.y > 0) lastDirectionAnimKey = "Up";
             else lastDirectionAnimKey = "Down";
         }
     }
 
-    // Inicia la corrutina principal del patrón de movimiento.
     private void StartPatrol()
     {
-        // Si ya hay una corrutina de movimiento, la detiene antes de iniciar una nueva.
-        if (movementCoroutine != null) StopCoroutine(movementCoroutine);
-        // Inicia la corrutina MovePattern y guarda una referencia a ella.
+        Debug.Log($"[{Time.frameCount}] {gameObject.name} - StartPatrol() llamado. IsExternallyPaused: {IsExternallyPaused}");
+        if (IsExternallyPaused)
+        {
+            Debug.LogWarning($"[{Time.frameCount}] {gameObject.name} - StartPatrol: No se inicia porque IsExternallyPaused es true.");
+            return; // No iniciar si está pausado externamente
+        }
+
+        if (movementCoroutine != null)
+        {
+            Debug.Log($"[{Time.frameCount}] {gameObject.name} - StartPatrol: Deteniendo corrutina existente antes de iniciar una nueva.");
+            StopCoroutine(movementCoroutine);
+        }
         movementCoroutine = StartCoroutine(MovePattern());
+        Debug.Log($"[{Time.frameCount}] {gameObject.name} - StartPatrol: Nueva corrutina MovePattern iniciada. movementCoroutine is {(movementCoroutine == null ? "NULL" : "ACTIVO")}.");
     }
 
- 
-    // Corrutina que define el patrón de movimiento de patrulla (A -> B -> A -> esperar).
     private IEnumerator MovePattern()
     {
-        while (true) // Bucle infinito para que el patrón se repita.
+        Debug.Log($"[{Time.frameCount}] {gameObject.name} - MovePattern: Corrutina iniciada.");
+        while (true)
         {
-            // Si está pausado externamente (ej: por diálogo), espera en este punto.
             if (IsExternallyPaused)
             {
-                yield return null; // Espera un frame y vuelve a comprobar.
-                continue;          // Salta el resto de la iteración del bucle.
+                Debug.Log($"[{Time.frameCount}] {gameObject.name} - MovePattern: Pausado externamente, esperando.");
+                currentMovementVector = Vector2.zero; // Asegurar que esté quieto mientras está pausado en este bucle
+                HandleAnimations();
+                yield return new WaitUntil(() => !IsExternallyPaused); // Esperar hasta que la pausa se quite
+                Debug.Log($"[{Time.frameCount}] {gameObject.name} - MovePattern: Reanudado después de pausa externa.");
             }
 
-            // Calcula el punto B de la patrulla (startPosition + patrolDirection * moveDistance).
             Vector3 patternTargetPosition = startPosition + new Vector3(patrolDirection.x * moveDistance, patrolDirection.y * moveDistance, 0);
-            // Inicia la sub-corrutina para moverse hacia el punto B.
             yield return StartCoroutine(MoveToPosition(patternTargetPosition));
 
-            // Comprueba de nuevo si se pausó externamente después de completar el movimiento.
-            if (IsExternallyPaused) { yield return null; continue; }
+            if (IsExternallyPaused) { /*Debug.Log("Pausado en MovePattern post B");*/ yield return new WaitUntil(() => !IsExternallyPaused); /*Debug.Log("Reanudado en MovePattern post B");*/ }
 
-            // Inicia la sub-corrutina para moverse de regreso al punto A (startPosition).
             yield return StartCoroutine(MoveToPosition(startPosition));
 
-            if (IsExternallyPaused) { yield return null; continue; }
+            if (IsExternallyPaused) { /*Debug.Log("Pausado en MovePattern post A");*/ yield return new WaitUntil(() => !IsExternallyPaused); /*Debug.Log("Reanudado en MovePattern post A");*/ }
 
-            // Al llegar a startPosition, asegurarse de que esté en Idle.
             currentMovementVector = Vector2.zero;
             HandleAnimations();
-            // Espera el tiempo definido en waitTime antes de repetir el patrón.
+            Debug.Log($"[{Time.frameCount}] {gameObject.name} - MovePattern: Esperando {waitTime}s.");
             yield return new WaitForSeconds(waitTime);
         }
     }
 
-    // Corrutina para mover el NPC a una posición objetivo específica.
     private IEnumerator MoveToPosition(Vector3 target)
     {
-        // Calcula la dirección normalizada hacia el objetivo.
+        // Debug.Log($"[{Time.frameCount}] {gameObject.name} - MoveToPosition: Moviéndose a {target}. IsExternallyPaused: {IsExternallyPaused}");
+
         Vector2 directionToTarget = (target - transform.position).normalized;
-
-        if (directionToTarget != Vector2.zero) // Solo si hay que moverse (no está ya en el target).
+        if (directionToTarget != Vector2.zero)
         {
-            currentMovementVector = directionToTarget;        // Actualiza el vector de movimiento actual.
-            UpdateLastDirectionAnimKey(currentMovementVector); // Actualiza la dirección para la animación.
-            HandleAnimations();                               // Pone la animación de "Walking".
+            currentMovementVector = directionToTarget;
+            UpdateLastDirectionAnimKey(currentMovementVector);
+            HandleAnimations();
         }
-        else // Si ya está en el target.
+        else
         {
-            currentMovementVector = Vector2.zero; // Asegurar que está quieto.
-            HandleAnimations();                   // Poner animación de "Idle".
-            yield break;                          // Termina esta corrutina.
+            currentMovementVector = Vector2.zero;
+            HandleAnimations();
+            yield break;
         }
-
-        // Mientras no haya llegado al objetivo (con un pequeño margen de error de 0.05f).
         while (Vector3.Distance(transform.position, target) > 0.05f)
         {
-            // Si está pausado externamente (ej: por diálogo) mientras se mueve.
             if (IsExternallyPaused)
             {
-                currentMovementVector = Vector2.zero; // Detener el vector de movimiento.
-                HandleAnimations();                   // Poner en Idle (mirando en la última dirección).
-
-                // Bucle de espera hasta que se quite la pausa externa.
-                while (IsExternallyPaused)
-                {
-                    yield return null;
-                }
-                // Al quitarse la pausa, reanudar el movimiento hacia el target.
-                directionToTarget = (target - transform.position).normalized; // Recalcular dirección.
-                if (directionToTarget == Vector2.zero) // Si ya llegó mientras estaba pausado.
-                {
-                    HandleAnimations(); // Poner en Idle.
-                    yield break;        // Terminar esta corrutina.
-                }
-                currentMovementVector = directionToTarget;        // Reanudar vector de movimiento.
-                UpdateLastDirectionAnimKey(currentMovementVector); // Actualizar dirección de animación.
-                HandleAnimations();                               // Poner en Walking.
+                currentMovementVector = Vector2.zero; HandleAnimations();
+                yield return new WaitUntil(() => !IsExternallyPaused);
+                directionToTarget = (target - transform.position).normalized;
+                if (directionToTarget == Vector2.zero) { HandleAnimations(); yield break; }
+                currentMovementVector = directionToTarget; UpdateLastDirectionAnimKey(currentMovementVector); HandleAnimations();
             }
-
-            // Determina la dirección actual en la que el NPC intenta moverse.
             Vector2 currentFacingDirection = currentMovementVector.normalized;
-            // Si por alguna razón se detuvo pero no ha llegado, recalcular la dirección para el raycast.
             if (currentFacingDirection == Vector2.zero && Vector3.Distance(transform.position, target) > 0.05f)
             {
                 currentFacingDirection = (target - transform.position).normalized;
             }
-
-            // Bucle de espera si hay un obstáculo (jugador) en el camino Y no está pausado externamente.
             while (IsObstacleInPath(currentFacingDirection) && !IsExternallyPaused)
             {
-                // Si se estaba moviendo cuando detectó el obstáculo, detenerse.
-                if (currentMovementVector != Vector2.zero)
-                {
-                    currentMovementVector = Vector2.zero; // Detener vector de movimiento.
-                    HandleAnimations();                   // Poner en Idle.
-                }
-                yield return null; // Esperar al siguiente frame y volver a comprobar IsObstacleInPath.
+                if (currentMovementVector != Vector2.zero) { currentMovementVector = Vector2.zero; HandleAnimations(); }
+                yield return null;
             }
-
-            // Si estaba detenido por un obstáculo y ahora el camino está libre Y no está pausado externamente.
             if (currentMovementVector == Vector2.zero && Vector3.Distance(transform.position, target) > 0.05f && !IsExternallyPaused)
             {
-                directionToTarget = (target - transform.position).normalized; // Recalcular dirección.
-                if (directionToTarget != Vector2.zero) // Solo si hay una dirección válida.
+                directionToTarget = (target - transform.position).normalized;
+                if (directionToTarget != Vector2.zero)
                 {
-                    currentMovementVector = directionToTarget;        // Reanudar vector de movimiento.
-                    UpdateLastDirectionAnimKey(currentMovementVector); // Actualizar dirección de animación.
-                    HandleAnimations();                               // Poner en Walking.
+                    currentMovementVector = directionToTarget; UpdateLastDirectionAnimKey(currentMovementVector); HandleAnimations();
                 }
             }
-
-            // Mover el NPC si no está pausado externamente y tiene una dirección de movimiento.
             if (!IsExternallyPaused && currentMovementVector != Vector2.zero)
             {
-                // Calcula la nueva posición usando MoveTowards para un movimiento suave a velocidad constante.
                 Vector3 newPosition = Vector3.MoveTowards(transform.position, target, moveSpeed * Time.deltaTime);
-                rb.MovePosition(newPosition); // Mueve el Rigidbody2D a la nueva posición.
+                rb.MovePosition(newPosition);
             }
-
-            yield return null; // Espera al siguiente frame.
+            yield return null;
         }
-
-        // Al llegar al objetivo.
-        rb.MovePosition(target);              // Asegura que esté exactamente en la posición target.
-        currentMovementVector = Vector2.zero; // Detener vector de movimiento.
-        HandleAnimations();                   // Poner en Idle.
+        rb.MovePosition(target);
+        currentMovementVector = Vector2.zero;
+        HandleAnimations();
     }
 
-    // Método para detectar si hay un obstáculo (jugador) en la dirección de movimiento.
     private bool IsObstacleInPath(Vector2 direction)
     {
-        if (direction == Vector2.zero) return false; // Si no se mueve, no hay obstáculo en el camino.
-
-        float checkDistance = 0.3f; // Distancia del rayo. AJUSTA ESTO según el tamaño de tus personajes/tiles.
-        // Origen del rayo, con un pequeño offset para evitar que choque con el propio collider del NPC.
-        Vector2 raycastOrigin = (Vector2)transform.position + direction * 0.5f; // Offset del origen. AJUSTA ESTO.
-
-        // Lanza el rayo.
+        if (direction == Vector2.zero) return false;
+        float checkDistance = 0.3f;
+        Vector2 raycastOrigin = (Vector2)transform.position + direction * 0.5f;
         RaycastHit2D hit = Physics2D.Raycast(raycastOrigin, direction, checkDistance, detectionLayerMask);
-        // Dibuja el rayo en la vista de Escena para depuración (solo visible en el Editor).
         Debug.DrawRay(raycastOrigin, direction * checkDistance, Color.red);
-
-        if (hit.collider != null) // Si el rayo golpeó algo.
+        if (hit.collider != null)
         {
-            // Comprueba si el objeto golpeado tiene el tag "Player".
             if (hit.collider.CompareTag("Player"))
             {
-                // Log para depuración, puedes comentarlo o quitarlo en la versión final.
                 Debug.Log(gameObject.name + " detectó un obstáculo: " + hit.collider.name + " con tag: " + hit.collider.tag);
-                return true; // Hay un obstáculo (el jugador).
+                return true;
             }
         }
-        return false; // No hay obstáculo (o lo que golpeó no es el jugador).
+        return false;
     }
 
-
-    /// <summary>
-    /// Pausa o reanuda el patrón de movimiento del NPC.
-    /// </summary>
-    /// <param name="shouldPause">True para pausar, False para reanudar.</param>
     public void SetMovementPaused(bool shouldPause)
     {
-        IsExternallyPaused = shouldPause; // Actualiza la bandera de pausa externa.
+        Debug.Log($"[{Time.frameCount}] {gameObject.name} - SetMovementPaused({shouldPause}) llamado. IsExternallyPaused ANTES: {IsExternallyPaused}, movementCoroutine: {(movementCoroutine == null ? "NULL" : "ACTIVO")}");
+        IsExternallyPaused = shouldPause;
 
-        if (shouldPause) // Si se debe pausar.
+        if (shouldPause)
         {
-            // Las corrutinas activas (MovePattern, MoveToPosition) detectarán IsExternallyPaused
-            // y se pondrán en un estado de espera o se detendrán y pondrán al NPC en Idle.
-            // Forzamos el estado Idle aquí también para asegurar.
             currentMovementVector = Vector2.zero;
             HandleAnimations();
         }
-        else // Si se debe reanudar.
+        else
         {
-            // Si la corrutina principal de patrulla no estaba activa (porque se detuvo completamente
-            // o es la primera vez después de Start y estaba pausado), la (re)iniciamos.
-            if (movementCoroutine == null && gameObject.activeInHierarchy && enabled)
+            if (gameObject.activeInHierarchy && enabled)
             {
-                StartPatrol();
+                // Si se está reanudando Y la corrutina no está activa (pudo ser detenida por OnDisable o nunca inició correctamente)
+                // Y _wasInitialized es true (Start ya se ejecutó)
+                if (movementCoroutine == null && _wasInitialized)
+                {
+                    Debug.Log($"[{Time.frameCount}] {gameObject.name} - SetMovementPaused(false): movementCoroutine era NULL y _wasInitialized es true, llamando a StartPatrol().");
+                    StartPatrol();
+                }
+                else if (movementCoroutine != null)
+                {
+                    Debug.Log($"[{Time.frameCount}] {gameObject.name} - SetMovementPaused(false): movementCoroutine NO era NULL. La corrutina debería reanudarse sola.");
+                }
+                else if (!_wasInitialized)
+                {
+                    Debug.LogWarning($"[{Time.frameCount}] {gameObject.name} - SetMovementPaused(false): No se inicia patrulla porque _wasInitialized es false.");
+                }
             }
-            // Si la corrutina MoveToPosition estaba en su bucle `while(IsExternallyPaused)`,
-            // ahora saldrá de él y continuará su lógica de movimiento.
         }
+        Debug.Log($"[{Time.frameCount}] {gameObject.name} - SetMovementPaused({shouldPause}) - IsExternallyPaused DESPUÉS: {IsExternallyPaused}, movementCoroutine: {(movementCoroutine == null ? "NULL" : "ACTIVO")}");
     }
 
-    /// <summary>
-    /// Hace que el NPC se ponga en estado Idle y mire hacia un objetivo específico.
-    /// Se asume que el movimiento ya ha sido pausado si es necesario por el sistema que llama a este método.
-    /// </summary>
-    /// <param name="targetToFace">El Transform del objeto hacia el que el NPC debe mirar.</param>
     public void SetIdleAndFaceTarget(Transform targetToFace)
     {
-        currentMovementVector = Vector2.zero; // Asegurar estado Idle.
-
-        if (targetToFace != null) // Si se proporcionó un objetivo.
+        currentMovementVector = Vector2.zero;
+        if (targetToFace != null)
         {
-            // Calcula la dirección hacia el objetivo.
             Vector2 directionToTarget = (targetToFace.position - transform.position).normalized;
-            // Actualiza la clave de dirección para la animación.
             UpdateLastDirectionAnimKey(directionToTarget);
         }
-        // Si targetToFace es null, se quedará en Idle en su última dirección conocida (lastDirectionAnimKey no cambia).
-
-        HandleAnimations(); // Reproducir la animación "Idle" + la nueva (o actual) lastDirectionAnimKey.
+        HandleAnimations();
     }
 }
