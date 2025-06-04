@@ -16,9 +16,7 @@ public class Combatant
     public GameObject combatSpriteGO;
     public int speed;
     public bool isPlayerCharacter;
-    // 'currentHP' y 'maxHP' en Combatant ahora sirven principalmente para enemigos 
-    // o como un reflejo temporal para personajes si se decide gestionarlo así.
-    // Para personajes, la fuente de verdad de currentHP/MaxHP es characterData.
+    public Animator animator; // Referencia al Animator del sprite de combate
     public int currentHP;
     public int maxHP;
     public bool isDefeated = false;
@@ -31,6 +29,7 @@ public class Combatant
         characterData = character;
         enemyData = null;
         combatSpriteGO = spriteGO;
+        if (spriteGO != null) animator = spriteGO.GetComponent<Animator>(); // Obtener Animator
         speed = character.Speed;
         isPlayerCharacter = true;
         // Inicializar desde el Character. Sus valores son la fuente de verdad.
@@ -46,6 +45,7 @@ public class Combatant
         characterData = null;
         enemyData = enemy;
         combatSpriteGO = spriteGO;
+        if (spriteGO != null) animator = spriteGO.GetComponent<Animator>(); // Obtener Animator
         speed = enemy.baseSpeed;
         isPlayerCharacter = false;
         currentHP = enemy.maxHP;
@@ -102,6 +102,8 @@ public class Combatant
         if (CombatManager.Instance != null && combatSpriteGO != null)
         {
             CombatManager.Instance.ShowFloatingText("-" + damageAmount.ToString(), combatSpriteGO.transform.position, Color.red, this);
+            // (FUTURO: Activar animación de "Hit" en el animator de este combatiente)
+             if (animator != null) animator.SetTrigger("HitTrigger");
         }
         Debug.Log($"{GetName()} recibe {damageAmount} de daño. HP restante: {GetCurrentHP()}/{GetMaxHP()}");
 
@@ -109,7 +111,12 @@ public class Combatant
         {
             isDefeated = true;
             Debug.Log($"{GetName()} ha sido derrotado!");
-            if (combatSpriteGO != null) combatSpriteGO.SetActive(false);
+            if (combatSpriteGO != null)
+            {
+                // (FUTURO: Activar animación de "Derrota" antes de desactivar)
+                 if (animator != null) animator.SetTrigger("DefeatTrigger");
+                combatSpriteGO.SetActive(false);
+            }
             if (enemyStatusUI != null && !isPlayerCharacter) enemyStatusUI.gameObject.SetActive(false); // Ocultar solo si es enemigo
         }
 
@@ -293,6 +300,18 @@ public class CombatManager : MonoBehaviour
     [SerializeField] private float floatingTextDefaultFontSize = 20f;
     [SerializeField] private float floatingTextYOffset = 0.6f;
 
+    // --- NUEVO: Referencias a Animator Controllers ---
+    [Header("Animaciones de Combate")]
+    [Tooltip("Animator Controller para los personajes de la party en combate.")]
+    [SerializeField] private RuntimeAnimatorController playerCombatAnimatorController;
+    [Tooltip("Animator Controller por defecto para los enemigos en combate.")]
+    [SerializeField] private RuntimeAnimatorController defaultEnemyCombatAnimatorController;
+    [Tooltip("Duración de la animación de ataque del jugador (para sincronizar daño).")]
+    [SerializeField] private float playerAttackAnimationDuration = 0.6f; // Ajusta esto
+    [Tooltip("Duración de la animación de ataque del enemigo (para sincronizar daño).")]
+    [SerializeField] private float enemyAttackAnimationDuration = 0.8f; // Ajusta esto
+    // --- FIN NUEVO ---
+
     private List<Character> currentPlayerPartyData;
     private List<EnemyData> currentEnemyGroupData;
     private PlayerMovement playerMovementController;
@@ -368,6 +387,8 @@ public class CombatManager : MonoBehaviour
         // floatingTextCanvasTransform es opcional, así que un LogWarning está bien si está vacío.
         if (floatingTextCanvasTransform == null) Debug.LogWarning("CombatManager: 'floatingTextCanvasTransform' no asignado. Los textos flotantes se instanciarán como hijos del combatiente (asume World Space Canvas en prefab) o en la raíz de la escena.", this);
 
+        if (playerCombatAnimatorController == null) Debug.LogWarning("CombatManager: 'playerCombatAnimatorController' no asignado. Las animaciones de la party podrían no funcionar.", this);
+        if (defaultEnemyCombatAnimatorController == null) Debug.LogWarning("CombatManager: 'defaultEnemyCombatAnimatorController' no asignado. Las animaciones de enemigos podrían no funcionar.", this);
 
         if (attackButton != null) attackButton.onClick.AddListener(OnAttackButtonClicked);
         if (defendButton != null) defendButton.onClick.AddListener(OnDefendButtonClicked);
@@ -527,6 +548,14 @@ public class CombatManager : MonoBehaviour
                     SpriteRenderer sr = partyMemberSpriteGO.AddComponent<SpriteRenderer>();
                     sr.sprite = currentPlayerPartyData[i].portraitSprite;
                     sr.sortingLayerName = "Characters_Combat";
+
+                    // --- AÑADIR Y CONFIGURAR ANIMATOR PARA LA PARTY ---
+                    Animator pAnim = partyMemberSpriteGO.AddComponent<Animator>();
+                    if (playerCombatAnimatorController != null)
+                    {
+                        pAnim.runtimeAnimatorController = playerCombatAnimatorController;
+                    }
+                    // --- FIN ANIMATOR PARTY ---
                     // --- AÑADIR COLLIDER AL PERSONAJE DE LA PARTY ---
                     BoxCollider2D partyCol = partyMemberSpriteGO.AddComponent<BoxCollider2D>();
                     // partyCol.isTrigger = true; // Opcional, para raycast no es estrictamente necesario que sea trigger si está en la LayerMask
@@ -560,6 +589,15 @@ public class CombatManager : MonoBehaviour
                     SpriteRenderer sr = enemySpriteGO.AddComponent<SpriteRenderer>();
                     sr.sprite = currentEnemyGroupData[i].battleSprite;
                     sr.sortingLayerName = "Characters_Combat";
+
+                    // --- AÑADIR Y CONFIGURAR ANIMATOR PARA ENEMIGOS ---
+                    Animator eAnim = enemySpriteGO.AddComponent<Animator>();
+                    // (FUTURO: EnemyData podría tener un campo para su propio AnimatorController específico)
+                    if (defaultEnemyCombatAnimatorController != null)
+                    {
+                        eAnim.runtimeAnimatorController = defaultEnemyCombatAnimatorController;
+                    }
+                    // --- FIN ANIMATOR ENEMIGOS ---
                     BoxCollider2D col = enemySpriteGO.AddComponent<BoxCollider2D>();
                     col.isTrigger = true;
                     if (sr.sprite != null) col.size = new Vector2(sr.sprite.bounds.size.x * 0.8f, sr.sprite.bounds.size.y * 0.8f);
@@ -688,7 +726,18 @@ public class CombatManager : MonoBehaviour
         if (livingPlayerCombatants.Count > 0)
         {
             Combatant target = livingPlayerCombatants[Random.Range(0, livingPlayerCombatants.Count)];
+            // --- ACTIVAR ANIMACIÓN DE ATAQUE DEL ENEMIGO ---
+            if (enemy.animator != null)
+            {
+                Debug.Log($"{enemy.GetName()} activando AttackTrigger.");
+                enemy.animator.SetTrigger("AttackTrigger");
+                // Podrías añadir una espera aquí si la animación es larga
+                yield return new WaitForSeconds(enemyAttackAnimationDuration); // O la duración exacta de tu clip de animación
+
+            }
+            // --- FIN ANIMACIÓN ---
             Debug.Log($"{enemy.GetName()} ataca a {target.GetName()}! (Defensa del objetivo: {target.GetDefense()})");
+
 
             int damage = Mathf.Max(1, enemy.GetAttack() - target.GetDefense());
             target.TakeDamage(damage);
@@ -808,13 +857,35 @@ public class CombatManager : MonoBehaviour
             return;
         }
         Debug.Log($"{attacker.GetName()} ataca a {target.GetName()}! (Defensa del objetivo: {target.GetDefense()})");
+        if (actionMenuPanel != null) actionMenuPanel.SetActive(false); // Ocultar menú mientras se ejecuta la acción
+        StartCoroutine(PerformAttackSequence(attacker, target));
+    }
 
-        int damage = Mathf.Max(1, attacker.GetAttack() - target.GetDefense());
-        target.TakeDamage(damage); // <--- ESTA LLAMADA ES LA IMPORTANTE
+    private IEnumerator PerformAttackSequence(Combatant attacker, Combatant target)
+    {
+        Debug.Log($"{attacker.GetName()} inicia secuencia de ataque sobre {target.GetName()}!");
+        if (attacker.animator != null)
+        {
+            Debug.Log($"{attacker.GetName()} activando AttackTrigger.");
+            attacker.animator.SetTrigger("AttackTrigger");
+            yield return new WaitForSeconds(playerAttackAnimationDuration); // Esperar duración de animación del jugador
+        }
+        else
+        {
+            yield return new WaitForSeconds(0.1f); // Pequeña pausa si no hay animación
+        }
+
+        // Aplicar daño después de la animación
+        if (!target.isDefeated) // Comprobar de nuevo por si acaso
+        {
+            Debug.Log($"Aplicando daño de {attacker.GetName()} a {target.GetName()} (Defensa del objetivo: {target.GetDefense()}).");
+            int damage = Mathf.Max(1, attacker.GetAttack() - target.GetDefense());
+            target.TakeDamage(damage);
+        }
 
         isSelectingTargetForAttack = false;
         attackerForTargetSelection = null;
-        StartCoroutine(EndPlayerActionAndProceedToNextTurn(0.5f));
+        StartCoroutine(EndPlayerActionAndProceedToNextTurn(0.2f));
     }
 
     private void ExecuteSkill(Combatant attacker, Combatant directTarget, AbilityData skill)
@@ -822,45 +893,56 @@ public class CombatManager : MonoBehaviour
         if (attacker == null || skill == null) { ResetSelectionStatesAndPassTurn(); return; }
         if (attacker.isPlayerCharacter == false || attacker.characterData == null) { ResetSelectionStatesAndPassTurn(); return; }
 
-        Debug.Log($"{attacker.GetName()} usa la habilidad '{skill.abilityName}'" + (directTarget != null ? $" sobre {directTarget.GetName()}" : ""));
+        if (actionMenuPanel != null) actionMenuPanel.SetActive(false); // Ocultar menú
+
+        StartCoroutine(PerformSkillSequence(attacker, directTarget, skill));
+    }
+
+    private IEnumerator PerformSkillSequence(Combatant attacker, Combatant directTarget, AbilityData skill)
+    {
+        Debug.Log($"{attacker.GetName()} inicia secuencia de habilidad '{skill.abilityName}'" + (directTarget != null ? $" sobre {directTarget.GetName()}" : ""));
 
         if (skill.mpCost > 0)
         {
             if (!attacker.characterData.SpendMana(skill.mpCost))
             {
                 Debug.LogWarning($"{attacker.GetName()} no tiene suficiente MP para {skill.abilityName}.");
-                ResetSelectionStatesAndPassTurn(true); // Reabrir menú si no hay MP
-                return;
+                ResetSelectionStatesAndPassTurn(true);
+                yield break; // Terminar la corrutina
             }
             UpdatePartyStatusHUD();
+        }
+
+        if (attacker.animator != null)
+        {
+            Debug.Log($"{attacker.GetName()} activando animación para habilidad '{skill.abilityName}'.");
+            attacker.animator.SetTrigger("AttackTrigger"); // O "SkillTrigger"
+            yield return new WaitForSeconds(playerAttackAnimationDuration); // Usar una duración genérica o específica de la habilidad
+        }
+        else
+        {
+            yield return new WaitForSeconds(0.1f);
         }
 
         List<Combatant> actualTargets = DetermineActualTargets(skill.targetType, attacker, directTarget);
         if (actualTargets.Count == 0 && skill.targetType != AbilityTargetType.None)
         {
             Debug.LogWarning($"No se encontraron objetivos válidos para la habilidad {skill.abilityName}.");
-            ResetSelectionStatesAndPassTurn(true); // Reabrir menú si no hay objetivos
-            return;
+            ResetSelectionStatesAndPassTurn(true);
+            yield break;
         }
 
-        Debug.Log($"Ejecutando efecto de {skill.abilityName} sobre {actualTargets.Count} objetivo(s). Tipo: {skill.effectType}, Potencia: {skill.power}");
+        Debug.Log($"Ejecutando efecto de {skill.abilityName} sobre {actualTargets.Count} objetivo(s).");
         foreach (Combatant t in actualTargets)
         {
             if (t.isDefeated && skill.effectType != AbilityEffectType.Special) continue;
-
             if (skill.effectType == AbilityEffectType.Damage)
             {
                 int damage = Mathf.Max(1, (int)skill.power + attacker.GetAttack() / 2 - t.GetDefense());
                 t.TakeDamage(damage);
             }
-            else if (skill.effectType == AbilityEffectType.Heal)
-            {
-                t.ApplyHeal((int)skill.power);
-            }
-            else if (skill.effectType == AbilityEffectType.RestoreMP)
-            {
-                if (t.isPlayerCharacter && t.characterData != null) t.ApplyManaRestore((int)skill.power);
-            }
+            else if (skill.effectType == AbilityEffectType.Heal) { t.ApplyHeal((int)skill.power); }
+            else if (skill.effectType == AbilityEffectType.RestoreMP) { t.ApplyManaRestore((int)skill.power); }
         }
         ResetSelectionStatesAndPassTurn();
     }
@@ -999,29 +1081,32 @@ public class CombatManager : MonoBehaviour
         if (caster == null || item == null) { ResetSelectionStatesAndPassTurn(); return; }
         if (caster.isPlayerCharacter == false || caster.characterData == null) { ResetSelectionStatesAndPassTurn(); return; }
 
+        if (actionMenuPanel != null) actionMenuPanel.SetActive(false); // Ocultar menú
+
+        StartCoroutine(PerformItemUseSequence(caster, directTarget, item));
+    }
+
+    private IEnumerator PerformItemUseSequence(Combatant caster, Combatant directTarget, ItemData item)
+    {
         Combatant actualTarget = DetermineItemTarget(item, caster, directTarget);
         if (actualTarget == null || (actualTarget.isPlayerCharacter && actualTarget.characterData == null))
         {
+            Debug.LogWarning($"No se pudo aplicar {item.itemName}, objetivo no válido.");
             ResetSelectionStatesAndPassTurn(true);
-            return;
+            yield break;
         }
 
         Debug.Log($"{caster.GetName()} usa el objeto '{item.itemName}' sobre {actualTarget.GetName()}");
-        bool itemUsedSuccessfully = false;
+        // (FUTURO: Animación de usar objeto para el caster)
+        // if (caster.animator != null) caster.animator.SetTrigger("UseItemTrigger");
+        // yield return new WaitForSeconds(playerItemAnimationDuration); // Necesitarías esta variable
 
-        // La lógica de Use() en ItemData devuelve true si el efecto se aplicó (ej: HP no estaba lleno)
-        if (item.Use(actualTarget.characterData)) // Asumimos que los objetos solo se usan en Characters por ahora
+        bool itemUsedSuccessfully = false;
+        if (item.Use(actualTarget.characterData))
         {
             itemUsedSuccessfully = true;
-            // Mostrar texto flotante DESPUÉS de que el HP/MP del Character se haya actualizado
-            if (item.hpToRestore > 0 && actualTarget.isPlayerCharacter)
-            {
-                ShowFloatingText("+" + item.hpToRestore, actualTarget.combatSpriteGO.transform.position, Color.green, actualTarget);
-            }
-            if (item.mpToRestore > 0 && actualTarget.isPlayerCharacter)
-            {
-                ShowFloatingText("+" + item.mpToRestore + " MP", actualTarget.combatSpriteGO.transform.position, Color.blue, actualTarget);
-            }
+            if (item.hpToRestore > 0 && actualTarget.isPlayerCharacter) { ShowFloatingText("+" + item.hpToRestore, actualTarget.combatSpriteGO.transform.position, Color.green, actualTarget); }
+            if (item.mpToRestore > 0 && actualTarget.isPlayerCharacter) { ShowFloatingText("+" + item.mpToRestore + " MP", actualTarget.combatSpriteGO.transform.position, Color.blue, actualTarget); }
         }
 
         if (itemUsedSuccessfully)
@@ -1138,98 +1223,132 @@ public class CombatManager : MonoBehaviour
 
     void Update()
     {
-        if (isCombatActive)
+        if (!isCombatActive) return;
+
+        // --- Lógica de Selección de Objetivo para ATAQUE ---
+        if (isSelectingTargetForAttack && Input.GetMouseButtonDown(0))
         {
-            if (isSelectingTargetForAttack && Input.GetMouseButtonDown(0))
+            // Debug.Log("CombatManager: Clic detectado mientras isSelectingTargetForAttack es true.");
+            if (Camera.main == null)
             {
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit2D hit = Physics2D.GetRayIntersection(ray, Mathf.Infinity, LayerMask.GetMask("EnemiesInCombat"));
+                Debug.LogError("CombatManager: Camera.main es NULL. Asegúrate de que tu cámara de combate esté tageada como 'MainCamera'.");
+                return;
+            }
 
-                if (hit.collider != null)
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit2D hit = Physics2D.GetRayIntersection(ray, Mathf.Infinity, LayerMask.GetMask("EnemiesInCombat"));
+
+            if (hit.collider != null)
+            {
+                // Debug.Log($"CombatManager: Raycast (ataque) golpeó a '{hit.collider.gameObject.name}' en la capa '{LayerMask.LayerToName(hit.collider.gameObject.layer)}'.");
+                Combatant targetCombatant = _combatants.FirstOrDefault(c => !c.isDefeated && c.combatSpriteGO == hit.collider.gameObject && !c.isPlayerCharacter);
+
+                if (targetCombatant != null)
                 {
-                    Combatant targetCombatant = _combatants.FirstOrDefault(c => !c.isDefeated && c.combatSpriteGO == hit.collider.gameObject && !c.isPlayerCharacter);
-                    if (targetCombatant != null)
-                    {
-                        ExecuteAttack(attackerForTargetSelection, targetCombatant);
-                    }
-                    else { Debug.Log("Raycast golpeó algo en capa Enemigos, pero no es un combatiente válido."); ResetSelectionStatesAndPassTurn(true); }
+                    Debug.Log("CombatManager: Objetivo enemigo válido encontrado para ATAQUE: " + targetCombatant.GetName());
+                    // --- CORRECCIÓN: Desactivar la selección ANTES de ejecutar la acción ---
+                    isSelectingTargetForAttack = false;
+                    ExecuteAttack(attackerForTargetSelection, targetCombatant);
+                    // attackerForTargetSelection se resetea dentro de PerformAttackSequence o su corolario
                 }
-                // else { Debug.Log("Ataque: Clic en el vacío."); ResetSelectionStatesAndPassTurn(true); } // Opcional: cancelar si se hace clic en el vacío
-            }
-            else if (isSelectingTargetForSkill && Input.GetMouseButtonDown(0))
-            {
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit2D hit = Physics2D.GetRayIntersection(ray, Mathf.Infinity, combatantLayerMask);
-
-                if (hit.collider != null)
+                else
                 {
-                    Combatant targetCombatant = _combatants.FirstOrDefault(c => !c.isDefeated && c.combatSpriteGO == hit.collider.gameObject);
-
-                    if (targetCombatant != null && _selectedAbility != null)
-                    {
-                        bool isValidTargetType = false;
-                        switch (_selectedAbility.targetType)
-                        {
-                            case AbilityTargetType.SingleEnemy:
-                                if (!targetCombatant.isPlayerCharacter) isValidTargetType = true;
-                                break;
-                            case AbilityTargetType.SingleAlly:
-                                if (targetCombatant.isPlayerCharacter) isValidTargetType = true;
-                                break;
-                        }
-
-                        if (isValidTargetType)
-                        {
-                            ExecuteSkill(attackerForTargetSelection, targetCombatant, _selectedAbility);
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"CombatManager: Objetivo '{targetCombatant.GetName()}' NO es válido para la habilidad '{_selectedAbility.abilityName}'.");
-                            ResetSelectionStatesAndPassTurn(true); // Volver al menú de acciones
-                        }
-                    }
-                    // else { Debug.Log("Habilidad: Clic en algo, pero no es un combatiente válido o no hay habilidad seleccionada."); ResetSelectionStatesAndPassTurn(true); }
+                    Debug.LogWarning("CombatManager: Clic en un objeto con collider en la capa de enemigos, pero no es un combatiente enemigo válido/vivo.");
+                    // No resetear isSelectingTargetForAttack aquí para permitir otro intento si el jugador quiere
+                    // Opcional: Podrías querer que el jugador pueda cancelar la selección aquí
+                    // ResetSelectionStatesAndPassTurn(true); // Esto volvería al menú de acción
                 }
-                // else { Debug.Log("Habilidad: Clic en el vacío."); ResetSelectionStatesAndPassTurn(true); } // Opcional
             }
-            else if (isSelectingTargetForItem && Input.GetMouseButtonDown(0))
-            {
-                if (Camera.main == null) { Debug.LogError("Camera.main es NULL."); return; }
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit2D hit = Physics2D.GetRayIntersection(ray, Mathf.Infinity, combatantLayerMask);
+            // else { Debug.Log("Ataque: Clic en el vacío."); } // Opcional: cancelar si se hace clic en el vacío
+        }
+        // --- Lógica de Selección de Objetivo para HABILIDAD ---
+        else if (isSelectingTargetForSkill && Input.GetMouseButtonDown(0))
+        {
+            // Debug.Log("CombatManager: Clic detectado mientras isSelectingTargetForSkill es true.");
+            if (Camera.main == null) { /* ... */ return; }
 
-                if (hit.collider != null)
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit2D hit = Physics2D.GetRayIntersection(ray, Mathf.Infinity, combatantLayerMask);
+
+            if (hit.collider != null)
+            {
+                // Debug.Log($"CombatManager: Raycast (habilidad) golpeó a '{hit.collider.gameObject.name}' en la capa '{LayerMask.LayerToName(hit.collider.gameObject.layer)}'.");
+                Combatant targetCombatant = _combatants.FirstOrDefault(c => !c.isDefeated && c.combatSpriteGO == hit.collider.gameObject);
+
+                if (targetCombatant != null && _selectedAbility != null)
                 {
-                    Combatant targetCombatant = _combatants.FirstOrDefault(c => !c.isDefeated && c.combatSpriteGO == hit.collider.gameObject);
-
-                    if (targetCombatant != null && _selectedItemData != null)
+                    bool isValidTargetType = false;
+                    switch (_selectedAbility.targetType)
                     {
-                        bool isValidTarget = false;
-                        if (_selectedItemData.itemType == ItemType.Consumable && (_selectedItemData.hpToRestore > 0 || _selectedItemData.mpToRestore > 0))
-                        {
-                            if (targetCombatant.isPlayerCharacter) isValidTarget = true;
-                        }
-                        // (Añadir validación para otros tipos de ítems)
-
-                        if (isValidTarget)
-                        {
-                            ExecuteItem(attackerForTargetSelection, targetCombatant, _selectedItemData);
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"Objetivo '{targetCombatant.GetName()}' NO es válido para el objeto '{_selectedItemData.itemName}'.");
-                            ResetSelectionStatesAndPassTurn(true);
-                        }
+                        case AbilityTargetType.SingleEnemy:
+                            if (!targetCombatant.isPlayerCharacter) isValidTargetType = true;
+                            break;
+                        case AbilityTargetType.SingleAlly:
+                            if (targetCombatant.isPlayerCharacter) isValidTargetType = true;
+                            break;
                     }
-                    // else { Debug.Log("Objeto: Clic en algo, pero no es un combatiente válido o no hay ítem seleccionado."); ResetSelectionStatesAndPassTurn(true); }
+
+                    if (isValidTargetType)
+                    {
+                        Debug.Log($"CombatManager: Objetivo '{targetCombatant.GetName()}' válido para la habilidad '{_selectedAbility.abilityName}'.");
+                        // --- CORRECCIÓN: Desactivar la selección ANTES de ejecutar la habilidad ---
+                        isSelectingTargetForSkill = false;
+                        ExecuteSkill(attackerForTargetSelection, targetCombatant, _selectedAbility);
+                        // attackerForTargetSelection y _selectedAbility se resetean en ResetSelectionStatesAndPassTurn
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"CombatManager: Objetivo '{targetCombatant.GetName()}' NO es válido para la habilidad '{_selectedAbility.abilityName}'.");
+                        // Considerar no cerrar el panel de skills inmediatamente, sino dar feedback y permitir reintentar o cancelar.
+                        // Por ahora, la lógica de ResetSelectionStatesAndPassTurn(true) se llamará si ExecuteSkill no procede.
+                        // Si se quiere cancelar explícitamente aquí:
+                        // ResetSelectionStatesAndPassTurn(true); // Vuelve al menú de acción
+                    }
                 }
-                // else { Debug.Log("Objeto: Clic en el vacío."); ResetSelectionStatesAndPassTurn(true); } // Opcional
+                // else { Debug.LogWarning("CombatManager: Clic en un objeto con collider, pero no es un combatiente válido/vivo o no hay habilidad seleccionada."); }
             }
-            else if (!isSelectingTargetForAttack && !isSelectingTargetForSkill && !isSelectingTargetForItem)
+            // else { Debug.Log("Habilidad: Clic en el vacío."); } // Opcional
+        }
+        // --- Lógica de Selección de Objetivo para OBJETOS ---
+        else if (isSelectingTargetForItem && Input.GetMouseButtonDown(0))
+        {
+            // ... (lógica similar, poner isSelectingTargetForItem = false; antes de ExecuteItem) ...
+            if (Camera.main == null) { return; }
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit2D hit = Physics2D.GetRayIntersection(ray, Mathf.Infinity, combatantLayerMask);
+
+            if (hit.collider != null)
             {
-                if (Input.GetKeyDown(KeyCode.Alpha0)) EndCombat(true);
-                else if (Input.GetKeyDown(KeyCode.Alpha9)) EndCombat(false);
+                Combatant targetCombatant = _combatants.FirstOrDefault(c => !c.isDefeated && c.combatSpriteGO == hit.collider.gameObject);
+
+                if (targetCombatant != null && _selectedItemData != null)
+                {
+                    bool isValidTarget = false;
+                    if (_selectedItemData.itemType == ItemType.Consumable && (_selectedItemData.hpToRestore > 0 || _selectedItemData.mpToRestore > 0))
+                    {
+                        if (targetCombatant.isPlayerCharacter) isValidTarget = true;
+                    }
+                    // (Añadir validación para otros tipos de ítems)
+
+                    if (isValidTarget)
+                    {
+                        // --- CORRECCIÓN: Desactivar la selección ANTES de ejecutar el ítem ---
+                        isSelectingTargetForItem = false;
+                        ExecuteItem(attackerForTargetSelection, targetCombatant, _selectedItemData);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Objetivo '{targetCombatant.GetName()}' NO es válido para el objeto '{_selectedItemData.itemName}'.");
+                        ResetSelectionStatesAndPassTurn(true);
+                    }
+                }
             }
+        }
+        // Teclas de depuración para terminar combate (solo si no estamos seleccionando nada)
+        else if (!isSelectingTargetForAttack && !isSelectingTargetForSkill && !isSelectingTargetForItem)
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha0)) EndCombat(true);
+            else if (Input.GetKeyDown(KeyCode.Alpha9)) EndCombat(false);
         }
     }
     public void OnFleeButtonClicked()
