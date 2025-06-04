@@ -23,19 +23,28 @@ public class Combatant
     public EnemyCombatStatusUI enemyStatusUI;
     public bool isDefending = false;
     private int defenseBonusWhileDefending = 5;
+    private SpriteRenderer _spriteRenderer; // Guardar referencia para cambiar color
+    private Color _originalSpriteColor;    // Para restaurar el color original
 
     public Combatant(Character character, GameObject spriteGO)
     {
         characterData = character;
         enemyData = null;
         combatSpriteGO = spriteGO;
-        if (spriteGO != null) animator = spriteGO.GetComponent<Animator>(); // Obtener Animator
+        if (spriteGO != null)
+        {
+            animator = spriteGO.GetComponent<Animator>();
+            _spriteRenderer = spriteGO.GetComponent<SpriteRenderer>(); // Obtener SpriteRenderer
+            if (_spriteRenderer != null) _originalSpriteColor = _spriteRenderer.color; // Guardar color original
+            else Debug.LogWarning($"Combatant {character.characterName} no tiene SpriteRenderer en su combatSpriteGO.");
+        }
         speed = character.Speed;
         isPlayerCharacter = true;
         // Inicializar desde el Character. Sus valores son la fuente de verdad.
         this.currentHP = character.currentHP;
         this.maxHP = character.MaxHP;
         isDefeated = (this.currentHP <= 0);
+        if (isDefeated && combatSpriteGO != null) combatSpriteGO.SetActive(false); // Desactivar si empieza derrotado
         isDefending = false;
         Debug.Log($"Combatant CREADO para JUGADOR: {GetName()}, HP Inicial: {this.currentHP}/{this.maxHP} (Desde Character: {character.currentHP}/{character.MaxHP})");
     }
@@ -45,7 +54,13 @@ public class Combatant
         characterData = null;
         enemyData = enemy;
         combatSpriteGO = spriteGO;
-        if (spriteGO != null) animator = spriteGO.GetComponent<Animator>(); // Obtener Animator
+        if (spriteGO != null)
+        {
+            animator = spriteGO.GetComponent<Animator>();
+            _spriteRenderer = spriteGO.GetComponent<SpriteRenderer>(); // Obtener SpriteRenderer
+            if (_spriteRenderer != null) _originalSpriteColor = _spriteRenderer.color; // Guardar color original
+            else Debug.LogWarning($"Combatant {enemy.enemyName} no tiene SpriteRenderer en su combatSpriteGO.");
+        }
         speed = enemy.baseSpeed;
         isPlayerCharacter = false;
         currentHP = enemy.maxHP;
@@ -101,23 +116,15 @@ public class Combatant
         // Mostrar texto flotante para el daño
         if (CombatManager.Instance != null && combatSpriteGO != null)
         {
-            CombatManager.Instance.ShowFloatingText("-" + damageAmount.ToString(), combatSpriteGO.transform.position, Color.red, this);
-            // (FUTURO: Activar animación de "Hit" en el animator de este combatiente)
-             if (animator != null) animator.SetTrigger("HitTrigger");
+            if (damageAmount > 0) CombatManager.Instance.ShowFloatingText("-" + damageAmount.ToString(), combatSpriteGO.transform.position, Color.red, this);
+            if (animator != null) animator.SetTrigger("HitTrigger");
+            if (_spriteRenderer != null && damageAmount > 0) CombatManager.Instance.StartCoroutine(FlashFeedbackCoroutine(_spriteRenderer, Color.red, _originalSpriteColor, 0.1f, 2));
         }
         Debug.Log($"{GetName()} recibe {damageAmount} de daño. HP restante: {GetCurrentHP()}/{GetMaxHP()}");
 
         if (GetCurrentHP() <= 0)
         {
-            isDefeated = true;
-            Debug.Log($"{GetName()} ha sido derrotado!");
-            if (combatSpriteGO != null)
-            {
-                // (FUTURO: Activar animación de "Derrota" antes de desactivar)
-                 if (animator != null) animator.SetTrigger("DefeatTrigger");
-                combatSpriteGO.SetActive(false);
-            }
-            if (enemyStatusUI != null && !isPlayerCharacter) enemyStatusUI.gameObject.SetActive(false); // Ocultar solo si es enemigo
+            HandleDefeat(); // Llamar al nuevo método para manejar la derrota
         }
 
         // Actualizar HUDs
@@ -130,6 +137,83 @@ public class Combatant
             enemyStatusUI.UpdateHPDisplay(); // Actualizar su propia barra de HP
         }
     }
+
+    private void HandleDefeat()
+    {
+        if (isDefeated) return; // Ya se está procesando la derrota
+
+        isDefeated = true;
+        Debug.Log($"{GetName()} ha sido derrotado!");
+
+        if (enemyStatusUI != null && !isPlayerCharacter) enemyStatusUI.gameObject.SetActive(false);
+
+        if (combatSpriteGO != null && CombatManager.Instance != null)
+        {
+            if (isPlayerCharacter) // Lógica de derrota para el jugador
+            {
+                if (animator != null) animator.SetTrigger("HitTrigger"); // Reusar HitTrigger o crear "PlayerDefeatTrigger"
+                // Esperar un poco para la animación de hit y luego desvanecer
+                CombatManager.Instance.StartCoroutine(DefeatSequenceCoroutine(0.3f, 0.5f)); // Duración de hit, duración de fade
+            }
+            else // Lógica de derrota para el enemigo
+            {
+                if (animator != null)
+                {
+                    animator.SetTrigger("DefeatTrigger"); // Trigger específico de derrota para enemigos
+                    // Obtener la duración de la animación de derrota para esperar
+                    // Esto es un poco más complejo, por ahora usaremos una duración fija o la de CombatManager
+                    float enemyDefeatAnimDuration = CombatManager.Instance.GetEnemyDefeatAnimDuration();
+                    CombatManager.Instance.StartCoroutine(DefeatSequenceCoroutine(enemyDefeatAnimDuration, 0.5f));
+                }
+                else
+                {
+                    // Si no hay animador, simplemente desvanecer y desactivar
+                    CombatManager.Instance.StartCoroutine(DefeatSequenceCoroutine(0f, 0.5f));
+                }
+            }
+        }
+    }
+
+    private IEnumerator DefeatSequenceCoroutine(float preFadeDelay, float fadeDuration)
+    {
+        if (preFadeDelay > 0) yield return new WaitForSeconds(preFadeDelay);
+
+        // Fade out
+        if (_spriteRenderer != null)
+        {
+            float timer = 0f;
+            Color startColor = _spriteRenderer.color;
+            while (timer < fadeDuration)
+            {
+                timer += Time.deltaTime;
+                float alpha = Mathf.Lerp(startColor.a, 0f, timer / fadeDuration);
+                _spriteRenderer.color = new Color(startColor.r, startColor.g, startColor.b, alpha);
+                yield return null;
+            }
+            _spriteRenderer.color = new Color(startColor.r, startColor.g, startColor.b, 0f); // Asegurar alfa 0
+        }
+
+        if (combatSpriteGO != null) combatSpriteGO.SetActive(false);
+    }
+
+    public static IEnumerator FlashFeedbackCoroutine(SpriteRenderer sr, Color flashColor, Color originalColor, float flashDuration, int flashCount)
+    {
+        if (sr == null) yield break;
+
+        for (int i = 0; i < flashCount; i++)
+        {
+            sr.color = flashColor;
+            yield return new WaitForSeconds(flashDuration);
+            sr.color = originalColor;
+            if (i < flashCount - 1) // No esperar después del último flash si se restaura inmediatamente
+            {
+                yield return new WaitForSeconds(flashDuration);
+            }
+        }
+        // Asegurarse de que el color final sea el original
+        sr.color = originalColor;
+    }
+
 
     public void ApplyHeal(int healAmount)
     {
@@ -162,6 +246,10 @@ public class Combatant
             if (CombatManager.Instance != null && combatSpriteGO != null)
             {
                 CombatManager.Instance.ShowFloatingText("+" + actualHealedAmount.ToString(), combatSpriteGO.transform.position, Color.green, this);
+                if (_spriteRenderer != null) // Parpadeo verde para curación
+                {
+                    CombatManager.Instance.StartCoroutine(FlashFeedbackCoroutine(_spriteRenderer, Color.green, _originalSpriteColor, 0.1f, 2));
+                }
             }
             Debug.Log($"{GetName()} se cura {actualHealedAmount}. HP actual: {GetCurrentHP()}/{GetMaxHP()}");
         }
@@ -306,10 +394,11 @@ public class CombatManager : MonoBehaviour
     [SerializeField] private RuntimeAnimatorController playerCombatAnimatorController;
     [Tooltip("Animator Controller por defecto para los enemigos en combate.")]
     [SerializeField] private RuntimeAnimatorController defaultEnemyCombatAnimatorController;
-    [Tooltip("Duración de la animación de ataque del jugador (para sincronizar daño).")]
-    [SerializeField] private float playerAttackAnimationDuration = 0.6f; // Ajusta esto
-    [Tooltip("Duración de la animación de ataque del enemigo (para sincronizar daño).")]
-    [SerializeField] private float enemyAttackAnimationDuration = 0.8f; // Ajusta esto
+    [SerializeField] private float playerGenericAnimationDuration = 0.6f;
+    [SerializeField] private float enemyAttackAnimationDuration = 0.8f;
+    [Tooltip("Duración de la animación de derrota del enemigo antes del fade out.")]
+    [SerializeField] private float enemyDefeatAnimationBaseDuration = 1.0f; // NUEVO
+
     // --- FIN NUEVO ---
 
     private List<Character> currentPlayerPartyData;
@@ -868,7 +957,7 @@ public class CombatManager : MonoBehaviour
         {
             Debug.Log($"{attacker.GetName()} activando AttackTrigger.");
             attacker.animator.SetTrigger("AttackTrigger");
-            yield return new WaitForSeconds(playerAttackAnimationDuration); // Esperar duración de animación del jugador
+            yield return new WaitForSeconds(playerGenericAnimationDuration); // Esperar duración de animación del jugador
         }
         else
         {
@@ -888,12 +977,13 @@ public class CombatManager : MonoBehaviour
         StartCoroutine(EndPlayerActionAndProceedToNextTurn(0.2f));
     }
 
+    // ExecuteSkill ahora llama a PerformSkillSequence
     private void ExecuteSkill(Combatant attacker, Combatant directTarget, AbilityData skill)
     {
-        if (attacker == null || skill == null) { ResetSelectionStatesAndPassTurn(); return; }
-        if (attacker.isPlayerCharacter == false || attacker.characterData == null) { ResetSelectionStatesAndPassTurn(); return; }
+        if (attacker == null || skill == null) { ResetSelectionStatesAndPassTurn(true); return; }
+        if (attacker.isPlayerCharacter == false || attacker.characterData == null) { ResetSelectionStatesAndPassTurn(true); return; }
 
-        if (actionMenuPanel != null) actionMenuPanel.SetActive(false); // Ocultar menú
+        if (actionMenuPanel != null) actionMenuPanel.SetActive(false);
 
         StartCoroutine(PerformSkillSequence(attacker, directTarget, skill));
     }
@@ -912,17 +1002,31 @@ public class CombatManager : MonoBehaviour
             }
             UpdatePartyStatusHUD();
         }
+        // 2. Activar Animación de Habilidad
+        float animationToWait = playerGenericAnimationDuration; // Duración por defecto si no se especifica en AbilityData
 
         if (attacker.animator != null)
         {
-            Debug.Log($"{attacker.GetName()} activando animación para habilidad '{skill.abilityName}'.");
-            attacker.animator.SetTrigger("AttackTrigger"); // O "SkillTrigger"
-            yield return new WaitForSeconds(playerAttackAnimationDuration); // Usar una duración genérica o específica de la habilidad
+            string triggerName = "AttackTrigger"; // Trigger por defecto si no se especifica en AbilityData
+            if (!string.IsNullOrEmpty(skill.animationTriggerName))
+            {
+                triggerName = skill.animationTriggerName;
+                Debug.Log($"{attacker.GetName()} usando trigger específico de habilidad: '{triggerName}'.");
+            }
+            else
+            {
+                Debug.Log($"{attacker.GetName()} usando trigger por defecto 'AttackTrigger' para habilidad '{skill.abilityName}'.");
+            }
+            attacker.animator.SetTrigger(triggerName);
+
+            if (skill.animationDuration > 0.01f) // Usar la duración de la habilidad si es mayor que un umbral pequeño
+            {
+                animationToWait = skill.animationDuration;
+            }
+            // Si skill.animationDuration es 0 o muy pequeña, se usará playerGenericAnimationDuration
         }
-        else
-        {
-            yield return new WaitForSeconds(0.1f);
-        }
+        Debug.Log($"PerformSkillSequence: Esperando {animationToWait}s para la animación de '{skill.abilityName}'.");
+        yield return new WaitForSeconds(animationToWait);
 
         List<Combatant> actualTargets = DetermineActualTargets(skill.targetType, attacker, directTarget);
         if (actualTargets.Count == 0 && skill.targetType != AbilityTargetType.None)
@@ -936,13 +1040,22 @@ public class CombatManager : MonoBehaviour
         foreach (Combatant t in actualTargets)
         {
             if (t.isDefeated && skill.effectType != AbilityEffectType.Special) continue;
+
             if (skill.effectType == AbilityEffectType.Damage)
             {
-                int damage = Mathf.Max(1, (int)skill.power + attacker.GetAttack() / 2 - t.GetDefense());
+                // Fórmula de daño de habilidad (puede ser diferente a la de ataque básico)
+                int damage = Mathf.Max(1, (int)skill.power + (attacker.characterData.MagicAttack / 2) - t.GetDefense()); // Ejemplo usando MagicAttack
                 t.TakeDamage(damage);
             }
-            else if (skill.effectType == AbilityEffectType.Heal) { t.ApplyHeal((int)skill.power); }
-            else if (skill.effectType == AbilityEffectType.RestoreMP) { t.ApplyManaRestore((int)skill.power); }
+            else if (skill.effectType == AbilityEffectType.Heal)
+            {
+                t.ApplyHeal((int)skill.power);
+            }
+            else if (skill.effectType == AbilityEffectType.RestoreMP)
+            {
+                if (t.isPlayerCharacter && t.characterData != null) t.ApplyManaRestore((int)skill.power);
+            }
+            // (Añadir más casos para otros AbilityEffectType: Buff, Debuff, etc.)
         }
         ResetSelectionStatesAndPassTurn();
     }
@@ -1455,6 +1568,12 @@ public class CombatManager : MonoBehaviour
                 break;
         }
         return actualTargets;
+    }
+    public float GetEnemyDefeatAnimDuration()
+    {
+        // Podrías hacer esto más dinámico si los enemigos tienen diferentes duraciones de animación de derrota
+        // almacenadas en su EnemyData, por ejemplo.
+        return enemyAttackAnimationDuration; // Reutilizando la duración del ataque por ahora, o usa enemyDefeatAnimationBaseDuration
     }
 
 }

@@ -81,13 +81,19 @@ public class AbilityData : ScriptableObject
     // public float statusEffectChance; // Probabilidad de aplicar el estado (0 a 1)
     // public int statusEffectDurationInTurns;
 
-    [Header("Animaciones y Efectos Visuales (Placeholders)")]
-    [Tooltip("Nombre o referencia a la animación que se reproducirá cuando el personaje use esta habilidad.")]
-    public string casterAnimationTrigger; // Ej: "CastSpell", "UseSkill"
+    // --- CAMPOS PARA ANIMACIÓN DE HABILIDAD ESPECÍFICA ---
+    [Header("Animación y Efectos de Combate")]
+    [Tooltip("Nombre del parámetro Trigger en el Animator Controller del personaje que lanza esta habilidad. Si está vacío, se podría usar un trigger genérico como 'AttackTrigger'.")]
+    public string animationTriggerName; // Renombrado desde casterAnimationTrigger
+
+    [Tooltip("Duración aproximada de la animación de esta habilidad en segundos. Si es 0 o negativo, CombatManager usará una duración por defecto.")]
+    public float animationDuration = 0.8f; // Valor por defecto, ajústalo por habilidad
+
     [Tooltip("Referencia a un Prefab de efecto visual (VFX) que se instanciará en el objetivo o en el lanzador.")]
-    public GameObject vfxPrefab;
+    public GameObject vfxPrefab; // Ya lo tenías
+
     [Tooltip("Referencia a un AudioClip para el sonido de la habilidad.")]
-    public AudioClip sfxClip;
+    public AudioClip sfxClip; // Ya lo tenías
 
 
     // --- MÉTODOS (Lógica de la Habilidad) ---
@@ -102,51 +108,18 @@ public class AbilityData : ScriptableObject
     /// <param name="targets">La lista de personajes objetivo.</param>
     public virtual void ExecuteEffect(Character caster, List<Character> targets)
     {
-        if (caster == null || targets == null || targets.Count == 0)
+        // La lógica principal de aplicar daño, curación, etc., ahora reside en CombatManager.ExecuteSkill
+        // para mantener el control centralizado de los Combatant y la UI.
+        // Este método se conserva por si se quieren añadir efectos únicos directamente en el AbilityData
+        // o si se refactoriza el sistema más adelante.
+
+        if (caster != null)
         {
-            Debug.LogWarning("ExecuteEffect: Lanzador o lista de objetivos no válidos para " + abilityName);
-            return;
+            Debug.Log($"AbilityData.ExecuteEffect: Habilidad '{abilityName}' llamada por '{caster.characterName}'. El efecto principal es manejado por CombatManager.");
         }
-
-        // Comprobar y gastar coste de MP (si lo tiene)
-        if (mpCost > 0)
+        else
         {
-            if (!caster.SpendMana(mpCost)) // Asume que Character.cs tiene un método SpendMana(int cost) que devuelve bool
-            {
-                Debug.Log(caster.characterName + " no tiene suficiente MP para usar " + abilityName);
-                // Aquí podrías notificar a la UI o al sistema de combate que falló por falta de MP.
-                return; // No ejecutar el efecto si no se puede pagar el coste.
-            }
-        }
-
-        Debug.Log(caster.characterName + " usa " + abilityName + "!");
-        // Aquí iría la lógica para reproducir animación del lanzador, VFX, SFX.
-
-        foreach (Character target in targets)
-        {
-            if (target == null) continue;
-
-            switch (effectType)
-            {
-                case AbilityEffectType.Damage:
-                    // Lógica de daño muy simple. Un sistema real consideraría stats del lanzador y del objetivo.
-                    // int damageDealt = Mathf.RoundToInt(power + (caster.Attack * 0.5f) - target.Defense); // Ejemplo de fórmula
-                    int damageDealt = Mathf.Max(1, Mathf.RoundToInt(power)); // Daño base por ahora
-                    Debug.Log(target.characterName + " recibe " + damageDealt + " de daño de " + abilityName);
-                    target.TakeDamage(damageDealt); // Asume que Character.cs tiene TakeDamage(int amount)
-                    break;
-                case AbilityEffectType.Heal:
-                    int amountHealed = Mathf.RoundToInt(power);
-                    target.Heal(amountHealed); // Asume que Character.cs tiene Heal(int amount)
-                    break;
-                case AbilityEffectType.RestoreMP:
-                    target.RestoreMana(Mathf.RoundToInt(power)); // Asume que Character.cs tiene RestoreMana(int amount)
-                    break;
-                // Implementar otros tipos de efectos (Buff, Debuff, StatusEffect) aquí...
-                default:
-                    Debug.LogWarning("Efecto de habilidad no implementado para: " + effectType.ToString());
-                    break;
-            }
+            Debug.LogWarning($"AbilityData.ExecuteEffect: Habilidad '{abilityName}' llamada sin un caster válido.");
         }
     }
 }

@@ -10,17 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 589eb4d2eb6aa78449615bb77cf25db9, type: 3}
-  m_Name: CuracionMenor
+  m_Name: RayoDestructor
   m_EditorClassIdentifier: 
-  abilityID: curacion_menor_'1
-  abilityName: Curacion Menor
+  abilityID: rayo_destructor_01
+  abilityName: Rayo Destructor
   icon: {fileID: 0}
-  description: "Curacion que cura un poco\t"
-  mpCost: 10
-  effectType: 1
-  targetType: 2
-  power: 40
-  animationTriggerName: HealSpellTrigger
-  animationDuration: 0.4
+  description: Rayo que atraviesa a un enemigo
+  mpCost: 5
+  effectType: 0
+  targetType: 4
+  power: 15
+  animationTriggerName: ThunderCastTrigger
+  animationDuration: 0.5
   vfxPrefab: {fileID: 0}
   sfxClip: {fileID: 0}

@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 30347d48d728a0c41834310095aad5bf
+guid: 153447693ba3ade4e961d78e7eaf488f
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -110,7 +110,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Orc01_01_S_Die_0
+      name: maga-combate-cura_0
       rect:
         serializedVersion: 2
         x: 0
@@ -124,14 +124,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d355c27d751e79d4ca417dadce43b5f5
-      internalID: 547212286
+      spriteID: ad88facc730d2794aae01eb4b30cdd96
+      internalID: -1055454220
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Orc01_01_S_Die_1
+      name: maga-combate-cura_1
       rect:
         serializedVersion: 2
         x: 48
@@ -145,14 +145,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 978e67cab57e79247b789ecb7885bbb3
-      internalID: -1029466342
+      spriteID: de9ca908799e3e04891d781f266176b4
+      internalID: -1708709148
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Orc01_01_S_Die_2
+      name: maga-combate-cura_2
       rect:
         serializedVersion: 2
         x: 96
@@ -166,14 +166,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 7133bd9257eb4484c9edba3d6bfe5cf5
-      internalID: -870313052
+      spriteID: e3ec0092363f4614dbc2732c65609acd
+      internalID: 1138132442
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Orc01_01_S_Die_3
+      name: maga-combate-cura_3
       rect:
         serializedVersion: 2
         x: 144
@@ -187,14 +187,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 761321e43b1020f4c816438536ad8a8f
-      internalID: 1350643703
+      spriteID: 1336cd828d00d984b980726bd4de08f0
+      internalID: -1547755521
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Orc01_01_S_Die_4
+      name: maga-combate-cura_4
       rect:
         serializedVersion: 2
         x: 192
@@ -208,8 +208,29 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d80e1317903ed5f47b70b1e20b2da1c5
-      internalID: 1071566491
+      spriteID: c66363488c06b154a95c6d64be34b7e5
+      internalID: -324641715
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: maga-combate-cura_5
+      rect:
+        serializedVersion: 2
+        x: 240
+        y: 0
+        width: 48
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b7d3a561bd420d749a94c65255210c3d
+      internalID: 1098528332
       vertices: []
       indices: 
       edges: []
@@ -225,11 +246,12 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      Orc01_01_S_Die_0: 547212286
-      Orc01_01_S_Die_1: -1029466342
-      Orc01_01_S_Die_2: -870313052
-      Orc01_01_S_Die_3: 1350643703
-      Orc01_01_S_Die_4: 1071566491
+      maga-combate-cura_0: -1055454220
+      maga-combate-cura_1: -1708709148
+      maga-combate-cura_2: 1138132442
+      maga-combate-cura_3: -1547755521
+      maga-combate-cura_4: -324641715
+      maga-combate-cura_5: 1098528332
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
