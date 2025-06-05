@@ -10,16 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 589eb4d2eb6aa78449615bb77cf25db9, type: 3}
-  m_Name: BolaDeRayo
+  m_Name: CorteDeFuego
   m_EditorClassIdentifier: 
-  abilityID: bola_de_rayo_01
-  abilityName: Bola de Rayo
+  abilityID: corte_fuego_01
+  abilityName: Corte de Fuego
   icon: {fileID: 0}
-  description: Lanza una bola de rayo
+  description: 'Corte de Fuego
+
+'
   mpCost: 20
   effectType: 0
   targetType: 5
   power: 30
-  casterAnimationTrigger: 
+  animationTriggerName: CorteFuegoCastTrigger
+  animationDuration: 0.5
   vfxPrefab: {fileID: 0}
   sfxClip: {fileID: 0}

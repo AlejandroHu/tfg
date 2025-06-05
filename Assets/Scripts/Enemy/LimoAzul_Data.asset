@@ -15,6 +15,7 @@ MonoBehaviour:
   enemyID: limo_azul_01
   enemyName: Limo Azul
   battleSprite: {fileID: -566724925, guid: 6cb6f8bf051df9645b3ca24b1b243e26, type: 3}
+  combatAnimatorController: {fileID: 9100000, guid: 28caf7c1c654bfe4eb07555f719bd7d6, type: 2}
   maxHP: 50
   maxMP: 10
   baseAttack: 15

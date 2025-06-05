@@ -21,6 +21,10 @@ public class EnemyData : ScriptableObject
     [Tooltip("Sprite que se usará para este enemigo en la pantalla de combate (vista 3/4, 48x48 píxeles).")]
     public Sprite battleSprite; // El sprite de 48x48 para el combate
 
+    // --- NUEVO: Animator Controller para el combate específico del enemigo ---
+    [Tooltip("Animator Controller a usar para este tipo de enemigo en combate. Debe contener estados como Idle_Combat, AttackTrigger, HitTrigger, DefeatTrigger, etc.")]
+    public RuntimeAnimatorController combatAnimatorController;
+
     // Podrías añadir aquí un 'explorationSprite' si el sprite en el mapa es diferente al del combate,
     // aunque el GameObject en el mapa ya tendrá su propio SpriteRenderer.
 

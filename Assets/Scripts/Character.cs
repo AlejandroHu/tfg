@@ -16,6 +16,16 @@ public class Character : MonoBehaviour
     public int level = 1;
     [Tooltip("Sprite del retrato del personaje para mostrar en la UI (menús, party, etc.).")]
     public Sprite portraitSprite;
+    // --- NUEVO: Animator Controller para el combate específico del personaje ---
+    [Tooltip("Animator Controller a usar para este personaje en combate. Debe contener estados como Idle_Combat, AttackTrigger, HitTrigger, DefeatTrigger, etc.")]
+    public RuntimeAnimatorController combatAnimatorController;
+
+    // --- NUEVO: Prefab para el proyectil de ataque básico de este personaje ---
+    [Tooltip("Si el ataque básico de este personaje lanza un proyectil, asigna el Prefab del proyectil aquí. Si es un ataque cuerpo a cuerpo, déjalo como None.")]
+    public GameObject basicAttackProjectilePrefab;
+    // --- FIN NUEVO ---
+
+
 
     [Header("Experiencia y Progresión")]
     [Tooltip("Puntos de experiencia actuales del personaje.")]
@@ -269,6 +279,7 @@ public class Character : MonoBehaviour
         if (currentCharacterLevel <= 0) currentCharacterLevel = 1; // Evitar errores con nivel 0 o negativo
         return Mathf.FloorToInt(Mathf.Pow(currentCharacterLevel, 1.5f) * 100f);
     }
+
 }
 
 // } // Fin del namespace (si lo usas)

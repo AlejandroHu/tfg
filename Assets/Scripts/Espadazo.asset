@@ -20,6 +20,7 @@ MonoBehaviour:
   effectType: 0
   targetType: 4
   power: 40
-  casterAnimationTrigger: 
+  animationTriggerName: EspadazoCastTrigger
+  animationDuration: 0.5
   vfxPrefab: {fileID: 0}
   sfxClip: {fileID: 0}
