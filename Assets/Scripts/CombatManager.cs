@@ -375,6 +375,12 @@ public class CombatManager : MonoBehaviour
     [SerializeField] private Transform floatingTextCanvasTransform;
     [SerializeField] private float floatingTextDefaultFontSize = 20f;
     [SerializeField] private float floatingTextYOffset = 0.6f;
+    // --- NUEVO: Prefab para el VFX de golpe directo ---
+    [Tooltip("Prefab del efecto visual (slash/hit) para ataques directos y habilidades sin proyectil.")]
+    [SerializeField] private GameObject directHitVFXPrefab;
+    [Tooltip("Offset Y para el VFX de golpe directo sobre el pivote del objetivo.")]
+    [SerializeField] private float directHitVFX_Y_Offset = 0.3f; // Ajusta según el tamaño de tus sprites y el pivote del VFX
+                                                                 // --- FIN NUEVO ---
 
     [Header("Animaciones de Combate")]
     // --- ELIMINADAS LAS REFERENCIAS GENÉRICAS DE ANIMATOR CONTROLLER ---
@@ -470,6 +476,7 @@ public class CombatManager : MonoBehaviour
         if (floatingTextPrefab == null) Debug.LogError("CombatManager: 'floatingTextPrefab' no asignado. No se mostrará texto flotante.", this);
         // floatingTextCanvasTransform es opcional, así que un LogWarning está bien si está vacío.
         if (floatingTextCanvasTransform == null) Debug.LogWarning("CombatManager: 'floatingTextCanvasTransform' no asignado. Los textos flotantes se instanciarán como hijos del combatiente (asume World Space Canvas en prefab) o en la raíz de la escena.", this);
+        if (directHitVFXPrefab == null) Debug.LogWarning("CombatManager: 'directHitVFXPrefab' no asignado. No se mostrará VFX para golpes directos.", this);
 
         if (attackButton != null) attackButton.onClick.AddListener(OnAttackButtonClicked);
         if (defendButton != null) defendButton.onClick.AddListener(OnDefendButtonClicked);
@@ -779,7 +786,7 @@ public class CombatManager : MonoBehaviour
     {
         if (!isCombatActive) return;
         if (CheckCombatEndConditions()) return;
-
+        Debug.Log($"[{Time.frameCount}] NextTurn: El combate continúa. Buscando siguiente combatiente.");
         _currentCombatantIndex++;
         if (_currentCombatantIndex >= _combatants.Count)
         {
@@ -807,7 +814,12 @@ public class CombatManager : MonoBehaviour
     {
         if (_activeCombatant == null || _activeCombatant.isDefeated) { NextTurn(); return; }
         Debug.Log($"CombatManager: Iniciando turno para {_activeCombatant.GetName()} (HP: {_activeCombatant.GetCurrentHP()}/{_activeCombatant.GetMaxHP()}, Defensa: {_activeCombatant.GetDefense()}, Defendiendo: {_activeCombatant.isDefending})");
-
+        // Doble check para asegurar que el combate no terminó justo antes
+        if (!isCombatActive)
+        {
+            Debug.LogWarning($"[{Time.frameCount}] StartTurnForActiveCombatant: El combate terminó antes de iniciar el turno para {_activeCombatant.GetName()}. No se mostrará el menú de acción.");
+            return;
+        }
         if (_activeCombatant.isPlayerCharacter)
         {
             if (actionMenuPanel != null) actionMenuPanel.SetActive(true);
@@ -843,7 +855,14 @@ public class CombatManager : MonoBehaviour
             }
             // --- FIN ANIMACIÓN ---
             Debug.Log($"{enemy.GetName()} ataca a {target.GetName()}! (Defensa del objetivo: {target.GetDefense()})");
-
+            // --- INSTANCIAR VFX DE GOLPE DIRECTO DEL ENEMIGO EN EL OBJETIVO (JUGADOR) ---
+            if (directHitVFXPrefab != null && target.combatSpriteGO != null)
+            {
+                Vector3 vfxPosition = target.combatSpriteGO.transform.position + new Vector3(0, directHitVFX_Y_Offset, 0);
+                Instantiate(directHitVFXPrefab, vfxPosition, Quaternion.identity);
+                Debug.Log($"[{Time.frameCount}] EnemyTurnCoroutine: Instanciado directHitVFXPrefab en {target.GetName()} por ataque de {enemy.GetName()}");
+            }
+            // --- FIN INSTANCIAR VFX ---
 
             int damage = Mathf.Max(1, enemy.GetAttack() - target.GetDefense());
             target.TakeDamage(damage);
@@ -1045,6 +1064,15 @@ public class CombatManager : MonoBehaviour
     {
         if (target.isDefeated) return;
         Debug.Log($"[{Time.frameCount}] ApplyDirectDamage: Aplicando daño de {attacker.GetName()} a {target.GetName()}. Defensa: {target.GetDefense()}, Ataque: {attacker.GetAttack()}");
+        // --- INSTANCIAR VFX DE GOLPE DIRECTO EN EL OBJETIVO ---
+        if (directHitVFXPrefab != null && target.combatSpriteGO != null)
+        {
+            Vector3 vfxPosition = target.combatSpriteGO.transform.position + new Vector3(0, directHitVFX_Y_Offset, 0);
+            Instantiate(directHitVFXPrefab, vfxPosition, Quaternion.identity);
+            Debug.Log($"[{Time.frameCount}] Instanciado directHitVFXPrefab en {target.GetName()}");
+        }
+        // --- FIN INSTANCIAR VFX ---
+
         int damage = Mathf.Max(1, attacker.GetAttack() - target.GetDefense());
         target.TakeDamage(damage);
     }
@@ -1126,6 +1154,15 @@ public class CombatManager : MonoBehaviour
                 foreach (Combatant t in actualTargets)
                 {
                     if (t.isDefeated && skill.effectType != AbilityEffectType.Special) continue;
+                    // --- MODIFICADO: Condición para VFX de golpe directo ---
+                    if (directHitVFXPrefab != null && t.combatSpriteGO != null &&
+                       (skill.effectType == AbilityEffectType.Damage)) // Solo para daño, no para Heal
+                    {
+                        Vector3 vfxPosition = t.combatSpriteGO.transform.position + new Vector3(0, directHitVFX_Y_Offset, 0);
+                        Instantiate(directHitVFXPrefab, vfxPosition, Quaternion.identity);
+                    }
+                    // --- FIN MODIFICACIÓN ---
+
                     if (skill.effectType == AbilityEffectType.Damage)
                     {
                         int damage = Mathf.Max(1, (int)skill.power + (attacker.characterData.MagicAttack / 2) - t.GetDefense());
@@ -1140,8 +1177,11 @@ public class CombatManager : MonoBehaviour
         {
             Debug.Log($"[{Time.frameCount}] PerformSkillSequence: Habilidad '{skill.abilityName}' es de tipo proyectil y se espera que el evento de animación lo lance/haya lanzado. El efecto se aplicará al impacto del proyectil.");
         }
-
-        // 4. Finalizar y pasar turno (AHORA SE LLAMA SIEMPRE AL FINAL)
+        // --- AÑADIR ESPERA DE FRAME ANTES DE PASAR TURNO ---
+        Debug.Log($"[{Time.frameCount}] PerformSkillSequence: Esperando fin de frame antes de llamar a ResetSelectionStatesAndPassTurn.");
+        yield return null; // Esperar un frame para que todos los TakeDamage y HandleDefeat se procesen
+                           // --- FIN ESPERA ---
+                           // 4. Finalizar y pasar turno (AHORA SE LLAMA SIEMPRE AL FINAL)
         Debug.Log($"[{Time.frameCount}] PerformSkillSequence: Fin de la secuencia para '{skill.abilityName}'. Llamando a ResetSelectionStatesAndPassTurn.");
         ResetSelectionStatesAndPassTurn();
     }
@@ -1165,18 +1205,44 @@ public class CombatManager : MonoBehaviour
 
     private bool CheckCombatEndConditions()
     {
-        bool allEnemiesDefeated = _combatants.Where(c => !c.isPlayerCharacter && c.enemyData != null).All(e => e.isDefeated);
-        if (allEnemiesDefeated && _combatants.Any(c => !c.isPlayerCharacter && c.enemyData != null))
+        Debug.Log($"[{Time.frameCount}] CheckCombatEndConditions: Verificando si el combate ha terminado.");
+        if (_combatants == null || _combatants.Count == 0)
         {
+            Debug.LogWarning($"[{Time.frameCount}] CheckCombatEndConditions: No hay combatientes. Terminando combate (derrota por defecto).");
+            EndCombat(false); // Evitar errores si la lista está vacía
+            return true;
+        }
+
+        // Comprobar victoria del jugador
+        bool allEnemiesDefeated = _combatants.Where(c => !c.isPlayerCharacter && c != null).All(e => e.isDefeated);
+        int enemyCount = _combatants.Count(c => !c.isPlayerCharacter && c != null);
+        // Log para cada enemigo y su estado
+        foreach (Combatant enemy in _combatants.Where(c => !c.isPlayerCharacter && c != null))
+        {
+            Debug.Log($"[{Time.frameCount}] CheckCombatEndConditions - Enemigo: {enemy.GetName()}, HP: {enemy.GetCurrentHP()}, Derrotado: {enemy.isDefeated}");
+        }
+        Debug.Log($"[{Time.frameCount}] CheckCombatEndConditions: Enemigos totales (considerados): {enemyCount}. allEnemiesDefeated: {allEnemiesDefeated}");
+
+        if (enemyCount > 0 && allEnemiesDefeated)
+        {
+            Debug.Log($"[{Time.frameCount}] CheckCombatEndConditions: ¡Todos los enemigos derrotados! Jugador gana.");
             EndCombat(true);
             return true;
         }
-        bool allPlayersDefeated = _combatants.Where(c => c.isPlayerCharacter && c.characterData != null).All(p => p.isDefeated);
-        if (allPlayersDefeated && _combatants.Any(c => c.isPlayerCharacter && c.characterData != null))
+
+        // Comprobar derrota del jugador
+        bool allPlayersDefeated = _combatants.Where(c => c.isPlayerCharacter && c != null).All(p => p.isDefeated);
+        int playerCount = _combatants.Count(c => c.isPlayerCharacter && c != null);
+        Debug.Log($"[{Time.frameCount}] CheckCombatEndConditions: Jugadores totales (considerados): {playerCount}. allPlayersDefeated: {allPlayersDefeated}");
+
+        if (playerCount > 0 && allPlayersDefeated)
         {
+            Debug.Log($"[{Time.frameCount}] CheckCombatEndConditions: ¡Todos los jugadores derrotados! Jugador pierde.");
             EndCombat(false);
             return true;
         }
+
+        Debug.Log($"[{Time.frameCount}] CheckCombatEndConditions: El combate continúa.");
         return false;
     }
 

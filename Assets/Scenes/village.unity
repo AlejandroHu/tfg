@@ -65725,6 +65725,8 @@ MonoBehaviour:
   floatingTextCanvasTransform: {fileID: 0}
   floatingTextDefaultFontSize: 20
   floatingTextYOffset: 0.6
+  directHitVFXPrefab: {fileID: 1884476670394373846, guid: 5071beae68d19e04fa7aef0a2459b0ee, type: 3}
+  directHitVFX_Y_Offset: -0.2
   playerFallbackAnimatorController: {fileID: 0}
   defaultEnemyFallbackAnimatorController: {fileID: 0}
   playerGenericAnimationDuration: 0.4
