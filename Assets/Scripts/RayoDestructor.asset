@@ -22,5 +22,5 @@ MonoBehaviour:
   power: 15
   animationTriggerName: ThunderCastTrigger
   animationDuration: 0.5
-  vfxPrefab: {fileID: 0}
+  vfxPrefab: {fileID: 881359467162644930, guid: 7a9d407fd0e966946b034c49f20a2452, type: 3}
   sfxClip: {fileID: 0}

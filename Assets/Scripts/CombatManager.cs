@@ -398,6 +398,13 @@ public class CombatManager : MonoBehaviour
     [SerializeField] private float enemyAttackAnimationDuration = 0.8f;
     [Tooltip("Duración de la animación de derrota del enemigo antes del fade out.")]
     [SerializeField] private float enemyDefeatAnimationBaseDuration = 1.0f; // NUEVO
+    [Header("Puntos de Spawn de Proyectiles")] // Ya lo teníamos
+    [SerializeField] private Transform playerProjectileSpawnPoint;
+    // --- NUEVO: Prefab para el proyectil de ataque básico del JUGADOR ---
+    [Header("Proyectiles")]
+    [Tooltip("Prefab del proyectil para el ATAQUE BÁSICO del jugador (si aplica, ej: maga). Debe tener Projectile.cs.")]
+    [SerializeField] private GameObject playerBasicAttackProjectilePrefab;
+
 
     // --- FIN NUEVO ---
 
@@ -657,6 +664,10 @@ public class CombatManager : MonoBehaviour
                     {
                         partyCol.size = new Vector2(0.5f, 0.5f); // Tamaño por defecto si no hay sprite
                     }
+
+                    // --- AÑADIR CombatSpriteEventHandler A LA PARTY ---
+                    partyMemberSpriteGO.AddComponent<CombatSpriteEventHandler>();
+                    // --- FIN ---
                     // (Opcional pero RECOMENDADO) Asignar una capa específica para los miembros de la party
                     // partyMemberSpriteGO.layer = LayerMask.NameToLayer("PlayerPartyInCombat"); // Crea esta capa en Unity
                     // --- FIN COLLIDER PARTY ---
@@ -693,6 +704,10 @@ public class CombatManager : MonoBehaviour
                     else col.size = new Vector2(0.5f, 0.5f);
                     enemySpriteGO.layer = LayerMask.NameToLayer("EnemiesInCombat");
                     _enemyCombatSpriteGOs.Add(enemySpriteGO);
+
+                    // --- AÑADIR CombatSpriteEventHandler A ENEMIGOS (si fueran a lanzar proyectiles por evento) ---
+                    enemySpriteGO.AddComponent<CombatSpriteEventHandler>();
+                    // --- FIN ---
                     EnemyCombatStatusUI statusUIInstance = null;
                     if (enemyStatusUIPrefab != null)
                     {
@@ -936,7 +951,6 @@ public class CombatManager : MonoBehaviour
             actionMenuPanel.SetActive(true);
         }
     }
-
     private void ExecuteAttack(Combatant attacker, Combatant target)
     {
         if (attacker == null || target == null || target.isDefeated)
@@ -945,36 +959,59 @@ public class CombatManager : MonoBehaviour
             if (attacker != null && attacker.isPlayerCharacter && actionMenuPanel != null) actionMenuPanel.SetActive(true);
             return;
         }
-        Debug.Log($"{attacker.GetName()} ataca a {target.GetName()}! (Defensa del objetivo: {target.GetDefense()})");
-        if (actionMenuPanel != null) actionMenuPanel.SetActive(false); // Ocultar menú mientras se ejecuta la acción
+
+        if (actionMenuPanel != null) actionMenuPanel.SetActive(false);
         StartCoroutine(PerformAttackSequence(attacker, target));
     }
 
     private IEnumerator PerformAttackSequence(Combatant attacker, Combatant target)
     {
-        Debug.Log($"{attacker.GetName()} inicia secuencia de ataque sobre {target.GetName()}!");
-        if (attacker.animator != null)
+        Debug.Log($"{attacker.GetName()} inicia secuencia de ATAQUE BÁSICO sobre {target.GetName()}!");
+        float animationDuration = playerGenericAnimationDuration;
+
+        CombatSpriteEventHandler eventHandler = null;
+        if (attacker.combatSpriteGO != null)
         {
-            Debug.Log($"{attacker.GetName()} activando AttackTrigger.");
-            attacker.animator.SetTrigger("AttackTrigger");
-            yield return new WaitForSeconds(playerGenericAnimationDuration); // Esperar duración de animación del jugador
-        }
-        else
-        {
-            yield return new WaitForSeconds(0.1f); // Pequeña pausa si no hay animación
+            eventHandler = attacker.combatSpriteGO.GetComponent<CombatSpriteEventHandler>();
         }
 
-        // Aplicar daño después de la animación
-        if (!target.isDefeated) // Comprobar de nuevo por si acaso
+        bool isBasicAttackProjectile = attacker.isPlayerCharacter && playerBasicAttackProjectilePrefab != null && playerBasicAttackProjectilePrefab.GetComponent<Projectile>() != null;
+
+        if (isBasicAttackProjectile && eventHandler != null)
         {
-            Debug.Log($"Aplicando daño de {attacker.GetName()} a {target.GetName()} (Defensa del objetivo: {target.GetDefense()}).");
-            int damage = Mathf.Max(1, attacker.GetAttack() - target.GetDefense());
-            target.TakeDamage(damage);
+            int basicAttackDamage = Mathf.Max(1, attacker.GetAttack() - target.GetDefense());
+            // --- LLAMADA AL SETUP DEL EVENT HANDLER PARA ATAQUE BÁSICO ---
+            eventHandler.SetupForBasicAttackProjectileLaunch(attacker, target, playerBasicAttackProjectilePrefab, basicAttackDamage);
+        }
+        else if (isBasicAttackProjectile && eventHandler == null)
+        {
+            Debug.LogWarning($"CombatSpriteEventHandler no encontrado en {attacker.GetName()} para lanzar proyectil de ataque básico.");
+        }
+
+        if (attacker.animator != null)
+        {
+            attacker.animator.SetTrigger("AttackTrigger");
+            yield return new WaitForSeconds(animationDuration);
+        }
+        else { yield return new WaitForSeconds(0.1f); }
+
+        // Si no fue un proyectil lanzado por evento O el handler falló, aplicar daño directo
+        if (!isBasicAttackProjectile || eventHandler == null || playerBasicAttackProjectilePrefab.GetComponent<Projectile>() == null)
+        {
+            if (!target.isDefeated) ApplyDirectDamage(attacker, target);
         }
 
         isSelectingTargetForAttack = false;
         attackerForTargetSelection = null;
         StartCoroutine(EndPlayerActionAndProceedToNextTurn(0.2f));
+    }
+
+    private void ApplyDirectDamage(Combatant attacker, Combatant target)
+    {
+        if (target.isDefeated) return;
+        Debug.Log($"Aplicando daño directo de ataque básico de {attacker.GetName()} a {target.GetName()}. Defensa del objetivo: {target.GetDefense()}");
+        int damage = Mathf.Max(1, attacker.GetAttack() - target.GetDefense());
+        target.TakeDamage(damage);
     }
 
     // ExecuteSkill ahora llama a PerformSkillSequence
@@ -990,80 +1027,80 @@ public class CombatManager : MonoBehaviour
 
     private IEnumerator PerformSkillSequence(Combatant attacker, Combatant directTarget, AbilityData skill)
     {
-        Debug.Log($"{attacker.GetName()} inicia secuencia de habilidad '{skill.abilityName}'" + (directTarget != null ? $" sobre {directTarget.GetName()}" : ""));
+        Debug.Log($"{attacker.GetName()} inicia secuencia de habilidad '{skill.abilityName}'");
 
         if (skill.mpCost > 0)
         {
-            if (!attacker.characterData.SpendMana(skill.mpCost))
-            {
-                Debug.LogWarning($"{attacker.GetName()} no tiene suficiente MP para {skill.abilityName}.");
-                ResetSelectionStatesAndPassTurn(true);
-                yield break; // Terminar la corrutina
-            }
+            if (!attacker.characterData.SpendMana(skill.mpCost)) { ResetSelectionStatesAndPassTurn(true); yield break; }
             UpdatePartyStatusHUD();
         }
-        // 2. Activar Animación de Habilidad
-        float animationToWait = playerGenericAnimationDuration; // Duración por defecto si no se especifica en AbilityData
+
+        float casterAnimationDuration = playerGenericAnimationDuration;
+        CombatSpriteEventHandler eventHandler = null;
+        if (attacker.combatSpriteGO != null)
+        {
+            eventHandler = attacker.combatSpriteGO.GetComponent<CombatSpriteEventHandler>();
+        }
+
+        List<Combatant> actualTargets = DetermineActualTargets(skill.targetType, attacker, directTarget);
+
+        bool isSkillProjectile = skill.vfxPrefab != null && skill.vfxPrefab.GetComponent<Projectile>() != null;
+        if (isSkillProjectile && eventHandler != null)
+        {
+            // --- LLAMADA AL SETUP DEL EVENT HANDLER PARA HABILIDAD ---
+            eventHandler.SetupForSkillProjectileLaunch(attacker, actualTargets, skill, skill.vfxPrefab);
+        }
+        else if (isSkillProjectile && eventHandler == null)
+        {
+            Debug.LogWarning($"CombatSpriteEventHandler no encontrado en {attacker.GetName()} para lanzar proyectil de {skill.abilityName}.");
+        }
 
         if (attacker.animator != null)
         {
-            string triggerName = "AttackTrigger"; // Trigger por defecto si no se especifica en AbilityData
-            if (!string.IsNullOrEmpty(skill.animationTriggerName))
-            {
-                triggerName = skill.animationTriggerName;
-                Debug.Log($"{attacker.GetName()} usando trigger específico de habilidad: '{triggerName}'.");
-            }
+            string triggerName = "AttackTrigger";
+            if (!string.IsNullOrEmpty(skill.animationTriggerName)) triggerName = skill.animationTriggerName;
+            attacker.animator.SetTrigger(triggerName);
+            if (skill.animationDuration > 0.01f) casterAnimationDuration = skill.animationDuration;
+        }
+        yield return new WaitForSeconds(casterAnimationDuration);
+
+        if (!isSkillProjectile || eventHandler == null || skill.vfxPrefab.GetComponent<Projectile>() == null)
+        {
+            if (actualTargets.Count == 0 && skill.targetType != AbilityTargetType.None && skill.targetType != AbilityTargetType.Self) { /*...*/ }
             else
             {
-                Debug.Log($"{attacker.GetName()} usando trigger por defecto 'AttackTrigger' para habilidad '{skill.abilityName}'.");
+                if (skill.targetType == AbilityTargetType.Self && actualTargets.Count == 0 && attacker != null && !attacker.isDefeated) actualTargets.Add(attacker);
+                foreach (Combatant t in actualTargets)
+                {
+                    if (t.isDefeated && skill.effectType != AbilityEffectType.Special) continue;
+                    if (skill.effectType == AbilityEffectType.Damage)
+                    {
+                        int damage = Mathf.Max(1, (int)skill.power + (attacker.characterData.MagicAttack / 2) - t.GetDefense());
+                        t.TakeDamage(damage);
+                    }
+                    else if (skill.effectType == AbilityEffectType.Heal) { t.ApplyHeal((int)skill.power); }
+                    else if (skill.effectType == AbilityEffectType.RestoreMP) { if (t.isPlayerCharacter && t.characterData != null) t.ApplyManaRestore((int)skill.power); }
+                }
             }
-            attacker.animator.SetTrigger(triggerName);
-
-            if (skill.animationDuration > 0.01f) // Usar la duración de la habilidad si es mayor que un umbral pequeño
-            {
-                animationToWait = skill.animationDuration;
-            }
-            // Si skill.animationDuration es 0 o muy pequeña, se usará playerGenericAnimationDuration
+            ResetSelectionStatesAndPassTurn();
         }
-        Debug.Log($"PerformSkillSequence: Esperando {animationToWait}s para la animación de '{skill.abilityName}'.");
-        yield return new WaitForSeconds(animationToWait);
-
-        List<Combatant> actualTargets = DetermineActualTargets(skill.targetType, attacker, directTarget);
-        if (actualTargets.Count == 0 && skill.targetType != AbilityTargetType.None)
-        {
-            Debug.LogWarning($"No se encontraron objetivos válidos para la habilidad {skill.abilityName}.");
-            ResetSelectionStatesAndPassTurn(true);
-            yield break;
-        }
-
-        Debug.Log($"Ejecutando efecto de {skill.abilityName} sobre {actualTargets.Count} objetivo(s).");
-        foreach (Combatant t in actualTargets)
-        {
-            if (t.isDefeated && skill.effectType != AbilityEffectType.Special) continue;
-
-            if (skill.effectType == AbilityEffectType.Damage)
-            {
-                // Fórmula de daño de habilidad (puede ser diferente a la de ataque básico)
-                int damage = Mathf.Max(1, (int)skill.power + (attacker.characterData.MagicAttack / 2) - t.GetDefense()); // Ejemplo usando MagicAttack
-                t.TakeDamage(damage);
-            }
-            else if (skill.effectType == AbilityEffectType.Heal)
-            {
-                t.ApplyHeal((int)skill.power);
-            }
-            else if (skill.effectType == AbilityEffectType.RestoreMP)
-            {
-                if (t.isPlayerCharacter && t.characterData != null) t.ApplyManaRestore((int)skill.power);
-            }
-            // (Añadir más casos para otros AbilityEffectType: Buff, Debuff, etc.)
-        }
-        ResetSelectionStatesAndPassTurn();
     }
 
     private IEnumerator EndPlayerActionAndProceedToNextTurn(float delay)
     {
-        yield return new WaitForSeconds(delay);
-        NextTurn();
+        Debug.Log($"[{Time.frameCount}] CombatManager: EndPlayerActionAndProceedToNextTurn - Esperando {delay}s.");
+        if (delay > 0) yield return new WaitForSeconds(delay);
+        else yield return null; // Esperar al menos un frame si el delay es 0
+
+        Debug.Log($"[{Time.frameCount}] CombatManager: EndPlayerActionAndProceedToNextTurn - Fin de espera. Llamando a NextTurn(). isCombatActive: {isCombatActive}");
+        if (isCombatActive) // Solo llamar a NextTurn si el combate sigue activo (ej: no terminó por CheckCombatEndConditions)
+        {
+            NextTurn();
+        }
+        else
+        {
+            Debug.LogWarning($"[{Time.frameCount}] CombatManager: EndPlayerActionAndProceedToNextTurn - Combate NO está activo, no se llama a NextTurn().");
+        }
     }
 
     private bool CheckCombatEndConditions()
@@ -1313,6 +1350,7 @@ public class CombatManager : MonoBehaviour
 
     private void ResetSelectionStatesAndPassTurn(bool reOpenActionMenu = false)
     {
+        Debug.Log($"[{Time.frameCount}] CombatManager: ResetSelectionStatesAndPassTurn INICIO. Reabrir Menú: {reOpenActionMenu}");
         isSelectingItem = false;
         isSelectingTargetForItem = false;
         isSelectingSkill = false;
@@ -1325,11 +1363,15 @@ public class CombatManager : MonoBehaviour
         if (reOpenActionMenu && actionMenuPanel != null && _activeCombatant != null && _activeCombatant.isPlayerCharacter)
         {
             actionMenuPanel.SetActive(true);
+            Debug.Log($"[{Time.frameCount}] CombatManager: ResetSelectionStatesAndPassTurn - Menú de acción reabierto.");
         }
         else
         {
-            StartCoroutine(EndPlayerActionAndProceedToNextTurn(0.5f));
+            // El delay aquí debe ser corto, solo para permitir que el frame actual termine si es necesario.
+            // Si la acción ya incluyó una espera para animación, este puede ser muy corto.
+            StartCoroutine(EndPlayerActionAndProceedToNextTurn(0.1f));
         }
+        Debug.Log($"[{Time.frameCount}] CombatManager: ResetSelectionStatesAndPassTurn FIN.");
     }
 
 

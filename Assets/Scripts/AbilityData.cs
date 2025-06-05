@@ -1,9 +1,8 @@
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
+using TopDown; // Asegúrate de que Character sea accesible
 
-// Puedes poner esto en un namespace si estás organizando así tu código
-// namespace TuJuego.Habilidades
-// {
+// Los enums de AbilityData sí están bien aquí.
 
 /// <summary>
 /// Define los posibles tipos de objetivos para una habilidad.
@@ -35,7 +34,7 @@ public enum AbilityEffectType
 
 /// <summary>
 /// ScriptableObject para definir los datos base de cada habilidad o magia en el juego.
-/// Crea assets de este tipo desde el menú: Assets > Create > TuJuego > Habilidad (o similar)
+/// Crea assets de este tipo desde el menú: Assets > Create > TuJuego > Habilidades > AbilityData
 /// </summary>
 [CreateAssetMenu(fileName = "NewAbilityData", menuName = "TuJuego/Crear Habilidad")]
 public class AbilityData : ScriptableObject
@@ -57,8 +56,6 @@ public class AbilityData : ScriptableObject
     [Header("Costes y Requisitos")]
     [Tooltip("Coste de Puntos de Maná (MP) para usar esta habilidad. Poner 0 si no tiene coste de MP.")]
     public int mpCost = 0;
-    // Podrías añadir otros costes aquí (ej: TP, objetos consumibles necesarios, etc.)
-    // Podrías añadir requisitos de nivel o clase aquí también.
 
     [Header("Efectos y Objetivos")]
     [Tooltip("El tipo principal de efecto que produce esta habilidad (Daño, Curación, Buff, etc.).")]
@@ -67,61 +64,40 @@ public class AbilityData : ScriptableObject
     [Tooltip("A quién o quiénes afecta esta habilidad.")]
     public AbilityTargetType targetType = AbilityTargetType.SingleEnemy;
 
-    [Tooltip("Potencia base de la habilidad (ej: cantidad de daño, cantidad de curación, porcentaje de buff/debuff). La fórmula de daño/curación final puede usar esto junto con los stats del lanzador/objetivo.")]
+    [Tooltip("Potencia base de la habilidad (ej: cantidad de daño, cantidad de curación, etc.).")]
     public float power = 10f;
-
-    // Podrías añadir más campos para efectos específicos:
-    // Ejemplo: Si es un Buff/Debuff
-    // public StatType statToModify; // Necesitarías un enum StatType (HP, MP, Attack, Defense, etc.)
-    // public float buffDebuffDuration;
-    // public bool isPercentageBuff; // Si el 'power' es un porcentaje o un valor fijo
-
-    // Ejemplo: Si aplica un StatusEffect
-    // public StatusEffectData statusEffectToApply; // Referencia a otro ScriptableObject StatusEffectData
-    // public float statusEffectChance; // Probabilidad de aplicar el estado (0 a 1)
-    // public int statusEffectDurationInTurns;
 
     // --- CAMPOS PARA ANIMACIÓN DE HABILIDAD ESPECÍFICA ---
     [Header("Animación y Efectos de Combate")]
     [Tooltip("Nombre del parámetro Trigger en el Animator Controller del personaje que lanza esta habilidad. Si está vacío, se podría usar un trigger genérico como 'AttackTrigger'.")]
-    public string animationTriggerName; // Renombrado desde casterAnimationTrigger
+    public string animationTriggerName;
 
     [Tooltip("Duración aproximada de la animación de esta habilidad en segundos. Si es 0 o negativo, CombatManager usará una duración por defecto.")]
     public float animationDuration = 0.8f; // Valor por defecto, ajústalo por habilidad
 
-    [Tooltip("Referencia a un Prefab de efecto visual (VFX) que se instanciará en el objetivo o en el lanzador.")]
-    public GameObject vfxPrefab; // Ya lo tenías
+    [Tooltip("Referencia a un Prefab de efecto visual (VFX) que se instanciará en el objetivo o en el lanzador. Si la habilidad lanza un proyectil, este sería el prefab del proyectil.")]
+    public GameObject vfxPrefab;
 
     [Tooltip("Referencia a un AudioClip para el sonido de la habilidad.")]
-    public AudioClip sfxClip; // Ya lo tenías
+    public AudioClip sfxClip;
 
 
-    // --- MÉTODOS (Lógica de la Habilidad) ---
-    // La lógica de "ejecutar" la habilidad podría estar aquí o en un sistema de combate.
-    // Por ahora, este ScriptableObject es principalmente para datos.
-
-    /// <summary>
-    /// (Ejemplo) Intenta ejecutar el efecto de esta habilidad sobre uno o más objetivos.
-    /// Esta es una implementación muy básica. Un sistema de combate real sería más complejo.
-    /// </summary>
-    /// <param name="caster">El personaje que lanza la habilidad.</param>
-    /// <param name="targets">La lista de personajes objetivo.</param>
+    // El método ExecuteEffect se mantiene como lo tenías, ya que la lógica de aplicar
+    // el efecto real (daño, curación) y disparar la animación se maneja en CombatManager.cs
+    // para este prototipo. Si quisieras que cada AbilityData tuviera una lógica de efecto
+    // completamente única, este método se expandiría mucho o usarías clases derivadas.
     public virtual void ExecuteEffect(Character caster, List<Character> targets)
     {
-        // La lógica principal de aplicar daño, curación, etc., ahora reside en CombatManager.ExecuteSkill
-        // para mantener el control centralizado de los Combatant y la UI.
-        // Este método se conserva por si se quieren añadir efectos únicos directamente en el AbilityData
-        // o si se refactoriza el sistema más adelante.
+        if (caster == null)
+        {
+            Debug.LogWarning("ExecuteEffect: Caster es null para " + abilityName);
+            return;
+        }
 
-        if (caster != null)
-        {
-            Debug.Log($"AbilityData.ExecuteEffect: Habilidad '{abilityName}' llamada por '{caster.characterName}'. El efecto principal es manejado por CombatManager.");
-        }
-        else
-        {
-            Debug.LogWarning($"AbilityData.ExecuteEffect: Habilidad '{abilityName}' llamada sin un caster válido.");
-        }
+        // La deducción de MP y la lógica principal de efectos ahora están en CombatManager.ExecuteSkill.
+        // Este método podría usarse en el futuro para efectos muy específicos de la habilidad
+        // que no son cubiertos por la lógica genérica del CombatManager.
+        // Por ahora, solo un log para indicar que se llamó.
+        Debug.Log($"AbilityData.ExecuteEffect llamada para {abilityName} por {caster.characterName}. El efecto principal es manejado por CombatManager.");
     }
 }
-
-// } // Fin del namespace si lo usas
