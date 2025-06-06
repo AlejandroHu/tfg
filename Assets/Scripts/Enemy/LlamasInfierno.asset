@@ -12,16 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 589eb4d2eb6aa78449615bb77cf25db9, type: 3}
   m_Name: LlamasInfierno
   m_EditorClassIdentifier: 
-  abilityID: llamas_infierno_01
-  abilityName: Llamas Infierno
+  abilityID: flor_infierno_01
+  abilityName: Flor Infernal
   icon: {fileID: 0}
   description: Llama que calcina
   mpCost: 0
   effectType: 0
   targetType: 5
   power: 40
-  animationTriggerName: 
-  animationDuration: 0.8
-  vfxPrefab: {fileID: 0}
+  animationTriggerName: LlamaInfiernoTrigger
+  animationDuration: 0.5
+  vfxPrefab: {fileID: 4425466928855556713, guid: 1c8fd17ba4769ca4f9f392e576f6157e, type: 3}
   launchSound: {fileID: 0}
   impactSound: {fileID: 0}

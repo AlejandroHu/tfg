@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b2155560ea429f44a5cba049c71a6a7, type: 3}
   m_Name: BossMago
   m_EditorClassIdentifier: 
-  enemyID: MagoOscuro
-  enemyName: Nuevo Enemigo
+  enemyID: mago_oscuro_01
+  enemyName: MagoOscuro
   battleSprite: {fileID: 21300000, guid: 455594003faa1b34da580197c6c5ac9c, type: 3}
-  combatAnimatorController: {fileID: 0}
+  combatAnimatorController: {fileID: 9100000, guid: 8759f85b2523e894ab144b78519de378, type: 2}
   maxHP: 200
   baseAttack: 30
-  baseDefense: 20
+  baseDefense: 5
   baseMagicAttack: 0
   baseMagicDefense: 0
   baseSpeed: 5

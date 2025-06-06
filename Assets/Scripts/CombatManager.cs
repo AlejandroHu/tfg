@@ -943,48 +943,143 @@ public class CombatManager : MonoBehaviour
 
     private IEnumerator EnemyTurnCoroutine(Combatant enemy)
     {
-        Debug.Log($"CombatManager: {enemy.GetName()} está pensando...");
-        yield return new WaitForSeconds(1.5f);
+        Debug.Log($"[{Time.frameCount}] EnemyTurnCoroutine: {enemy.GetName()} está pensando...");
+        yield return new WaitForSeconds(1.0f);
 
         if (enemy.isDefeated) { NextTurn(); yield break; }
         if (enemy.isDefending) enemy.StopDefending();
 
         List<Combatant> livingPlayerCombatants = _combatants.Where(c => c.isPlayerCharacter && !c.isDefeated).ToList();
-
-        if (livingPlayerCombatants.Count > 0)
+        if (livingPlayerCombatants.Count == 0)
         {
-            Combatant target = livingPlayerCombatants[Random.Range(0, livingPlayerCombatants.Count)];
-            // --- ACTIVAR ANIMACIÓN DE ATAQUE DEL ENEMIGO ---
-            // --- REPRODUCIR SONIDO DE ATAQUE DEL ENEMIGO ---
-            PlaySoundEffect(enemy.enemyData.basicAttackSound);
-            // --- FIN SONIDO ---
-            if (enemy.animator != null)
-            {
-                Debug.Log($"{enemy.GetName()} activando AttackTrigger.");
-                enemy.animator.SetTrigger("AttackTrigger");
-                // Podrías añadir una espera aquí si la animación es larga
-                yield return new WaitForSeconds(enemyAttackAnimationDuration); // O la duración exacta de tu clip de animación
+            Debug.Log($"[{Time.frameCount}] EnemyTurnCoroutine: {enemy.GetName()} no tiene objetivos vivos.");
+            NextTurn();
+            yield break;
+        }
 
-            }
-            // --- FIN ANIMACIÓN ---
-            Debug.Log($"{enemy.GetName()} ataca a {target.GetName()}! (Defensa del objetivo: {target.GetDefense()})");
-            // --- INSTANCIAR VFX DE GOLPE DIRECTO DEL ENEMIGO EN EL OBJETIVO (JUGADOR) ---
-            if (directHitVFXPrefab != null && target.combatSpriteGO != null)
+        // --- LÓGICA DE DECISIÓN DE LA IA ---
+        bool useAbility = false;
+        if (enemy.enemyData.isBoss && enemy.enemyData.abilities.Count > 0)
+        {
+            // Decisión simple: 50% de probabilidad de usar habilidad si es un jefe con habilidades
+            if (Random.value > 0.5f)
             {
-                Vector3 vfxPosition = target.combatSpriteGO.transform.position + new Vector3(0, directHitVFX_Y_Offset, 0);
-                Instantiate(directHitVFXPrefab, vfxPosition, Quaternion.identity);
-                Debug.Log($"[{Time.frameCount}] EnemyTurnCoroutine: Instanciado directHitVFXPrefab en {target.GetName()} por ataque de {enemy.GetName()}");
+                useAbility = true;
             }
-            // --- FIN INSTANCIAR VFX ---
+        }
 
-            int damage = Mathf.Max(1, enemy.GetAttack() - target.GetDefense());
-            target.TakeDamage(damage);
+        if (useAbility)
+        {
+            // --- USAR UNA HABILIDAD ---
+            // 1. Elegir una habilidad al azar de la lista
+            AbilityData chosenAbility = enemy.enemyData.abilities[Random.Range(0, enemy.enemyData.abilities.Count)];
+            Debug.Log($"[{Time.frameCount}] IA Enemiga: {enemy.GetName()} ha decidido usar la habilidad '{chosenAbility.abilityName}'.");
+
+            // 2. Determinar el objetivo para la habilidad
+            Combatant abilityTarget = null;
+            if (chosenAbility.targetType == AbilityTargetType.SingleEnemy)
+            {
+                abilityTarget = livingPlayerCombatants[Random.Range(0, livingPlayerCombatants.Count)];
+            }
+            // (Si tuviera habilidades de curación de aliados enemigos, aquí iría la lógica para SingleAlly)
+
+            // 3. Ejecutar la habilidad (la lógica de la corrutina maneja animación, espera y efectos)
+            // NOTA: Como la ejecución de la habilidad del jugador, esto es "dispara y olvida".
+            // EnemyTurnCoroutine terminará, pero PerformSkillSequence se seguirá ejecutando.
+            StartCoroutine(PerformSkillSequenceForEnemy(enemy, abilityTarget, chosenAbility));
+
         }
         else
         {
-            Debug.Log($"{enemy.GetName()} no tiene objetivos vivos en la party.");
+            // --- USAR UN ATAQUE BÁSICO ---
+            Debug.Log($"[{Time.frameCount}] IA Enemiga: {enemy.GetName()} ha decidido usar un ataque básico.");
+            Combatant target = livingPlayerCombatants[Random.Range(0, livingPlayerCombatants.Count)];
+
+            // Iniciar corrutina para el ataque básico del enemigo
+            StartCoroutine(PerformBasicAttackForEnemy(enemy, target));
+        }
+    }
+
+    // Corrutina específica para el ataque básico de un enemigo
+    private IEnumerator PerformBasicAttackForEnemy(Combatant attacker, Combatant target)
+    {
+        PlaySoundEffect(attacker.enemyData.basicAttackSound);
+        if (attacker.animator != null)
+        {
+            attacker.animator.SetTrigger("AttackTrigger");
+            yield return new WaitForSeconds(enemyAttackAnimationDuration);
         }
 
+        if (directHitVFXPrefab != null && target.combatSpriteGO != null)
+        {
+            Instantiate(directHitVFXPrefab, target.combatSpriteGO.transform.position + new Vector3(0, directHitVFX_Y_Offset, 0), Quaternion.identity);
+        }
+
+        int damage = Mathf.Max(1, attacker.GetAttack() - target.GetDefense());
+        target.TakeDamage(damage);
+
+        yield return new WaitForSeconds(0.5f);
+        NextTurn();
+    }
+
+    // Corrutina específica para la habilidad de un enemigo
+    private IEnumerator PerformSkillSequenceForEnemy(Combatant attacker, Combatant directTarget, AbilityData skill)
+    {
+        // Esta corrutina es casi idéntica a PerformSkillSequence del jugador, pero simplificada
+        // ya que los enemigos no usan el sistema de eventos de animación del jugador ni tienen coste de MP.
+
+        // 1. Reproducir sonido y animación del lanzador
+        PlaySoundEffect(skill.launchSound);
+        float casterAnimationDuration = enemyAttackAnimationDuration; // Usar una duración genérica de enemigo
+        if (attacker.animator != null)
+        {
+            string triggerName = "AttackTrigger";
+            if (!string.IsNullOrEmpty(skill.animationTriggerName)) triggerName = skill.animationTriggerName;
+            attacker.animator.SetTrigger(triggerName);
+            if (skill.animationDuration > 0.01f) casterAnimationDuration = skill.animationDuration;
+        }
+        yield return new WaitForSeconds(casterAnimationDuration);
+
+        // 2. Determinar objetivos reales
+        List<Combatant> actualTargets = DetermineActualTargets(skill.targetType, attacker, directTarget);
+
+        // 3. Aplicar efecto (asumimos que las habilidades de enemigos no usan proyectiles por ahora, o son efectos directos)
+        foreach (Combatant t in actualTargets)
+        {
+            if (t.isDefeated) continue;
+
+            // --- MODIFICADO: Lógica de VFX de impacto para enemigos ---
+            GameObject vfxToInstantiate = null;
+            // Priorizar el VFX específico de la habilidad (si no es un proyectil)
+            if (skill.vfxPrefab != null && skill.vfxPrefab.GetComponent<Projectile>() == null)
+            {
+                vfxToInstantiate = skill.vfxPrefab;
+                Debug.Log($"[{Time.frameCount}] Jefe usando VFX específico de habilidad '{skill.abilityName}': {vfxToInstantiate.name}");
+            }
+            else // Si no hay VFX específico en la habilidad, usar el genérico de golpe directo
+            {
+                vfxToInstantiate = directHitVFXPrefab;
+                if (vfxToInstantiate != null) Debug.Log($"[{Time.frameCount}] Jefe usando VFX genérico de golpe directo: {vfxToInstantiate.name}");
+            }
+
+            // Instanciar el VFX elegido sobre el objetivo
+            if (vfxToInstantiate != null && t.combatSpriteGO != null && skill.effectType == AbilityEffectType.Damage)
+            {
+                Vector3 vfxPosition = t.combatSpriteGO.transform.position + new Vector3(0, directHitVFX_Y_Offset, 0);
+                Instantiate(vfxToInstantiate, vfxPosition, Quaternion.identity);
+            }
+            // --- FIN MODIFICACIÓN ---
+            PlaySoundEffect(skill.impactSound);
+
+            if (skill.effectType == AbilityEffectType.Damage)
+            {
+                int damage = Mathf.Max(1, (int)skill.power + (attacker.enemyData.baseMagicAttack / 2) - t.GetDefense());
+                t.TakeDamage(damage);
+            }
+            // (Añadir lógica para otros efectos de habilidad del enemigo)
+        }
+
+        // 4. Pasar al siguiente turno
         yield return new WaitForSeconds(0.5f);
         NextTurn();
     }
@@ -1278,11 +1373,27 @@ public class CombatManager : MonoBehaviour
                 {
                     if (t.isDefeated && skill.effectType != AbilityEffectType.Special) continue;
 
-                    if (directHitVFXPrefab != null && t.combatSpriteGO != null && skill.effectType == AbilityEffectType.Damage)
+                    // --- LÓGICA DE VFX DE IMPACTO MODIFICADA ---
+                    GameObject vfxToInstantiate = null;
+                    // Priorizar el VFX específico de la habilidad (si no es un proyectil)
+                    if (skill.vfxPrefab != null && skill.vfxPrefab.GetComponent<Projectile>() == null)
                     {
-                        Instantiate(directHitVFXPrefab, t.combatSpriteGO.transform.position + new Vector3(0, directHitVFX_Y_Offset, 0), Quaternion.identity);
+                        vfxToInstantiate = skill.vfxPrefab;
+                        Debug.Log($"[{Time.frameCount}] Usando VFX específico de habilidad '{skill.abilityName}': {vfxToInstantiate.name}");
                     }
-                    // --- REPRODUCIR SONIDO DE IMPACTO DE HABILIDAD DIRECTA ---
+                    else // Si no hay VFX específico en la habilidad, usar el genérico de golpe directo
+                    {
+                        vfxToInstantiate = directHitVFXPrefab;
+                        if (vfxToInstantiate != null) Debug.Log($"[{Time.frameCount}] Usando VFX genérico de golpe directo: {vfxToInstantiate.name}");
+                    }
+
+                    // Instanciar el VFX elegido sobre el objetivo
+                    if (vfxToInstantiate != null && t.combatSpriteGO != null)
+                    {
+                        Vector3 vfxPosition = t.combatSpriteGO.transform.position + new Vector3(0, directHitVFX_Y_Offset, 0);
+                        Instantiate(vfxToInstantiate, vfxPosition, Quaternion.identity);
+                    }
+                    // --- FIN LÓGICA VFX ---
                     PlaySoundEffect(skill.impactSound);
                     // --- FIN SONIDO ---
 
@@ -1814,33 +1925,46 @@ public class CombatManager : MonoBehaviour
     private List<Combatant> DetermineActualTargets(AbilityTargetType targetType, Combatant attacker, Combatant directTarget)
     {
         List<Combatant> actualTargets = new List<Combatant>();
-        if (attacker == null) return actualTargets; // Necesitamos un atacante
+        if (attacker == null) return actualTargets;
+
+        // Filtrar las listas de posibles objetivos al inicio
+        List<Combatant> livingEnemies = _combatants.Where(c => c != null && !c.isPlayerCharacter && !c.isDefeated).ToList();
+        List<Combatant> livingAllies = _combatants.Where(c => c != null && c.isPlayerCharacter && !c.isDefeated).ToList();
 
         switch (targetType)
         {
             case AbilityTargetType.Self:
                 if (!attacker.isDefeated) actualTargets.Add(attacker);
                 break;
+
             case AbilityTargetType.SingleAlly:
-                if (directTarget != null && directTarget.isPlayerCharacter && !directTarget.isDefeated) actualTargets.Add(directTarget);
+                if (attacker.isPlayerCharacter) // Si un jugador lanza a un aliado
+                {
+                    if (directTarget != null && directTarget.isPlayerCharacter && !directTarget.isDefeated) actualTargets.Add(directTarget);
+                }
+                else // Si un enemigo lanza a un aliado (otro enemigo)
+                {
+                    if (directTarget != null && !directTarget.isPlayerCharacter && !directTarget.isDefeated) actualTargets.Add(directTarget);
+                }
                 break;
-            case AbilityTargetType.AllAllies:
-                actualTargets.AddRange(_combatants.Where(c => c.isPlayerCharacter && !c.isDefeated));
+
+            case AbilityTargetType.AllAllies: // Afecta a todos los del mismo bando que el lanzador
+                actualTargets.AddRange(attacker.isPlayerCharacter ? livingAllies : livingEnemies);
                 break;
-            case AbilityTargetType.SingleEnemy:
-                if (directTarget != null && !directTarget.isPlayerCharacter && !directTarget.isDefeated) actualTargets.Add(directTarget);
+
+            case AbilityTargetType.SingleEnemy: // Afecta a un enemigo del bando contrario
+                if (attacker.isPlayerCharacter) // Si un jugador lanza a un enemigo
+                {
+                    if (directTarget != null && !directTarget.isPlayerCharacter && !directTarget.isDefeated) actualTargets.Add(directTarget);
+                }
+                else // Si un enemigo lanza a un enemigo (un jugador)
+                {
+                    if (directTarget != null && directTarget.isPlayerCharacter && !directTarget.isDefeated) actualTargets.Add(directTarget);
+                }
                 break;
-            case AbilityTargetType.AllEnemies:
-                actualTargets.AddRange(_combatants.Where(c => !c.isPlayerCharacter && !c.isDefeated));
-                break;
-            case AbilityTargetType.None:
-                // Para habilidades que no tienen un objetivo específico (ej: un buff de área que no se selecciona)
-                // O podría aplicarse a todos, o a un grupo predefinido.
-                // Si es para todos los aliados, se debería usar AllAllies.
-                // Si es para todos los enemigos, AllEnemies.
-                // Si es para el propio lanzador, Self.
-                // Si es "None" y tiene un efecto, la habilidad misma debe saber a quién aplicarlo o cómo.
-                // Por ahora, si es None, no se añaden objetivos aquí.
+
+            case AbilityTargetType.AllEnemies: // Afecta a todos los del bando contrario
+                actualTargets.AddRange(attacker.isPlayerCharacter ? livingEnemies : livingAllies);
                 break;
         }
         return actualTargets;
