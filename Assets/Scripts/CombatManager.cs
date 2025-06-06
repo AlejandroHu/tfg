@@ -157,7 +157,19 @@ public class Combatant
             CombatManager.Instance.PlaySoundEffect(defeatSound);
         }
         // --- FIN SONIDO ---
-        if (enemyStatusUI != null && !isPlayerCharacter) enemyStatusUI.gameObject.SetActive(false);
+        // --- INICIO DE LA LÓGICA A AÑADIR ---
+        if (!isPlayerCharacter) // Asegurarse de que es un enemigo
+        {
+            // NOTIFICAR AL QUESTMANAGER QUE SE HA DERROTADO UN ENEMIGO
+            if (QuestManager.Instance != null && enemyData != null && !string.IsNullOrEmpty(enemyData.enemyID))
+            {
+                QuestManager.Instance.NotifyEnemyKilled(enemyData.enemyID);
+            }
+
+            // La lógica de ocultar la UI del enemigo también va aquí dentro
+            if (enemyStatusUI != null) enemyStatusUI.gameObject.SetActive(false);
+        }
+        // --- FIN DE LA LÓGICA A AÑADIR ---
         if (combatSpriteGO != null && CombatManager.Instance != null)
         {
             float preFadeDelay = 0f;

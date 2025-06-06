@@ -27,8 +27,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 76d6057e2fcc2c249bc8191c75cb3fe8, type: 2}
   - {fileID: 11400000, guid: b017397ff22a8d944b1bac0d5518ab3d, type: 2}
   xpReward: 10
-  basicAttackSound: {fileID: 0}
-  takeHitSound: {fileID: 0}
-  defeatSound: {fileID: 0}
+  basicAttackSound: {fileID: 8300000, guid: f973388b8a7d06d4fb443ac1015fe9fc, type: 3}
+  takeHitSound: {fileID: 8300000, guid: 9ead53b838f0c9049aec77499156e087, type: 3}
+  defeatSound: {fileID: 8300000, guid: 37534d9927fbb804391a8e9070b109b3, type: 3}
   itemDrop: {fileID: 0}
   itemDropChance: 0.1

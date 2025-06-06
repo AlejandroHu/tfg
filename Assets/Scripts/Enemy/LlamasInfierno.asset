@@ -24,4 +24,4 @@ MonoBehaviour:
   animationDuration: 0.5
   vfxPrefab: {fileID: 4425466928855556713, guid: 1c8fd17ba4769ca4f9f392e576f6157e, type: 3}
   launchSound: {fileID: 0}
-  impactSound: {fileID: 0}
+  impactSound: {fileID: 8300000, guid: c885d9aeab96d194a929158d7f06a0ce, type: 3}
