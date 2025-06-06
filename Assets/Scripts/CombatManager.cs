@@ -299,6 +299,13 @@ public class Combatant
 public class CombatManager : MonoBehaviour
 {
     public static CombatManager Instance { get; private set; }
+    // ... (Variables [SerializeField] existentes) ...
+    [Header("HUD de Combate - Información de Ronda/Turno")] // --- NUEVA SECCIÓN ---
+    [Tooltip("Elemento TextMeshProUGUI para mostrar el título de la ronda (ej: 'RONDA 1').")]
+    [SerializeField] private TextMeshProUGUI roundTitleText;
+    [Tooltip("Duración en segundos que el título de la ronda permanecerá visible.")]
+    [SerializeField] private float roundTitleDisplayDuration = 1.5f;
+    // --- FIN NUEVA SECCIÓN ---
 
     [Header("Estado del Combate")]
     [SerializeField] private bool isCombatActive = false;
@@ -397,6 +404,9 @@ public class CombatManager : MonoBehaviour
     [Tooltip("Duración de la animación de ataque del enemigo si su EnemyData no especifica una o no tiene controller.")]
     [SerializeField] private float enemyAttackAnimationDuration = 0.8f;
     [SerializeField] private float enemyDefeatAnimationBaseDuration = 1.0f;
+    // --- NUEVA VARIABLE PARA DELAY DE IMPACTO DE PROYECTILES DE HABILIDAD ---
+    [Tooltip("Tiempo de espera adicional DESPUÉS de la animación del lanzador para que los proyectiles de habilidad impacten y sus efectos se procesen.")]
+    [SerializeField] private float skillProjectileImpactDelay = 0.75f; // Ajusta este valor según sea necesario
 
 
 
@@ -414,6 +424,8 @@ public class CombatManager : MonoBehaviour
     private Combatant _activeCombatant;
     private List<AbilityListItem_UI> _currentSkillListUIs = new List<AbilityListItem_UI>();
     private List<CombatItemListItem_UI> _currentCombatItemListUIs = new List<CombatItemListItem_UI>();
+    private int _currentRoundNumber = 0; // --- NUEVO: Contador de rondas ---
+    private Coroutine _roundTitleCoroutine; // Para manejar la corrutina del título
 
 
     void Awake()
@@ -477,6 +489,14 @@ public class CombatManager : MonoBehaviour
         // floatingTextCanvasTransform es opcional, así que un LogWarning está bien si está vacío.
         if (floatingTextCanvasTransform == null) Debug.LogWarning("CombatManager: 'floatingTextCanvasTransform' no asignado. Los textos flotantes se instanciarán como hijos del combatiente (asume World Space Canvas en prefab) o en la raíz de la escena.", this);
         if (directHitVFXPrefab == null) Debug.LogWarning("CombatManager: 'directHitVFXPrefab' no asignado. No se mostrará VFX para golpes directos.", this);
+        if (roundTitleText != null)
+        {
+            roundTitleText.gameObject.SetActive(false);
+        }
+        else
+        {
+            Debug.LogWarning("CombatManager: 'roundTitleText' no asignado. No se mostrará el título de la ronda.");
+        }
 
         if (attackButton != null) attackButton.onClick.AddListener(OnAttackButtonClicked);
         if (defendButton != null) defendButton.onClick.AddListener(OnDefendButtonClicked);
@@ -505,6 +525,8 @@ public class CombatManager : MonoBehaviour
         if (playerParty == null || playerParty.Count == 0) { Debug.LogError("CombatManager: Party vacía al iniciar combate."); return; }
         if (enemyGroup == null || enemyGroup.Count == 0) { Debug.LogError("CombatManager: Grupo de enemigos vacío al iniciar combate."); return; }
         if (encounterReference == null) { Debug.LogError("CombatManager: Referencia a EnemyEncounter nula al iniciar combate."); return; }
+        _currentRoundNumber = 0; // Resetear al iniciar combate
+        if (roundTitleText != null) roundTitleText.gameObject.SetActive(false);
 
         isCombatActive = true;
         this.currentPlayerPartyData = new List<Character>(playerParty);
@@ -528,6 +550,12 @@ public class CombatManager : MonoBehaviour
         isSelectingItem = false; // Resetear estado de selección de ítem
         isSelectingTargetForItem = false;
         _selectedItemData = null;
+        if (roundTitleText != null) roundTitleText.gameObject.SetActive(false);
+        if (_roundTitleCoroutine != null)
+        {
+            StopCoroutine(_roundTitleCoroutine);
+            _roundTitleCoroutine = null;
+        }
 
         StartCoroutine(CombatTransitionCoroutine(false, playerWon));
     }
@@ -784,29 +812,85 @@ public class CombatManager : MonoBehaviour
 
     private void NextTurn()
     {
-        if (!isCombatActive) return;
-        if (CheckCombatEndConditions()) return;
+        Debug.Log($"[{Time.frameCount}] NextTurn: INICIO. isCombatActive: {isCombatActive}"); // Log de tu versión
+        if (!isCombatActive)
+        {
+            Debug.LogWarning($"[{Time.frameCount}] NextTurn: Combate NO activo. Retornando.");
+            return;
+        }
+
+        if (CheckCombatEndConditions()) // CheckCombatEndConditions llama a EndCombat si se cumplen
+        {
+            Debug.Log($"[{Time.frameCount}] NextTurn: CheckCombatEndConditions() devolvió true (combate terminado). Retornando.");
+            return; // El combate ha terminado
+        }
+
         Debug.Log($"[{Time.frameCount}] NextTurn: El combate continúa. Buscando siguiente combatiente.");
+
         _currentCombatantIndex++;
         if (_currentCombatantIndex >= _combatants.Count)
         {
             _currentCombatantIndex = 0;
-            Debug.Log("CombatManager: ----- Nueva Ronda de Combate Iniciada -----");
-            foreach (Combatant combatant in _combatants)
+            _currentRoundNumber++; // Incrementar el número de ronda
+            Debug.Log($"[{Time.frameCount}] NextTurn: ----- NUEVA RONDA ({_currentRoundNumber}) -----");
+
+            // --- MOSTRAR TÍTULO DE RONDA ---
+            if (roundTitleText != null)
+            {
+                if (_roundTitleCoroutine != null) StopCoroutine(_roundTitleCoroutine); // Detener corrutina anterior si existe
+                _roundTitleCoroutine = StartCoroutine(ShowRoundTitleCoroutine($"RONDA {_currentRoundNumber}"));
+            }
+            // --- FIN MOSTRAR TÍTULO ---
+
+            foreach (Combatant combatant in _combatants.Where(c => c != null)) // Añadido check de null por seguridad
             {
                 if (combatant.isDefending) combatant.StopDefending();
             }
             UpdatePartyStatusHUD();
         }
+        else if (_currentCombatantIndex == 0 && _currentRoundNumber == 0) // Condición para el primer turno del combate
+        {
+            _currentRoundNumber = 1; // La primera ronda es la 1
+            Debug.Log($"[{Time.frameCount}] NextTurn: ----- INICIO COMBATE - RONDA {_currentRoundNumber} -----");
+            if (roundTitleText != null)
+            {
+                if (_roundTitleCoroutine != null) StopCoroutine(_roundTitleCoroutine);
+                _roundTitleCoroutine = StartCoroutine(ShowRoundTitleCoroutine($"RONDA {_currentRoundNumber}"));
+            }
+        }
 
-        if (_combatants.Count == 0) { EndCombat(false); return; }
+        // Asegurarse de que _combatants no sea nulo o vacío después de la lógica de ronda
+        if (_combatants == null || _combatants.Count == 0)
+        {
+            Debug.LogError($"[{Time.frameCount}] NextTurn: Lista de combatientes vacía o nula inesperadamente DESPUÉS de procesar ronda. Terminando combate.");
+            EndCombat(false);
+            return;
+        }
+        // Asegurarse de que el índice es válido después de potencialmente resetearlo
+        if (_currentCombatantIndex < 0 || _currentCombatantIndex >= _combatants.Count)
+        {
+            Debug.LogError($"[{Time.frameCount}] NextTurn: Índice de combatiente inválido ({_currentCombatantIndex}) DESPUÉS de procesar ronda. Reseteando a 0.");
+            _currentCombatantIndex = 0;
+            if (_combatants.Count == 0) { EndCombat(false); return; } // Doble check por si acaso
+        }
+
         _activeCombatant = _combatants[_currentCombatantIndex];
+
+        if (_activeCombatant == null)
+        { // Comprobar si _activeCombatant es nulo
+            Debug.LogError($"[{Time.frameCount}] NextTurn: _activeCombatant es null en el índice {_currentCombatantIndex} ANTES de comprobar isDefeated. Saltando turno e investigando.");
+            NextTurn(); // Intentar con el siguiente, pero esto podría indicar un problema más profundo
+            return;
+        }
 
         if (_activeCombatant.isDefeated)
         {
+            Debug.Log($"[{Time.frameCount}] NextTurn: {_activeCombatant.GetName()} está derrotado. Saltando turno.");
             NextTurn();
             return;
         }
+
+        Debug.Log($"[{Time.frameCount}] NextTurn: FIN. Llamando a StartTurnForActiveCombatant() para {_activeCombatant.GetName()}.");
         StartTurnForActiveCombatant();
     }
 
@@ -1091,7 +1175,6 @@ public class CombatManager : MonoBehaviour
     {
         Debug.Log($"[{Time.frameCount}] PerformSkillSequence: Iniciando para '{skill.abilityName}' por '{attacker.GetName()}'.");
 
-        // 1. Deducir Coste de MP
         if (skill.mpCost > 0)
         {
             if (!attacker.characterData.SpendMana(skill.mpCost))
@@ -1103,16 +1186,13 @@ public class CombatManager : MonoBehaviour
             UpdatePartyStatusHUD();
         }
 
-        // 2. Preparar EventHandler y Activar Animación de Lanzamiento
         float casterAnimationDuration = playerGenericAnimationDuration;
         CombatSpriteEventHandler eventHandler = null;
-        if (attacker.combatSpriteGO != null)
-        {
-            eventHandler = attacker.combatSpriteGO.GetComponent<CombatSpriteEventHandler>();
-        }
+        if (attacker.combatSpriteGO != null) eventHandler = attacker.combatSpriteGO.GetComponent<CombatSpriteEventHandler>();
 
         List<Combatant> actualTargets = DetermineActualTargets(skill.targetType, attacker, directTarget);
 
+        // Determinar si la habilidad va a lanzar un proyectil a través de un evento de animación
         bool isSkillAProjectileLaunchedByEvent = skill.vfxPrefab != null && skill.vfxPrefab.GetComponent<Projectile>() != null && eventHandler != null;
 
         if (isSkillAProjectileLaunchedByEvent)
@@ -1122,9 +1202,10 @@ public class CombatManager : MonoBehaviour
         }
         else if (skill.vfxPrefab != null && skill.vfxPrefab.GetComponent<Projectile>() != null && eventHandler == null)
         {
-            Debug.LogWarning($"[{Time.frameCount}] PerformSkillSequence: CombatSpriteEventHandler no encontrado en {attacker.GetName()} para lanzar proyectil de {skill.abilityName}. Si es un proyectil, se intentará aplicar efecto directo.");
+            Debug.LogWarning($"[{Time.frameCount}] PerformSkillSequence: CombatSpriteEventHandler no encontrado en {attacker.GetName()} para lanzar proyectil de {skill.abilityName}. Se intentará aplicar efecto directo si es posible.");
         }
 
+        // Disparar Animación de Lanzamiento del Personaje
         if (attacker.animator != null)
         {
             string triggerName = "AttackTrigger";
@@ -1132,12 +1213,18 @@ public class CombatManager : MonoBehaviour
             attacker.animator.SetTrigger(triggerName);
             if (skill.animationDuration > 0.01f) casterAnimationDuration = skill.animationDuration;
         }
-        Debug.Log($"[{Time.frameCount}] PerformSkillSequence: Animación '{attacker.animator?.GetCurrentAnimatorClipInfo(0)[0].clip.name}' disparada, esperando {casterAnimationDuration}s.");
+        Debug.Log($"[{Time.frameCount}] PerformSkillSequence: Animación del lanzador '{attacker.animator?.GetCurrentAnimatorClipInfo(0)[0].clip.name}' activada, esperando {casterAnimationDuration}s.");
         yield return new WaitForSeconds(casterAnimationDuration);
-        Debug.Log($"[{Time.frameCount}] PerformSkillSequence: Fin de espera de animación del lanzador.");
+        Debug.Log($"[{Time.frameCount}] PerformSkillSequence: Fin de espera de animación del lanzador para '{skill.abilityName}'.");
 
-        // 3. Aplicar Efecto Directo de la Habilidad (SI NO fue un proyectil lanzado por evento O si el handler falló)
-        if (!isSkillAProjectileLaunchedByEvent)
+        // --- AÑADIR ESPERA ADICIONAL SI FUE UN PROYECTIL LANZADO POR EVENTO ---
+        if (isSkillAProjectileLaunchedByEvent)
+        {
+            Debug.Log($"[{Time.frameCount}] PerformSkillSequence: Habilidad '{skill.abilityName}' es de tipo proyectil. Esperando {skillProjectileImpactDelay}s adicionales para impacto de proyectil(es).");
+            yield return new WaitForSeconds(skillProjectileImpactDelay); // Esperar que los proyectiles impacten
+            Debug.Log($"[{Time.frameCount}] PerformSkillSequence: Fin de espera adicional para impacto de proyectil de habilidad.");
+        }
+        else // Si NO es un proyectil lanzado por evento, aplicar efectos directos ahora
         {
             Debug.Log($"[{Time.frameCount}] PerformSkillSequence: Aplicando efecto directo para '{skill.abilityName}'.");
             if (actualTargets.Count == 0 && skill.targetType != AbilityTargetType.None && skill.targetType != AbilityTargetType.Self)
@@ -1146,22 +1233,17 @@ public class CombatManager : MonoBehaviour
             }
             else
             {
-                if (skill.targetType == AbilityTargetType.Self && actualTargets.Count == 0 && attacker != null && !attacker.isDefeated)
-                {
-                    actualTargets.Add(attacker);
-                }
+                if (skill.targetType == AbilityTargetType.Self && actualTargets.Count == 0 && attacker != null && !attacker.isDefeated) actualTargets.Add(attacker);
+
                 Debug.Log($"[{Time.frameCount}] PerformSkillSequence: Aplicando efecto directo a {actualTargets.Count} objetivo(s).");
                 foreach (Combatant t in actualTargets)
                 {
                     if (t.isDefeated && skill.effectType != AbilityEffectType.Special) continue;
-                    // --- MODIFICADO: Condición para VFX de golpe directo ---
-                    if (directHitVFXPrefab != null && t.combatSpriteGO != null &&
-                       (skill.effectType == AbilityEffectType.Damage)) // Solo para daño, no para Heal
+
+                    if (directHitVFXPrefab != null && t.combatSpriteGO != null && skill.effectType == AbilityEffectType.Damage)
                     {
-                        Vector3 vfxPosition = t.combatSpriteGO.transform.position + new Vector3(0, directHitVFX_Y_Offset, 0);
-                        Instantiate(directHitVFXPrefab, vfxPosition, Quaternion.identity);
+                        Instantiate(directHitVFXPrefab, t.combatSpriteGO.transform.position + new Vector3(0, directHitVFX_Y_Offset, 0), Quaternion.identity);
                     }
-                    // --- FIN MODIFICACIÓN ---
 
                     if (skill.effectType == AbilityEffectType.Damage)
                     {
@@ -1173,15 +1255,10 @@ public class CombatManager : MonoBehaviour
                 }
             }
         }
-        else
-        {
-            Debug.Log($"[{Time.frameCount}] PerformSkillSequence: Habilidad '{skill.abilityName}' es de tipo proyectil y se espera que el evento de animación lo lance/haya lanzado. El efecto se aplicará al impacto del proyectil.");
-        }
-        // --- AÑADIR ESPERA DE FRAME ANTES DE PASAR TURNO ---
-        Debug.Log($"[{Time.frameCount}] PerformSkillSequence: Esperando fin de frame antes de llamar a ResetSelectionStatesAndPassTurn.");
-        yield return null; // Esperar un frame para que todos los TakeDamage y HandleDefeat se procesen
-                           // --- FIN ESPERA ---
-                           // 4. Finalizar y pasar turno (AHORA SE LLAMA SIEMPRE AL FINAL)
+
+        Debug.Log($"[{Time.frameCount}] PerformSkillSequence: Esperando fin de frame ANTES de ResetSelectionStatesAndPassTurn para '{skill.abilityName}'.");
+        yield return null;
+
         Debug.Log($"[{Time.frameCount}] PerformSkillSequence: Fin de la secuencia para '{skill.abilityName}'. Llamando a ResetSelectionStatesAndPassTurn.");
         ResetSelectionStatesAndPassTurn();
     }
@@ -1206,22 +1283,13 @@ public class CombatManager : MonoBehaviour
     private bool CheckCombatEndConditions()
     {
         Debug.Log($"[{Time.frameCount}] CheckCombatEndConditions: Verificando si el combate ha terminado.");
-        if (_combatants == null || _combatants.Count == 0)
-        {
-            Debug.LogWarning($"[{Time.frameCount}] CheckCombatEndConditions: No hay combatientes. Terminando combate (derrota por defecto).");
-            EndCombat(false); // Evitar errores si la lista está vacía
-            return true;
-        }
+        if (_combatants == null || _combatants.Count == 0) { EndCombat(false); return true; }
 
-        // Comprobar victoria del jugador
-        bool allEnemiesDefeated = _combatants.Where(c => !c.isPlayerCharacter && c != null).All(e => e.isDefeated);
-        int enemyCount = _combatants.Count(c => !c.isPlayerCharacter && c != null);
-        // Log para cada enemigo y su estado
-        foreach (Combatant enemy in _combatants.Where(c => !c.isPlayerCharacter && c != null))
-        {
-            Debug.Log($"[{Time.frameCount}] CheckCombatEndConditions - Enemigo: {enemy.GetName()}, HP: {enemy.GetCurrentHP()}, Derrotado: {enemy.isDefeated}");
-        }
-        Debug.Log($"[{Time.frameCount}] CheckCombatEndConditions: Enemigos totales (considerados): {enemyCount}. allEnemiesDefeated: {allEnemiesDefeated}");
+        bool allEnemiesDefeated = _combatants.Where(c => c != null && !c.isPlayerCharacter).All(e => e.isDefeated);
+        int enemyCount = _combatants.Count(c => c != null && !c.isPlayerCharacter);
+        // foreach (Combatant enemy in _combatants.Where(c => !c.isPlayerCharacter && c != null))
+        // { Debug.Log($"[{Time.frameCount}] CheckCombatEndConditions - Enemigo: {enemy.GetName()}, HP: {enemy.GetCurrentHP()}, Derrotado: {enemy.isDefeated}"); }
+        // Debug.Log($"[{Time.frameCount}] CheckCombatEndConditions: Enemigos totales: {enemyCount}. allEnemiesDefeated: {allEnemiesDefeated}");
 
         if (enemyCount > 0 && allEnemiesDefeated)
         {
@@ -1230,10 +1298,9 @@ public class CombatManager : MonoBehaviour
             return true;
         }
 
-        // Comprobar derrota del jugador
-        bool allPlayersDefeated = _combatants.Where(c => c.isPlayerCharacter && c != null).All(p => p.isDefeated);
-        int playerCount = _combatants.Count(c => c.isPlayerCharacter && c != null);
-        Debug.Log($"[{Time.frameCount}] CheckCombatEndConditions: Jugadores totales (considerados): {playerCount}. allPlayersDefeated: {allPlayersDefeated}");
+        bool allPlayersDefeated = _combatants.Where(c => c != null && c.isPlayerCharacter).All(p => p.isDefeated);
+        int playerCount = _combatants.Count(c => c != null && c.isPlayerCharacter);
+        // Debug.Log($"[{Time.frameCount}] CheckCombatEndConditions: Jugadores totales: {playerCount}. allPlayersDefeated: {allPlayersDefeated}");
 
         if (playerCount > 0 && allPlayersDefeated)
         {
@@ -1742,6 +1809,26 @@ public class CombatManager : MonoBehaviour
         // Podrías hacer esto más dinámico si los enemigos tienen diferentes duraciones de animación de derrota
         // almacenadas en su EnemyData, por ejemplo.
         return enemyAttackAnimationDuration; // Reutilizando la duración del ataque por ahora, o usa enemyDefeatAnimationBaseDuration
+    }
+    private IEnumerator ShowRoundTitleCoroutine(string title)
+    {
+        if (roundTitleText == null) yield break;
+
+        roundTitleText.text = title;
+        roundTitleText.gameObject.SetActive(true);
+
+        // Opcional: Podrías añadir un pequeño efecto de fade in aquí si quieres
+        // CanvasGroup titleCG = roundTitleText.GetComponent<CanvasGroup>(); // Si le añades un CanvasGroup
+        // if (titleCG != null) { /* ... lógica de fade in ... */ }
+
+        yield return new WaitForSeconds(roundTitleDisplayDuration);
+
+        // Opcional: Efecto de Fade Out para el título
+        // if (titleCG != null) { /* ... lógica de fade out ... */ }
+        // else roundTitleText.gameObject.SetActive(false); 
+        roundTitleText.gameObject.SetActive(false); // Simple ocultación por ahora
+
+        _roundTitleCoroutine = null; // Limpiar referencia
     }
 
 }
