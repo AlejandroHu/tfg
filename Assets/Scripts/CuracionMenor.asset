@@ -23,4 +23,5 @@ MonoBehaviour:
   animationTriggerName: HealSpellTrigger
   animationDuration: 0.4
   vfxPrefab: {fileID: 0}
-  sfxClip: {fileID: 0}
+  launchSound: {fileID: 0}
+  impactSound: {fileID: 8300000, guid: 76b0fed7109f19a419eebdb86db299cf, type: 3}

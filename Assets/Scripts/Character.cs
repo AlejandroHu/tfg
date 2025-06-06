@@ -24,6 +24,13 @@ public class Character : MonoBehaviour
     [Tooltip("Si el ataque básico de este personaje lanza un proyectil, asigna el Prefab del proyectil aquí. Si es un ataque cuerpo a cuerpo, déjalo como None.")]
     public GameObject basicAttackProjectilePrefab;
     // --- FIN NUEVO ---
+    // --- NUEVO: Campos para Sonidos de Combate ---
+    [Tooltip("Sonido que se reproduce cuando este personaje realiza un ataque básico.")]
+    public AudioClip basicAttackSound;
+    [Tooltip("Sonido que se reproduce cuando este personaje recibe un golpe.")]
+    public AudioClip takeHitSound;
+    // --- FIN NUEVO ---
+
 
 
 

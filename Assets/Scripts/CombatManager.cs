@@ -95,6 +95,13 @@ public class Combatant
     public void TakeDamage(int damageAmount)
     {
         if (isDefeated || damageAmount <= 0) return;
+        // --- REPRODUCIR SONIDO DE RECIBIR DAÑO ---
+        // Se reproduce antes de cualquier espera o efecto visual para que sea inmediato
+        if (CombatManager.Instance != null && damageAmount > 0)
+        {
+            AudioClip hitSound = isPlayerCharacter ? characterData.takeHitSound : enemyData.takeHitSound;
+            CombatManager.Instance.PlaySoundEffect(hitSound);
+        }
 
         int hpBeforeDamage = GetCurrentHP(); // Usar GetCurrentHP() para leer el valor correcto
 
@@ -143,6 +150,13 @@ public class Combatant
         if (isDefeated) return;
         isDefeated = true;
         Debug.Log($"{GetName()} ha sido derrotado!");
+        // --- REPRODUCIR SONIDO DE DERROTA ---
+        if (CombatManager.Instance != null)
+        {
+            AudioClip defeatSound = isPlayerCharacter ? null : enemyData.defeatSound; // Asumimos que solo enemigos tienen sonido de derrota
+            CombatManager.Instance.PlaySoundEffect(defeatSound);
+        }
+        // --- FIN SONIDO ---
         if (enemyStatusUI != null && !isPlayerCharacter) enemyStatusUI.gameObject.SetActive(false);
         if (combatSpriteGO != null && CombatManager.Instance != null)
         {
@@ -299,6 +313,9 @@ public class Combatant
 public class CombatManager : MonoBehaviour
 {
     public static CombatManager Instance { get; private set; }
+    [Header("Audio")] // --- NUEVA SECCIÓN ---
+    [Tooltip("AudioSource para reproducir los efectos de sonido del combate.")]
+    [SerializeField] private AudioSource sfxAudioSource;
     // ... (Variables [SerializeField] existentes) ...
     [Header("HUD de Combate - Información de Ronda/Turno")] // --- NUEVA SECCIÓN ---
     [Tooltip("Elemento TextMeshProUGUI para mostrar el título de la ronda (ej: 'RONDA 1').")]
@@ -497,6 +514,7 @@ public class CombatManager : MonoBehaviour
         {
             Debug.LogWarning("CombatManager: 'roundTitleText' no asignado. No se mostrará el título de la ronda.");
         }
+        if (sfxAudioSource == null) Debug.LogWarning("CombatManager: 'sfxAudioSource' no asignado. No se reproducirán efectos de sonido.", this);
 
         if (attackButton != null) attackButton.onClick.AddListener(OnAttackButtonClicked);
         if (defendButton != null) defendButton.onClick.AddListener(OnDefendButtonClicked);
@@ -512,6 +530,14 @@ public class CombatManager : MonoBehaviour
         else
         {
             Debug.LogWarning("CombatManager: 'closeSkillSelectionButton' no asignado en el panel de habilidades. No se podrá cerrar con ese botón.", this);
+        }
+    }
+    // --- NUEVO: Método para Reproducir Sonidos ---
+    public void PlaySoundEffect(AudioClip clip)
+    {
+        if (clip != null && sfxAudioSource != null)
+        {
+            sfxAudioSource.PlayOneShot(clip);
         }
     }
 
@@ -929,6 +955,9 @@ public class CombatManager : MonoBehaviour
         {
             Combatant target = livingPlayerCombatants[Random.Range(0, livingPlayerCombatants.Count)];
             // --- ACTIVAR ANIMACIÓN DE ATAQUE DEL ENEMIGO ---
+            // --- REPRODUCIR SONIDO DE ATAQUE DEL ENEMIGO ---
+            PlaySoundEffect(enemy.enemyData.basicAttackSound);
+            // --- FIN SONIDO ---
             if (enemy.animator != null)
             {
                 Debug.Log($"{enemy.GetName()} activando AttackTrigger.");
@@ -1111,6 +1140,12 @@ public class CombatManager : MonoBehaviour
             Debug.LogWarning($"[{Time.frameCount}] {attacker.GetName()}: El 'basicAttackProjectilePrefab' ({projectilePrefabFromCharacter.name}) no tiene script Projectile. Aplicando daño directo.");
             isBasicAttackWithProjectile = false; // Forzar daño directo
         }
+        // --- REPRODUCIR SONIDO DE ATAQUE BÁSICO DEL JUGADOR ---
+        if (attacker.isPlayerCharacter && attacker.characterData != null)
+        {
+            PlaySoundEffect(attacker.characterData.basicAttackSound);
+        }
+        // --- FIN SONIDO ---
 
 
         // Disparar Animación de Ataque del Atacante
@@ -1185,6 +1220,9 @@ public class CombatManager : MonoBehaviour
             }
             UpdatePartyStatusHUD();
         }
+        // --- REPRODUCIR SONIDO DE LANZAMIENTO DE HABILIDAD ---
+        PlaySoundEffect(skill.launchSound);
+        // --- FIN SONIDO ---
 
         float casterAnimationDuration = playerGenericAnimationDuration;
         CombatSpriteEventHandler eventHandler = null;
@@ -1244,6 +1282,9 @@ public class CombatManager : MonoBehaviour
                     {
                         Instantiate(directHitVFXPrefab, t.combatSpriteGO.transform.position + new Vector3(0, directHitVFX_Y_Offset, 0), Quaternion.identity);
                     }
+                    // --- REPRODUCIR SONIDO DE IMPACTO DE HABILIDAD DIRECTA ---
+                    PlaySoundEffect(skill.impactSound);
+                    // --- FIN SONIDO ---
 
                     if (skill.effectType == AbilityEffectType.Damage)
                     {

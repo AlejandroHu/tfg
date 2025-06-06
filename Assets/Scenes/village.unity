@@ -15266,6 +15266,101 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!1 &490076955
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 490076958}
+  - component: {fileID: 490076957}
+  - component: {fileID: 490076956}
+  m_Layer: 0
+  m_Name: BossFinal
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!61 &490076956
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 490076955}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
+--- !u!114 &490076957
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 490076955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36ba16952e87d024f9691c9f098a0160, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemyGroup:
+  - {fileID: 11400000, guid: 40916a8587bccca42866aa4cd249ae98, type: 2}
+  defeatPermanently: 1
+  canFleeFromThisEncounter: 0
+  isDefeated: 0
+--- !u!4 &490076958
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 490076955}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.6299973, y: 2.71, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &495117767
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -15536,6 +15631,8 @@ MonoBehaviour:
   portraitSprite: {fileID: 21300000, guid: 4809942d9f274b34daf75283eb8b8dac, type: 3}
   combatAnimatorController: {fileID: 9100000, guid: fac2c2b21721a304485b08de52b24f07, type: 2}
   basicAttackProjectilePrefab: {fileID: 0}
+  basicAttackSound: {fileID: 8300000, guid: dea47dccadad2a84b86601f614d68f0a, type: 3}
+  takeHitSound: {fileID: 8300000, guid: 9ead53b838f0c9049aec77499156e087, type: 3}
   currentXP: 0
   experienceToNextLevel: 100
   knownAbilities:
@@ -65801,6 +65898,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1986459724}
   - component: {fileID: 1986459723}
+  - component: {fileID: 1986459725}
   m_Layer: 0
   m_Name: CombatManager_Handler
   m_TagString: Untagged
@@ -65820,6 +65918,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fadce341615cc6041aabeb9c2562d8f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  sfxAudioSource: {fileID: 1986459725}
   roundTitleText: {fileID: 1690468780}
   roundTitleDisplayDuration: 1.5
   isCombatActive: 0
@@ -65885,6 +65984,102 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!82 &1986459725
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1986459722}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &2007085549
 GameObject:
   m_ObjectHideFlags: 0
@@ -66563,6 +66758,8 @@ MonoBehaviour:
   portraitSprite: {fileID: 21300000, guid: 21aaaf4b49401584387cdb2c44f43d7d, type: 3}
   combatAnimatorController: {fileID: 9100000, guid: 832a0c6e2d5f8074c8f3c58b74e6cdff, type: 2}
   basicAttackProjectilePrefab: {fileID: 5914548881077681461, guid: 6bb93de6ab75da545bdf6c3c73096c6a, type: 3}
+  basicAttackSound: {fileID: 8300000, guid: 784c1a39fe0a4e44eb05d572717ea1a5, type: 3}
+  takeHitSound: {fileID: 8300000, guid: 9ead53b838f0c9049aec77499156e087, type: 3}
   currentXP: 50
   experienceToNextLevel: 100
   knownAbilities:
@@ -67397,3 +67594,4 @@ SceneRoots:
   - {fileID: 2036152138}
   - {fileID: 2058534975}
   - {fileID: 1218690504}
+  - {fileID: 490076958}

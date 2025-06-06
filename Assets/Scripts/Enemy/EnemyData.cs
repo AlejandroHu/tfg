@@ -31,8 +31,6 @@ public class EnemyData : ScriptableObject
     [Header("Estadísticas de Combate Base")]
     [Tooltip("Puntos de Vida (HP) máximos del enemigo.")]
     public int maxHP = 50;
-    [Tooltip("Puntos de Maná (MP) máximos del enemigo, si usa habilidades con coste.")]
-    public int maxMP = 10;
     [Tooltip("Ataque base del enemigo.")]
     public int baseAttack = 8;
     [Tooltip("Defensa base del enemigo.")]
@@ -45,14 +43,25 @@ public class EnemyData : ScriptableObject
     public int baseSpeed = 5;
     // Podrías añadir más stats como Evasión, Puntería, resistencias elementales, etc.
 
-    [Header("Habilidades del Enemigo")]
-    [Tooltip("Lista de habilidades (AbilityData) que este enemigo puede usar en combate.")]
+    [Header("Comportamiento y Habilidades")]
+    [Tooltip("Si está marcado, este enemigo usará una IA de jefe (usará habilidades).")]
+    public bool isBoss = false; // --- NUEVO: Bandera para identificar jefes ---
+    [Tooltip("Lista de habilidades que este enemigo puede usar si es un jefe.")]
     public List<AbilityData> abilities = new List<AbilityData>();
-    // Podrías añadir lógica de IA aquí o en un script separado para cómo el enemigo elige sus habilidades.
 
     [Header("Recompensas al Ser Derrotado")]
     [Tooltip("Cantidad de Puntos de Experiencia (XP) que el jugador obtiene al derrotar a este enemigo.")]
     public int xpReward = 10;
+
+    // --- NUEVO: Campos para Sonidos de Combate ---
+    [Header("Sonidos de Combate")]
+    [Tooltip("Sonido que se reproduce cuando este enemigo realiza un ataque básico.")]
+    public AudioClip basicAttackSound;
+    [Tooltip("Sonido que se reproduce cuando este enemigo recibe un golpe.")]
+    public AudioClip takeHitSound;
+    [Tooltip("Sonido que se reproduce cuando este enemigo es derrotado.")]
+    public AudioClip defeatSound;
+    // --- FIN NUEVO ---
 
     // Para el loot (objetos que deja caer), podrías tener una lista más compleja.
     // Ejemplo simple:

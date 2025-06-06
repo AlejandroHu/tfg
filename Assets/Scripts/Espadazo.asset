@@ -23,4 +23,5 @@ MonoBehaviour:
   animationTriggerName: EspadazoCastTrigger
   animationDuration: 0.5
   vfxPrefab: {fileID: 0}
-  sfxClip: {fileID: 0}
+  launchSound: {fileID: 0}
+  impactSound: {fileID: 8300000, guid: dea47dccadad2a84b86601f614d68f0a, type: 3}

@@ -127,6 +127,14 @@ public class Projectile : MonoBehaviour
             _hitOccurred = true;
             speed = 0;
             Debug.Log($"Projectile: ¡Impacto en el objetivo {_targetCombatant.GetName()}!");
+            // --- REPRODUCIR SONIDO DE IMPACTO ---
+            if (CombatManager.Instance != null && _originatingAbility != null)
+            {
+                CombatManager.Instance.PlaySoundEffect(_originatingAbility.impactSound);
+            }
+            // Si el ataque básico también tuviera un sonido de impacto, se añadiría una lógica similar aquí
+            // else if (CombatManager.Instance != null && _originatingWeapon != null) { /* ... */ }
+            // --- FIN SONIDO ---
 
             // Aplicar efecto/daño
             if (_originatingAbility != null && _attacker != null) // Si fue lanzado por una HABILIDAD

@@ -23,4 +23,5 @@ MonoBehaviour:
   animationTriggerName: ThunderCastTrigger
   animationDuration: 0.5
   vfxPrefab: {fileID: 881359467162644930, guid: 7a9d407fd0e966946b034c49f20a2452, type: 3}
-  sfxClip: {fileID: 0}
+  launchSound: {fileID: 8300000, guid: 784c1a39fe0a4e44eb05d572717ea1a5, type: 3}
+  impactSound: {fileID: 8300000, guid: fa32d53a813dc57419f77555e360ef5b, type: 3}

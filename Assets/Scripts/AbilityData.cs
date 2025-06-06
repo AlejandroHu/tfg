@@ -77,9 +77,12 @@ public class AbilityData : ScriptableObject
 
     [Tooltip("Referencia a un Prefab de efecto visual (VFX) que se instanciará en el objetivo o en el lanzador. Si la habilidad lanza un proyectil, este sería el prefab del proyectil.")]
     public GameObject vfxPrefab;
-
-    [Tooltip("Referencia a un AudioClip para el sonido de la habilidad.")]
-    public AudioClip sfxClip;
+    // --- MODIFICADO: Campo de sfxClip renombrado y añadido sfxImpactClip ---
+    [Tooltip("Sonido que se reproduce cuando se LANZA la habilidad.")]
+    public AudioClip launchSound;
+    [Tooltip("Sonido que se reproduce cuando la habilidad IMPACTA (si es proyectil) o en el objetivo (si es efecto directo).")]
+    public AudioClip impactSound;
+    // --- FIN MODIFICACIÓN ---
 
 
     // El método ExecuteEffect se mantiene como lo tenías, ya que la lógica de aplicar
