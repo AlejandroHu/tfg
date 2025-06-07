@@ -193,6 +193,221 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 833286087612537164, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
   m_PrefabInstance: {fileID: 495117767}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &11658074
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 11658062}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c48eaac22e7b6ed49a69d855f45dc8e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  questToGive: {fileID: 0}
+  dialogueQuestAvailable: {fileID: 0}
+  dialogueQuestActive: {fileID: 0}
+  dialogueQuestCompleted: {fileID: 0}
+  dialogueQuestClaimed: {fileID: 0}
+--- !u!1 &27200243
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 27200244}
+  - component: {fileID: 27200246}
+  - component: {fileID: 27200245}
+  m_Layer: 5
+  m_Name: Dialogue_Panel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &27200244
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 27200243}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2011969077}
+  - {fileID: 29028219}
+  m_Father: {fileID: 1691145147}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 0}
+  m_AnchoredPosition: {x: 0, y: 300}
+  m_SizeDelta: {x: -1200, y: 200}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &27200245
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 27200243}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.56078434}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &27200246
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 27200243}
+  m_CullTransparentMesh: 1
+--- !u!1 &29028215
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 29028219}
+  - component: {fileID: 29028218}
+  - component: {fileID: 29028217}
+  - component: {fileID: 29028216}
+  m_Layer: 5
+  m_Name: Continue_Button
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &29028216
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 29028215}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 29028217}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &29028217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 29028215}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &29028218
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 29028215}
+  m_CullTransparentMesh: 1
+--- !u!224 &29028219
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 29028215}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1770465375}
+  m_Father: {fileID: 27200244}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 1, y: 0}
+  m_AnchorMax: {x: 1, y: 0}
+  m_AnchoredPosition: {x: -7.4000244, y: 4}
+  m_SizeDelta: {x: 160, y: 30}
+  m_Pivot: {x: 1, y: 0}
 --- !u!1001 &38835587
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -244,7 +459,7 @@ PrefabInstance:
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueTextTMP
       value: 
-      objectReference: {fileID: 889296640}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: typingSoundClip
       value: 
@@ -252,11 +467,11 @@ PrefabInstance:
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueBoxPanel
       value: 
-      objectReference: {fileID: 1831045152}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: continueIndicator
       value: 
-      objectReference: {fileID: 1295501265}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: nextPageSoundClip
       value: 
@@ -264,7 +479,7 @@ PrefabInstance:
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueAudioSource
       value: 
-      objectReference: {fileID: 1412634613}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 1
@@ -738,9 +953,13 @@ PrefabInstance:
     m_TransformParent: {fileID: 771472388}
     m_Modifications:
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
+      propertyPath: npcMovement
+      value: 
+      objectReference: {fileID: 1073677409}
+    - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueTextTMP
       value: 
-      objectReference: {fileID: 889296640}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: typingSoundClip
       value: 
@@ -748,11 +967,11 @@ PrefabInstance:
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueBoxPanel
       value: 
-      objectReference: {fileID: 1831045152}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: continueIndicator
       value: 
-      objectReference: {fileID: 1295501265}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: nextPageSoundClip
       value: 
@@ -760,7 +979,7 @@ PrefabInstance:
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueAudioSource
       value: 
-      objectReference: {fileID: 1412634613}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 1
@@ -812,6 +1031,26 @@ PrefabInstance:
     - target: {fileID: 9064587946877540704, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: m_Name
       value: Campesina (4)
+      objectReference: {fileID: 0}
+    - target: {fileID: 9207939611408102592, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
+      propertyPath: anim
+      value: 
+      objectReference: {fileID: 2051680497}
+    - target: {fileID: 9207939611408102592, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
+      propertyPath: waitTime
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9207939611408102592, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
+      propertyPath: moveSpeed
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9207939611408102592, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
+      propertyPath: moveDistance
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9207939611408102592, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
+      propertyPath: patrolDirection.x
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -6875,6 +7114,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 833286087612537164, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
   m_PrefabInstance: {fileID: 662271597}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &238815046 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 9207939611408102592, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
+  m_PrefabInstance: {fileID: 662271597}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 238815035}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8865abbaffd6bfd42bb987afc7d442fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &241549486
 GameObject:
   m_ObjectHideFlags: 0
@@ -13520,7 +13770,7 @@ PrefabInstance:
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: dialogueTextTMP
       value: 
-      objectReference: {fileID: 889296640}
+      objectReference: {fileID: 0}
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: typingSoundClip
       value: 
@@ -13528,11 +13778,11 @@ PrefabInstance:
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: dialogueBoxPanel
       value: 
-      objectReference: {fileID: 1831045152}
+      objectReference: {fileID: 0}
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: continueIndicator
       value: 
-      objectReference: {fileID: 1295501265}
+      objectReference: {fileID: 0}
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: nextPageSoundClip
       value: 
@@ -13540,7 +13790,7 @@ PrefabInstance:
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: dialogueAudioSource
       value: 
-      objectReference: {fileID: 1412634613}
+      objectReference: {fileID: 0}
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 1
@@ -15522,7 +15772,7 @@ PrefabInstance:
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueTextTMP
       value: 
-      objectReference: {fileID: 889296640}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: typingSoundClip
       value: 
@@ -15530,11 +15780,11 @@ PrefabInstance:
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueBoxPanel
       value: 
-      objectReference: {fileID: 1831045152}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: continueIndicator
       value: 
-      objectReference: {fileID: 1295501265}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: nextPageSoundClip
       value: 
@@ -15542,7 +15792,7 @@ PrefabInstance:
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueAudioSource
       value: 
-      objectReference: {fileID: 1412634613}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 1
@@ -15602,6 +15852,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 9064587946877540704, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       insertIndex: -1
       addedObject: {fileID: 11658063}
+    - targetCorrespondingSourceObject: {fileID: 9064587946877540704, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 11658074}
   m_SourcePrefab: {fileID: 100100000, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
 --- !u!1 &500755450
 GameObject:
@@ -15979,6 +16232,53 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 511873749}
   m_CullTransparentMesh: 1
+--- !u!1 &512679890
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 512679892}
+  - component: {fileID: 512679891}
+  m_Layer: 0
+  m_Name: DialogueManager_Handler
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &512679891
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 512679890}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a5115ff41f522545aa64740e8fad818, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dialoguePanel: {fileID: 27200243}
+  dialogueText: {fileID: 2011969079}
+  continueButton: {fileID: 29028216}
+--- !u!4 &512679892
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 512679890}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.709395, y: -1.8600405, z: -0.0008997844}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &514812527
 GameObject:
   m_ObjectHideFlags: 0
@@ -19870,7 +20170,7 @@ PrefabInstance:
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueTextTMP
       value: 
-      objectReference: {fileID: 889296640}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: typingSoundClip
       value: 
@@ -19878,11 +20178,11 @@ PrefabInstance:
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueBoxPanel
       value: 
-      objectReference: {fileID: 1831045152}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: continueIndicator
       value: 
-      objectReference: {fileID: 1295501265}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: nextPageSoundClip
       value: 
@@ -19890,7 +20190,7 @@ PrefabInstance:
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueAudioSource
       value: 
-      objectReference: {fileID: 1412634613}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 1
@@ -19920,9 +20220,13 @@ PrefabInstance:
     m_TransformParent: {fileID: 771472388}
     m_Modifications:
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
+      propertyPath: npcMovement
+      value: 
+      objectReference: {fileID: 238815046}
+    - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueTextTMP
       value: 
-      objectReference: {fileID: 889296640}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: typingSoundClip
       value: 
@@ -19930,11 +20234,11 @@ PrefabInstance:
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueBoxPanel
       value: 
-      objectReference: {fileID: 1831045152}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: continueIndicator
       value: 
-      objectReference: {fileID: 1295501265}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: nextPageSoundClip
       value: 
@@ -19942,7 +20246,7 @@ PrefabInstance:
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueAudioSource
       value: 
-      objectReference: {fileID: 1412634613}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 1
@@ -19994,6 +20298,30 @@ PrefabInstance:
     - target: {fileID: 9064587946877540704, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: m_Name
       value: Campesina (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 9207939611408102592, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
+      propertyPath: anim
+      value: 
+      objectReference: {fileID: 292247443}
+    - target: {fileID: 9207939611408102592, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
+      propertyPath: waitTime
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9207939611408102592, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9207939611408102592, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
+      propertyPath: moveSpeed
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9207939611408102592, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
+      propertyPath: moveDistance
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9207939611408102592, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
+      propertyPath: patrolDirection.x
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -21502,7 +21830,6 @@ Transform:
   m_Children:
   - {fileID: 1529426177}
   - {fileID: 2061819430}
-  - {fileID: 810633773}
   - {fileID: 11658068}
   - {fileID: 323809102}
   - {fileID: 1144877797}
@@ -21535,7 +21862,7 @@ PrefabInstance:
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: dialogueTextTMP
       value: 
-      objectReference: {fileID: 889296640}
+      objectReference: {fileID: 0}
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: typingSoundClip
       value: 
@@ -21543,11 +21870,11 @@ PrefabInstance:
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: dialogueBoxPanel
       value: 
-      objectReference: {fileID: 1831045152}
+      objectReference: {fileID: 0}
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: continueIndicator
       value: 
-      objectReference: {fileID: 1295501265}
+      objectReference: {fileID: 0}
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: nextPageSoundClip
       value: 
@@ -21555,7 +21882,7 @@ PrefabInstance:
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: dialogueAudioSource
       value: 
-      objectReference: {fileID: 1412634613}
+      objectReference: {fileID: 0}
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 1
@@ -21793,7 +22120,7 @@ PrefabInstance:
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: dialogueTextTMP
       value: 
-      objectReference: {fileID: 889296640}
+      objectReference: {fileID: 0}
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: typingSoundClip
       value: 
@@ -21801,11 +22128,11 @@ PrefabInstance:
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: dialogueBoxPanel
       value: 
-      objectReference: {fileID: 1831045152}
+      objectReference: {fileID: 0}
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: continueIndicator
       value: 
-      objectReference: {fileID: 1295501265}
+      objectReference: {fileID: 0}
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: nextPageSoundClip
       value: 
@@ -21813,7 +22140,7 @@ PrefabInstance:
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: dialogueAudioSource
       value: 
-      objectReference: {fileID: 1412634613}
+      objectReference: {fileID: 0}
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 1
@@ -21945,11 +22272,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 805934458}
   m_CullTransparentMesh: 1
---- !u!224 &810633773 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-  m_PrefabInstance: {fileID: 8621960681653815350}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &814535473
 GameObject:
   m_ObjectHideFlags: 0
@@ -22309,7 +22631,7 @@ PrefabInstance:
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: dialogueTextTMP
       value: 
-      objectReference: {fileID: 889296640}
+      objectReference: {fileID: 0}
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: typingSoundClip
       value: 
@@ -22317,11 +22639,11 @@ PrefabInstance:
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: dialogueBoxPanel
       value: 
-      objectReference: {fileID: 1831045152}
+      objectReference: {fileID: 0}
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: continueIndicator
       value: 
-      objectReference: {fileID: 1295501265}
+      objectReference: {fileID: 0}
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: nextPageSoundClip
       value: 
@@ -22329,7 +22651,7 @@ PrefabInstance:
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: dialogueAudioSource
       value: 
-      objectReference: {fileID: 1412634613}
+      objectReference: {fileID: 0}
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 1
@@ -22605,17 +22927,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 866100030}
   m_CullTransparentMesh: 1
---- !u!114 &889296640 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5245721791661077308, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-  m_PrefabInstance: {fileID: 8621960681653815350}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &909325507
 GameObject:
   m_ObjectHideFlags: 0
@@ -23438,6 +23749,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 833286087612537164, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
   m_PrefabInstance: {fileID: 120081154}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1073677409 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 9207939611408102592, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
+  m_PrefabInstance: {fileID: 120081154}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1073677398}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8865abbaffd6bfd42bb987afc7d442fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1080635516
 GameObject:
   m_ObjectHideFlags: 0
@@ -32574,7 +32896,7 @@ PrefabInstance:
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueTextTMP
       value: 
-      objectReference: {fileID: 889296640}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: typingSoundClip
       value: 
@@ -32582,11 +32904,11 @@ PrefabInstance:
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueBoxPanel
       value: 
-      objectReference: {fileID: 1831045152}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: continueIndicator
       value: 
-      objectReference: {fileID: 1295501265}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: nextPageSoundClip
       value: 
@@ -32594,7 +32916,7 @@ PrefabInstance:
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueAudioSource
       value: 
-      objectReference: {fileID: 1412634613}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 1
@@ -32655,11 +32977,6 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 1144877792}
   m_SourcePrefab: {fileID: 100100000, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
---- !u!1 &1295501265 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1482476070877409703, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-  m_PrefabInstance: {fileID: 8621960681653815350}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1302333839
 GameObject:
   m_ObjectHideFlags: 0
@@ -38109,7 +38426,7 @@ PrefabInstance:
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: dialogueTextTMP
       value: 
-      objectReference: {fileID: 889296640}
+      objectReference: {fileID: 0}
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: typingSoundClip
       value: 
@@ -38117,11 +38434,11 @@ PrefabInstance:
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: dialogueBoxPanel
       value: 
-      objectReference: {fileID: 1831045152}
+      objectReference: {fileID: 0}
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: continueIndicator
       value: 
-      objectReference: {fileID: 1295501265}
+      objectReference: {fileID: 0}
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: nextPageSoundClip
       value: 
@@ -38129,7 +38446,7 @@ PrefabInstance:
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: dialogueAudioSource
       value: 
-      objectReference: {fileID: 1412634613}
+      objectReference: {fileID: 0}
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 1
@@ -38150,11 +38467,6 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 1024848492}
   m_SourcePrefab: {fileID: 100100000, guid: d65feec901a6e4940888f9229695ee36, type: 3}
---- !u!82 &1412634613 stripped
-AudioSource:
-  m_CorrespondingSourceObject: {fileID: 8267415648320925169, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-  m_PrefabInstance: {fileID: 8621960681653815350}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1413454502
 GameObject:
   m_ObjectHideFlags: 0
@@ -45291,7 +45603,7 @@ PrefabInstance:
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: dialogueTextTMP
       value: 
-      objectReference: {fileID: 889296640}
+      objectReference: {fileID: 0}
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: typingSoundClip
       value: 
@@ -45299,11 +45611,11 @@ PrefabInstance:
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: dialogueBoxPanel
       value: 
-      objectReference: {fileID: 1831045152}
+      objectReference: {fileID: 0}
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: continueIndicator
       value: 
-      objectReference: {fileID: 1295501265}
+      objectReference: {fileID: 0}
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: nextPageSoundClip
       value: 
@@ -45311,7 +45623,7 @@ PrefabInstance:
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: dialogueAudioSource
       value: 
-      objectReference: {fileID: 1412634613}
+      objectReference: {fileID: 0}
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 1
@@ -56707,6 +57019,7 @@ RectTransform:
   - {fileID: 1934193490}
   - {fileID: 1413454503}
   - {fileID: 66080135}
+  - {fileID: 27200244}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -57265,6 +57578,140 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1728790126}
   m_CullTransparentMesh: 1
+--- !u!1 &1770465374
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1770465375}
+  - component: {fileID: 1770465377}
+  - component: {fileID: 1770465376}
+  m_Layer: 5
+  m_Name: Text (TMP)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1770465375
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1770465374}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 29028219}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1770465376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1770465374}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: Continuar >
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 517fd96c9340e264db5d2123712ca4c6, type: 2}
+  m_sharedMaterial: {fileID: 1033751740435956633, guid: 517fd96c9340e264db5d2123712ca4c6, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4281479730
+  m_fontColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 24
+  m_fontSizeBase: 24
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_enableWordWrapping: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 1
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &1770465377
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1770465374}
+  m_CullTransparentMesh: 1
 --- !u!1 &1783321789
 GameObject:
   m_ObjectHideFlags: 0
@@ -57678,7 +58125,7 @@ PrefabInstance:
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueTextTMP
       value: 
-      objectReference: {fileID: 889296640}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: typingSoundClip
       value: 
@@ -57686,11 +58133,11 @@ PrefabInstance:
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueBoxPanel
       value: 
-      objectReference: {fileID: 1831045152}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: continueIndicator
       value: 
-      objectReference: {fileID: 1295501265}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: nextPageSoundClip
       value: 
@@ -57698,7 +58145,7 @@ PrefabInstance:
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueAudioSource
       value: 
-      objectReference: {fileID: 1412634613}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 1
@@ -57719,11 +58166,6 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 436870601}
   m_SourcePrefab: {fileID: 100100000, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
---- !u!1 &1831045152 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 423514278114793507, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-  m_PrefabInstance: {fileID: 8621960681653815350}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1832853597
 GameObject:
   m_ObjectHideFlags: 0
@@ -58045,9 +58487,13 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
+      propertyPath: npcMovement
+      value: 
+      objectReference: {fileID: 1694219151}
+    - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueTextTMP
       value: 
-      objectReference: {fileID: 889296640}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: typingSoundClip
       value: 
@@ -58055,11 +58501,11 @@ PrefabInstance:
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueBoxPanel
       value: 
-      objectReference: {fileID: 1831045152}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: continueIndicator
       value: 
-      objectReference: {fileID: 1295501265}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: nextPageSoundClip
       value: 
@@ -58067,7 +58513,7 @@ PrefabInstance:
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueAudioSource
       value: 
-      objectReference: {fileID: 1412634613}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 1
@@ -58080,7 +58526,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: Herrero (4)
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 840089430842863518, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
@@ -58099,7 +58546,7 @@ PrefabInstance:
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueTextTMP
       value: 
-      objectReference: {fileID: 889296640}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: typingSoundClip
       value: 
@@ -58107,11 +58554,11 @@ PrefabInstance:
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueBoxPanel
       value: 
-      objectReference: {fileID: 1831045152}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: continueIndicator
       value: 
-      objectReference: {fileID: 1295501265}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: nextPageSoundClip
       value: 
@@ -58119,7 +58566,7 @@ PrefabInstance:
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueAudioSource
       value: 
-      objectReference: {fileID: 1412634613}
+      objectReference: {fileID: 0}
     - target: {fileID: 182418533558318501, guid: cfccf221fc1e6b04e84fc456bf070e41, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 1
@@ -66415,6 +66862,140 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2008031068}
   m_CullTransparentMesh: 1
+--- !u!1 &2011969076
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2011969077}
+  - component: {fileID: 2011969078}
+  - component: {fileID: 2011969079}
+  m_Layer: 5
+  m_Name: Dialogue_Text
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2011969077
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2011969076}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 27200244}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: -60, y: -60}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &2011969078
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2011969076}
+  m_CullTransparentMesh: 1
+--- !u!114 &2011969079
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2011969076}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: New Text
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 4017441ed4114ed44a5bcff23a94ed02, type: 2}
+  m_sharedMaterial: {fileID: -1431129665943132465, guid: 4017441ed4114ed44a5bcff23a94ed02, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 28
+  m_fontSizeBase: 28
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 1
+  m_VerticalAlignment: 256
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_enableWordWrapping: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 1
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1001 &2019719093
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -66466,7 +67047,7 @@ PrefabInstance:
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: dialogueTextTMP
       value: 
-      objectReference: {fileID: 889296640}
+      objectReference: {fileID: 0}
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: typingSoundClip
       value: 
@@ -66474,11 +67055,11 @@ PrefabInstance:
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: dialogueBoxPanel
       value: 
-      objectReference: {fileID: 1831045152}
+      objectReference: {fileID: 0}
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: continueIndicator
       value: 
-      objectReference: {fileID: 1295501265}
+      objectReference: {fileID: 0}
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: nextPageSoundClip
       value: 
@@ -66486,7 +67067,7 @@ PrefabInstance:
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: dialogueAudioSource
       value: 
-      objectReference: {fileID: 1412634613}
+      objectReference: {fileID: 0}
     - target: {fileID: 2347929601464094269, guid: d65feec901a6e4940888f9229695ee36, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 1
@@ -66673,7 +67254,7 @@ PrefabInstance:
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: dialogueTextTMP
       value: 
-      objectReference: {fileID: 889296640}
+      objectReference: {fileID: 0}
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: typingSoundClip
       value: 
@@ -66681,11 +67262,11 @@ PrefabInstance:
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: dialogueBoxPanel
       value: 
-      objectReference: {fileID: 1831045152}
+      objectReference: {fileID: 0}
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: continueIndicator
       value: 
-      objectReference: {fileID: 1295501265}
+      objectReference: {fileID: 0}
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: nextPageSoundClip
       value: 
@@ -66693,7 +67274,7 @@ PrefabInstance:
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: dialogueAudioSource
       value: 
-      objectReference: {fileID: 1412634613}
+      objectReference: {fileID: 0}
     - target: {fileID: -3001288074546909465, guid: 9f6266aaa5a5e2c4c83be03284f85c59, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 1
@@ -66884,13 +67465,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5378fd3b00e07534c95dcf2f0e7127f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  interactionKey: 101
-  advanceDialogueKey: 32
-  interactionDistance: 0.3
-  interactableLayer:
-    serializedVersion: 2
-    m_Bits: 256
-  raycastOriginOffset: 0.2
 --- !u!114 &2061819442
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -67170,7 +67744,7 @@ PrefabInstance:
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueTextTMP
       value: 
-      objectReference: {fileID: 889296640}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: typingSoundClip
       value: 
@@ -67178,11 +67752,11 @@ PrefabInstance:
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueBoxPanel
       value: 
-      objectReference: {fileID: 1831045152}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: continueIndicator
       value: 
-      objectReference: {fileID: 1295501265}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: nextPageSoundClip
       value: 
@@ -67190,7 +67764,7 @@ PrefabInstance:
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueAudioSource
       value: 
-      objectReference: {fileID: 1412634613}
+      objectReference: {fileID: 0}
     - target: {fileID: 7874748124731525847, guid: c6da738401bba7e4a87452e62c41539b, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 1
@@ -67598,127 +68172,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 08ee03dfe0cb81745bb8af5a1cddb405, type: 3}
---- !u!1001 &8621960681653815350
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 771472388}
-    m_Modifications:
-    - target: {fileID: 2340504953833963856, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2340504953833963856, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_AnchorMin.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2340504953833963856, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: -1320
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_Pivot.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_Pivot.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_AnchorMin.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4021416769169134089, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5872776800433120973, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_Name
-      value: Dialogo
-      objectReference: {fileID: 0}
-    - target: {fileID: 6545089932945809589, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: bobSpeed
-      value: 20
-      objectReference: {fileID: 0}
-    - target: {fileID: 6545089932945809589, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: bobAmount
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 8267415648320925169, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
-      propertyPath: m_Volume
-      value: 1
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: abc9083e010beda4e96f1dbae2c3133e, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -67747,3 +68200,4 @@ SceneRoots:
   - {fileID: 490076958}
   - {fileID: 159473796}
   - {fileID: 184046164}
+  - {fileID: 512679892}
