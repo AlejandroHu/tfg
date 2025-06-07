@@ -56,20 +56,20 @@ public class QuestGiver : MonoBehaviour
         switch (currentStatus)
         {
             case QuestStatus.Inactive:
-                //npcDialogue.StartDialogue(dialogueQuestAvailable);
+                npcDialogue.StartDialogue(dialogueQuestAvailable);
                 // Después de que este diálogo termine, necesitaremos aceptar la misión
                 // Esto se hará llamando a AcceptThisQuest() desde una función externa de Ink.
                 break;
             case QuestStatus.Active:
-                //npcDialogue.StartDialogue(dialogueQuestActive);
+                npcDialogue.StartDialogue(dialogueQuestActive);
                 break;
             case QuestStatus.Completed:
-                //npcDialogue.StartDialogue(dialogueQuestCompleted);
+                npcDialogue.StartDialogue(dialogueQuestCompleted);
                 // Después de que este diálogo termine, necesitaremos reclamar las recompensas
                 // llamando a ClaimRewardsForThisQuest() desde Ink.
                 break;
             case QuestStatus.Claimed:
-                //npcDialogue.StartDialogue(dialogueQuestClaimed);
+                npcDialogue.StartDialogue(dialogueQuestClaimed);
                 break;
         }
     }
