@@ -14,4 +14,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/forest.unity
     guid: 1aebe70a7cfa115408ac64dd437a0fb0
+  - enabled: 1
+    path: Assets/Scenes/posada.unity
+    guid: d287f95adfad3fb4db17a9c0aee9c7e0
   m_configObjects: {}

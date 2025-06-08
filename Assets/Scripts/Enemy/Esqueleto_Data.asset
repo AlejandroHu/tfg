@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b2155560ea429f44a5cba049c71a6a7, type: 3}
+  m_Name: Esqueleto_Data
+  m_EditorClassIdentifier: 
+  enemyID: esqueleto_01
+  enemyName: Esqueleto
+  battleSprite: {fileID: 1055068266, guid: a599654b460727a488a2ecd75eda87eb, type: 3}
+  combatAnimatorController: {fileID: 9100000, guid: 570e5935ba984ec4986782f98dd912e9, type: 2}
+  maxHP: 50
+  baseAttack: 20
+  baseDefense: 3
+  baseMagicAttack: 0
+  baseMagicDefense: 0
+  baseSpeed: 5
+  isBoss: 0
+  abilities: []
+  xpReward: 10
+  basicAttackSound: {fileID: 8300000, guid: dea47dccadad2a84b86601f614d68f0a, type: 3}
+  takeHitSound: {fileID: 8300000, guid: 9ead53b838f0c9049aec77499156e087, type: 3}
+  defeatSound: {fileID: 8300000, guid: 37534d9927fbb804391a8e9070b109b3, type: 3}
+  itemDrop: {fileID: 0}
+  itemDropChance: 0.1

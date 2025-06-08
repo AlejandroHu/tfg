@@ -74,9 +74,13 @@ public class PlayerInteraction : MonoBehaviour
         if (hit.collider != null)
         {
             if (hit.collider.gameObject == this.gameObject) return;
-
             // Intentar obtener el componente NPCDialogue del objeto golpeado.
-            if (hit.collider.TryGetComponent<NPCDialogue>(out NPCDialogue npcDialogue))
+            if (hit.collider.TryGetComponent<SceneTransitionDoor>(out SceneTransitionDoor door))
+            {
+                Debug.Log($"Interactuando con puerta: {hit.collider.name}");
+                door.Transition();
+            }
+            else if (hit.collider.TryGetComponent<NPCDialogue>(out NPCDialogue npcDialogue))
             {
                 // --- NUEVA LÓGICA INTELIGENTE ---
                 // Primero, comprobar si el NPC tiene un QuestGiver.

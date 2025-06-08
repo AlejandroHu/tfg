@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b2155560ea429f44a5cba049c71a6a7, type: 3}
+  m_Name: Bat_Data
+  m_EditorClassIdentifier: 
+  enemyID: bat_01
+  enemyName: Bat
+  battleSprite: {fileID: 309779283, guid: 737af2514fee91c4abc473fd1af4351c, type: 3}
+  combatAnimatorController: {fileID: 9100000, guid: b5be72a8a218bfd4482ad2d1c51f8eb2, type: 2}
+  maxHP: 50
+  baseAttack: 8
+  baseDefense: 5
+  baseMagicAttack: 0
+  baseMagicDefense: 0
+  baseSpeed: 5
+  isBoss: 0
+  abilities: []
+  xpReward: 10
+  basicAttackSound: {fileID: 8300000, guid: 863cb1541c2c18b4dbc765e8257ad6ea, type: 3}
+  takeHitSound: {fileID: 8300000, guid: 9ead53b838f0c9049aec77499156e087, type: 3}
+  defeatSound: {fileID: 8300000, guid: 37534d9927fbb804391a8e9070b109b3, type: 3}
+  itemDrop: {fileID: 0}
+  itemDropChance: 0.1
