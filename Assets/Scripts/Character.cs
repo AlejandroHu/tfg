@@ -88,7 +88,7 @@ public class Character : MonoBehaviour
 
     void Awake()
     {
-        DontDestroyOnLoad(gameObject);
+       // DontDestroyOnLoad(gameObject);
         InitializeEquipmentSlots();
 
         if (initialHeadEquipment != null) EquipItemInitially(initialHeadEquipment);

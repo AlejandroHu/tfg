@@ -12,6 +12,7 @@ namespace TopDown
 {
     public class PlayerMovement : MonoBehaviour
     {
+        public static PlayerMovement Instance { get; private set; }
         [Header("Movement")]
         [SerializeField] private float moveSpeed = 5f;
 
@@ -29,6 +30,18 @@ namespace TopDown
 
         private void Awake()
         {
+            // --- INICIO DE LA LÓGICA DE PERSISTENCIA ---
+            //if (Instance != null && Instance != this)
+            //{
+                // Si ya existe una instancia del jugador (porque hemos vuelto a la escena principal),
+                // destruimos esta nueva instancia duplicada para evitar tener dos jugadores.
+               // Destroy(gameObject);
+               // return;
+            //}
+           // Instance = this;
+            //transform.SetParent(null);
+            //DontDestroyOnLoad(gameObject); // ¡LA LÍNEA MÁS IMPORTANTE! No destruir este objeto al cargar una nueva escena.
+            // --- FIN DE LA LÓGICA DE PERSISTENCIA ---
             rb = GetComponent<Rigidbody2D>();
 
             if (anim == null)
